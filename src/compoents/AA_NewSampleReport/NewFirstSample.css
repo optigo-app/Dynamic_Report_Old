@@ -1,0 +1,103 @@
+.master-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 95vh;
+  background: #f9f9f9;
+  text-align: center;
+  gap: 20px;
+  padding: 20px;
+}
+
+.master-title {
+  font-size: 24px;
+  font-weight: bold;
+  margin-bottom: 10px;
+}
+
+.master-dropdown {
+  width: 250px;
+}
+
+.save-btn {
+  margin-top: 20px;
+  width: 150px;
+}
+
+/* Report container */
+.report-container {
+  min-height: 100vh;
+  background: #fff;
+}
+
+.master_form_sub {
+  display: flex;
+  flex-direction: column;
+  width: 50%;
+  align-items: flex-start;
+  gap: 20px;
+}
+
+/* Smooth slide + fade transition */
+.fade-slide-enter {
+  opacity: 0;
+  transform: translateY(30px); /* slide up */
+}
+.fade-slide-enter-active {
+  opacity: 1;
+  transform: translateY(0);
+  transition: opacity 600ms ease, transform 600ms ease;
+}
+.fade-slide-exit {
+  opacity: 1;
+  transform: translateY(0);
+}
+.fade-slide-exit-active {
+  opacity: 0;
+  transform: translateY(-30px); /* slide out */
+  transition: opacity 600ms ease, transform 600ms ease;
+}
+
+.slider-view {
+  width: 60%;
+  background: #f4f6f8;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 10px;
+}
+
+.slider-swiper {
+  width: 100%;
+  height: 100%;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.slider-swiper img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.master-form {
+  width: 40%;
+  padding: 40px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.master-title {
+  font-size: 24px;
+  font-weight: 600;
+  margin-bottom: 16px;
+}
+
+.master-dropdown {
+  width: 100%;
+}
+
+.save-btn {
+  align-self: flex-start;
+}

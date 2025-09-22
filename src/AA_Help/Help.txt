@@ -1,0 +1,8 @@
+
+Customer Recevi Report : -   
+            - Row Selection Without chekbox on grid view show 
+
+materipurchasereturnrepor  &&  material memo report :- 
+        deafult sorting set 
+        
+

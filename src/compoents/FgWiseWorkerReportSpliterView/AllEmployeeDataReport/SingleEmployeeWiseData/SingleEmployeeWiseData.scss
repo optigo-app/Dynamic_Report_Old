@@ -1,0 +1,317 @@
+.singleDataEmployee_mainDiv {
+  background-color: #f8f7fa;
+  height: 90vh;
+  width: 99.5%;
+  padding: 5px;
+
+  .summaryBox {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    padding: 10px;
+  }
+
+  .AllEmploe_boxViewTotal {
+    display: flex;
+    align-items: center;
+    padding: 8px;
+    border-radius: 8px;
+    border: 1px solid rgb(115, 103, 240);
+    background-color: white;
+    margin: 0px;
+    min-width: 130px;
+    max-width: 130px;
+  }
+
+  .AllEmplo_boxViewTotalValue {
+    font-weight: bold;
+    font-size: 1.25rem;
+    color: rgb(115, 103, 240);
+    margin: 3px 0px;
+    min-width: 70px;
+    line-height: 20px;
+  }
+
+  .boxViewTotal {
+    display: flex;
+    align-items: center;
+    padding: 8px;
+    border-radius: 8px;
+    border: 1px solid rgb(115, 103, 240);
+    background-color: white;
+    margin: 0px;
+    min-width: 130px;
+    max-width: 130px;
+  }
+
+  .boxViewTotalTitle {
+    margin: 0px;
+    font-size: 14px;
+    color: rgb(117, 117, 117);
+    cursor: pointer;
+    font-weight: 600;
+  }
+
+  .boxViewTotalValue {
+    font-weight: bold;
+    font-size: 1.25rem;
+    color: rgb(115, 103, 240);
+    margin: 3px 0px;
+    min-width: 70px;
+    line-height: 20px;
+  }
+
+  .selectDropDownMain {
+    width: 100% !important;
+  }
+
+  .simpleGridView {
+    box-shadow: 0 0.1875rem 0.75rem 0 rgba(47, 43, 61, 0.14);
+    background-color: white;
+  }
+
+  .minTexBox {
+    width: 150px !important;
+  }
+
+  .FiletrBtnOpen {
+    height: 40px;
+    width: 130px;
+    border-radius: 3px;
+    background-color: rgb(222 212 212);
+    border: none;
+    outline: none;
+    cursor: pointer;
+    font-size: 14px;
+    color: #000000d4;
+  }
+
+  .accordianMain {
+    margin: 20px !important;
+  }
+
+  .gridMetalComboMain {
+    display: flex !important;
+    flex-direction: column !important;
+    max-height: 340px;
+    overflow: auto;
+    scrollbar-width: thin;
+  }
+
+  .mainName {
+    height: 20px;
+    display: flex;
+    margin: 0px;
+    align-items: center;
+    font-weight: 600;
+  }
+
+  .subname {
+    height: 20px;
+    display: flex;
+    margin: 0px;
+    align-items: center;
+  }
+
+  .imageViewImgGrid {
+    height: 35px;
+    width: 35px;
+    cursor: pointer;
+  }
+
+  .imageViewImg {
+    height: 35px;
+    width: 35px;
+    cursor: pointer;
+  }
+
+  .imageViewImgage {
+    height: 300px;
+    width: 24%;
+    object-fit: cover;
+    padding: 5px;
+  }
+  .colorFiled {
+    height: 30px;
+    width: 30px;
+    margin: 5px;
+    cursor: pointer;
+    border-radius: 5px;
+  }
+  .topSettingBtnPopup {
+    padding: 10px;
+    height: fit-content;
+    background-color: lavender;
+    border-radius: 5px;
+    margin: 20px;
+    cursor: pointer;
+  }
+
+  .ConversionMain {
+    width: 400px !important;
+    padding: 20px;
+  }
+
+  .react-datepicker {
+    height: 280px !important;
+    box-shadow: 0 0.1875rem 0.75rem 0 rgba(47, 43, 61, 0.14) !important;
+    border: none !important;
+    background-color: white !important;
+  }
+  .react-datepicker__header {
+    height: 75px !important;
+    background-color: white !important;
+    border: 0px !important;
+  }
+
+  .react-datepicker__header__dropdown {
+    height: 20px !important;
+    margin-top: 8px !important;
+  }
+  .react-datepicker__day-names {
+    color: black !important;
+  }
+  .react-datepicker__day-name,
+  .react-datepicker__day,
+  .react-datepicker__time-name {
+    color: #00000094 !important;
+  }
+  .react-datepicker__day--selected,
+  .react-datepicker__day--in-selecting-range,
+  .react-datepicker__day--in-range,
+  .react-datepicker__month-text--selected,
+  .react-datepicker__month-text--in-selecting-range,
+  .react-datepicker__month-text--in-range,
+  .react-datepicker__quarter-text--selected,
+  .react-datepicker__quarter-text--in-selecting-range,
+  .react-datepicker__quarter-text--in-range,
+  .react-datepicker__year-text--selected,
+  .react-datepicker__year-text--in-selecting-range,
+  .react-datepicker__year-text--in-range {
+    color: white !important;
+    background-color: #1c8de5e3 !important;
+  }
+  .react-datepicker__month-dropdown {
+    background-color: white !important;
+  }
+  .react-datepicker__year-dropdown {
+    background-color: white !important;
+  }
+
+  /* Testgrid.css */
+
+  .transition-container {
+    max-height: 0;
+    opacity: 0;
+    overflow: hidden;
+    transition: max-height 0.5s ease, opacity 0.5s ease;
+  }
+
+  .transition-container.open {
+    max-height: 300px;
+    opacity: 1;
+  }
+
+  .transition-container.closed {
+    max-height: 0;
+    opacity: 0;
+  }
+
+  .ClearFilterButton {
+    background-color: rgb(250 77 77);
+    color: white;
+    font-size: 14px;
+    width: 150px;
+    height: 40px;
+    font-weight: 500;
+    border: none;
+    outline: none;
+    border-radius: 3px;
+    cursor: pointer;
+    margin-inline: 5px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  .ClearFilterButton:hover {
+    background-color: rgb(238, 37, 37);
+    transition: transform 0.3s ease, background-color 0.3s ease;
+  }
+
+  .exportButton {
+    background-color: rgb(21, 163, 75);
+    color: white;
+    font-size: 16px;
+    width: 150px;
+    height: 40px;
+    font-weight: 500;
+    border: none;
+    outline: none;
+    margin-inline: 5px;
+    border-radius: 3px;
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  .exportButton:hover {
+    background-color: rgb(34, 194, 95);
+    transition: transform 0.3s ease, background-color 0.3s ease;
+  }
+
+  .Grid_CloseIcone {
+    background: linear-gradient(
+      270deg,
+      rgb(218 14 84 / 70%) 0%,
+      rgb(249 6 55) 100%
+    ) !important;
+    color: white;
+    font-size: 16px;
+    width: 50px;
+    height: 40px;
+    font-weight: 500;
+    border: none;
+    outline: none;
+    margin-inline: 5px;
+    border-radius: 3px;
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-radius: 5px;
+    margin: 10px;
+  }
+
+  .Grid_CloseIcone:hover {
+    background-color: rgb(238, 37, 37);
+    transition: transform 0.3s ease, background-color 0.3s ease;
+  }
+
+  .loader-overlay_signle {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgb(235 230 230 / 20%);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    bottom: 0;
+  }
+  .loadingBarManage {
+    color: #7d7f85 !important;
+  }
+}
+
+.SingleEmploe_drawerMain {
+  z-index: 99999 !important;
+}
+.SingleEmploe_drawerMain .MuiDrawer-paper {
+  width: 400px !important;
+}
+
+.MuiDataGrid-cell:focus {
+  border-color: rgb(115, 103, 240) !important;
+}

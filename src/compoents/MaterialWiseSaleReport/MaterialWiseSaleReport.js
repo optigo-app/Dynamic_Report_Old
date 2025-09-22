@@ -1,0 +1,1702 @@
+// http://localhost:3000/testreport/?sp=9&sv=/e3tuemVufX17ezIwfX17e29yYWlsMjV9fXt7b3JhaWwyNX19/0&ifid=ToolsReport&pid=18231
+
+import React, { useState, useEffect, useRef, useMemo } from "react";
+import Box from "@mui/material/Box";
+import { DataGrid } from "@mui/x-data-grid";
+import "./MaterialWiseSaleReport.scss";
+import DatePicker from "react-datepicker";
+// import masterData from "./masterData.json";
+import mainButton from "../images/Mail_32.png";
+import printButton from "../images/print.png";
+import gridView from "../images/GriedView.png";
+import imageView from "../images/ImageView2.png";
+import { RiFullscreenLine } from "react-icons/ri";
+import { IoMdClose } from "react-icons/io";
+import "react-datepicker/dist/react-datepicker.css";
+import {
+  Accordion,
+  AccordionDetails,
+  AccordionSummary,
+  Button,
+  Checkbox,
+  CircularProgress,
+  Dialog,
+  Drawer,
+  FormControl,
+  FormControlLabel,
+  IconButton,
+  InputAdornment,
+  InputLabel,
+  MenuItem,
+  Modal,
+  Paper,
+  Select,
+  Slide,
+  TextField,
+  Typography,
+} from "@mui/material";
+import emailjs from "emailjs-com";
+import { MdExpandMore, MdOpenInFull, MdOutlineFilterAlt, MdOutlineFilterAltOff } from "react-icons/md";
+import CustomTextField from "../text-field/index";
+import * as XLSX from "xlsx";
+import { saveAs } from "file-saver";
+import { AiFillSetting } from "react-icons/ai";
+import OtherKeyData from "./MaterialWiseSaleReport.json";
+import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
+import DualDatePicker from "../DatePicker/DualDatePicker";
+import { GetWorkerData } from "../../API/GetWorkerData/GetWorkerData";
+import { useSearchParams } from "react-router-dom";
+import { AlertTriangle, CircleX } from "lucide-react";
+import {
+  GridPagination,
+  useGridApiContext,
+  useGridSelector,
+  gridPageSelector,
+  gridPageCountSelector,
+} from "@mui/x-data-grid";
+import {
+  FirstPage,
+  LastPage,
+  KeyboardArrowLeft,
+  KeyboardArrowRight,
+} from "@mui/icons-material";
+
+let popperPlacement = "bottom-start";
+const ItemType = {
+  COLUMN: "COLUMN",
+};
+const EXCEL_TYPE =
+  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-8";
+
+const style = {
+  position: "absolute",
+  top: "50%",
+  left: "50%",
+  transform: "translate(-50%, -50%)",
+  width: 400,
+  bgcolor: "background.paper",
+  border: "2px solid #000",
+  boxShadow: 24,
+  p: 4,
+};
+
+function CustomPagination() {
+  const apiRef = useGridApiContext();
+  const page = useGridSelector(apiRef, gridPageSelector);
+  const pageCount = useGridSelector(apiRef, gridPageCountSelector);
+  const rowCount = apiRef.current.getRowsCount();
+  const pageSize = apiRef.current.state.pagination.paginationModel.pageSize;
+  const [inputPage, setInputPage] = React.useState(page + 1);
+
+  React.useEffect(() => {
+    setInputPage(page + 1);
+  }, [page]);
+
+  const handleInputChange = (e) => {
+    setInputPage(e.target.value);
+  };
+
+  const handleInputBlur = () => {
+    let newPage = Number(inputPage);
+
+    if (isNaN(newPage) || newPage < 1) {
+      newPage = 1;
+    } else if (newPage > pageCount) {
+      newPage = pageCount;
+    }
+
+    apiRef.current.setPage(newPage - 1);
+    setInputPage(newPage);
+  };
+
+  const handlePageSizeChange = (e) => {
+    apiRef.current.setPageSize(Number(e.target.value));
+  };
+
+  const startItem = page * pageSize + 1;
+  const endItem = Math.min((page + 1) * pageSize, rowCount);
+
+  return (
+    <div
+      style={{
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "flex-end",
+        width: "100%",
+        padding: "0 8px",
+        gap: 16,
+      }}
+    >
+      {/* ✅ Page navigation */}
+      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+        <span style={{ fontSize: 14 }}>Rows per page:</span>
+        <TextField
+          select
+          size="small"
+          value={pageSize}
+          onChange={handlePageSizeChange}
+          SelectProps={{
+            native: true,
+          }}
+          style={{ width: 60 }}
+          sx={{
+            "& .MuiNativeSelect-select": {
+              padding: "2px 5px!important",
+              fontSize: "14px !important",
+            },
+          }}
+        >
+          {[20, 30, 50, 100].map((size) => (
+            <option key={size} value={size}>
+              {size}
+            </option>
+          ))}
+        </TextField>
+
+        <IconButton
+          size="small"
+          onClick={() => apiRef.current.setPage(0)}
+          disabled={page === 0}
+        >
+          <FirstPage fontSize="small" />
+        </IconButton>
+
+        <IconButton
+          size="small"
+          onClick={() => apiRef.current.setPage(page - 1)}
+          disabled={page === 0}
+        >
+          <KeyboardArrowLeft fontSize="small" />
+        </IconButton>
+
+        <p>Page</p>
+        <TextField
+          value={inputPage}
+          onChange={handleInputChange}
+          onBlur={handleInputBlur}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              handleInputBlur();
+            }
+          }}
+          size="small"
+          variant="outlined"
+          style={{ width: 60 }}
+          inputProps={{ style: { textAlign: "center", padding: "2px 4px" } }}
+        />
+        <span style={{ fontSize: 14 }}>of {pageCount}</span>
+
+        <IconButton
+          size="small"
+          onClick={() => apiRef.current.setPage(page + 1)}
+          disabled={page >= pageCount - 1}
+        >
+          <KeyboardArrowRight fontSize="small" />
+        </IconButton>
+
+        <IconButton
+          size="small"
+          onClick={() => apiRef.current.setPage(pageCount - 1)}
+          disabled={page >= pageCount - 1}
+        >
+          <LastPage fontSize="small" />
+        </IconButton>
+
+        <span style={{ fontSize: 14 }}>
+          Displaying {rowCount === 0 ? 0 : startItem} to {endItem} of {rowCount}
+        </span>
+      </div>
+    </div>
+  );
+}
+
+const DraggableColumn = ({ col, index, checkedColumns, setCheckedColumns }) => {
+  return (
+    <Draggable draggableId={col.field.toString()} index={index}>
+      {(provided, snapshot) => (
+        <div
+          ref={provided.innerRef}
+          {...provided.draggableProps}
+          {...provided.dragHandleProps}
+          style={{
+            display: "flex",
+            alignItems: "center",
+            padding: "8px",
+            border: "1px solid lightgray",
+            marginBottom: "15px",
+            height: "55px",
+            background: snapshot.isDragging ? "#e0e0e0" : "rgb(234, 234, 234)",
+            borderRadius: "4px",
+            cursor: "grab",
+            opacity: snapshot.isDragging ? 0.5 : 1,
+            transition: "opacity 0.2s ease",
+            ...provided.draggableProps.style,
+          }}
+        >
+          <FormControlLabel
+            control={
+              <Checkbox
+                checked={checkedColumns[col.field]}
+                onChange={() =>
+                  setCheckedColumns((prev) => ({
+                    ...prev,
+                    [col.field]: !prev[col.field],
+                  }))
+                }
+              />
+            }
+            label={col.headerName}
+          />
+        </div>
+      )}
+    </Draggable>
+  );
+};
+
+const formatToMMDDYYYY = (date) => {
+  const d = new Date(date);
+  return `${(d.getMonth() + 1).toString().padStart(2, "0")}/${d
+    .getDate()
+    .toString()
+    .padStart(2, "0")}/${d.getFullYear()}`;
+};
+
+export default function MaterialWiseSaleReport() {
+  const [isLoading, setIsLoading] = useState(false);
+  const [toDate, setToDate] = useState(null);
+  const [fromDate, setFromDate] = useState(null);
+  const [open, setOpen] = useState(false);
+  const gridContainerRef = useRef(null);
+  const [showImageView, setShowImageView] = useState(false);
+  const [selectedColors, setSelectedColors] = useState([]);
+  const [openPopup, setOpenPopup] = useState(false);
+  const [isChecked, setIsChecked] = useState(false);
+  const [columns, setColumns] = useState([]);
+  const [openPDate, setOpenPDate] = useState(false);
+  const [selectedDate, setSelectedDate] = useState(null);
+  const [selectedRd3Name, setSelectedRd3Name] = useState("");
+  const [masterKeyData, setMasterKeyData] = useState();
+  const [allColumIdWiseName, setAllColumIdWiseName] = useState();
+  const [allColumData, setAllColumData] = useState();
+  const [allRowData, setAllRowData] = useState();
+  const [checkedColumns, setCheckedColumns] = useState({});
+  const [selectedDepartmentId, setSelectedDepartmentId] = useState();
+  const [selectedEmployeeCode, setSelectedEmployeeCode] = useState();
+  const [lastUpdated, setLastUpdated] = useState("");
+  const gridRef = useRef(null);
+  const [searchParams] = useSearchParams();
+  const [startDate, setStartDate] = useState();
+  const [endDate, setEndDate] = useState();
+  const [AllFinalData, setFinalData] = useState();
+  const [status500, setStatus500] = useState(false);
+  const [commonSearch, setCommonSearch] = useState("");
+  const [summaryData, setSummaryData] = useState([]);
+  const [grupEnChekBox, setGrupEnChekBox] = useState(() => {
+    const initial = {};
+    OtherKeyData?.rd1.forEach((col) => {
+      if (col.GrupChekBox) {
+        initial[col.field] = true;
+      }
+    });
+    return initial;
+  });
+
+  const [filterState, setFilterState] = useState({
+    dateRange: { startDate: null, endDate: null },
+  });
+
+  const firstTimeLoadedRef = useRef(false);
+
+  useEffect(() => {
+    const now = new Date();
+    const formattedDate = formatToMMDDYYYY(now);
+    setStartDate(formattedDate);
+    setEndDate(formattedDate);
+    fetchData(formattedDate, formattedDate);
+    setFilterState({
+      dateRange: {
+        startDate: now,
+        endDate: now,
+      },
+    });
+    setTimeout(() => {
+      firstTimeLoadedRef.current = true;
+    }, 0); // lets React finish updating state first
+  }, []);
+
+  useEffect(() => {
+    if (!firstTimeLoadedRef.current) return;
+    const { startDate: s, endDate: e } = filterState.dateRange;
+    if (s && e) {
+      const formattedStart = formatToMMDDYYYY(new Date(s));
+      const formattedEnd = formatToMMDDYYYY(new Date(e));
+
+      setStartDate(formattedStart);
+      setEndDate(formattedEnd);
+
+      fetchData(formattedStart, formattedEnd);
+    }
+  }, [filterState.dateRange]);
+
+  const fetchData = async (stat, end) => {
+    const sp = searchParams.get("sp");
+    let AllData = JSON.parse(sessionStorage.getItem("AuthqueryParams"));
+    setIsLoading(true);
+    const body = {
+      con: `{"id":"","mode":"materialwisesalereport","appuserid":"${AllData?.uid}"}`,
+      p: `{"fdate":"${stat}","tdate":"${end}"}`,
+      f: "Task Management (taskmaster)",
+    };
+
+    try {
+      const fetchedData = await GetWorkerData(body, sp);
+      setAllRowData(fetchedData?.Data?.rd1);
+      setAllColumIdWiseName(fetchedData?.Data?.rd);
+      setMasterKeyData(OtherKeyData?.rd);
+      setAllColumData(OtherKeyData?.rd1);
+      setFinalData(fetchedData?.Data);
+      setIsLoading(false);
+    } catch (error) {
+      if (error?.status == 500) {
+        setStatus500(true);
+      }
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    const now = new Date();
+    const formatNumber = (n) => n.toString().padStart(2, "0");
+
+    const formattedDate = `${formatNumber(now.getDate())}-${formatNumber(
+      now.getMonth() + 1
+    )}-${now.getFullYear()} ${formatNumber(now.getHours())}:${formatNumber(
+      now.getMinutes()
+    )}:${formatNumber(now.getSeconds())}`;
+
+    setLastUpdated(formattedDate);
+  }, []);
+
+  useEffect(() => {
+    if (allColumData) {
+      const initialCheckedColumns = {};
+      Object?.values(allColumData)?.forEach((col) => {
+        initialCheckedColumns[col.field] = col.ColumShow;
+      });
+      setCheckedColumns(initialCheckedColumns);
+    }
+  }, [allColumData]);
+
+  useEffect(() => {
+    if (!allColumData) return;
+    const columnData = Object?.values(allColumData)
+      ?.filter((col) => col.ColumShow)
+      ?.map((col, index) => {
+        const isPriorityFilter = col.proiorityFilter === true;
+        return {
+          field: col.field,
+          headerName: (
+            <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+              {col.GrupChekBox && (
+                <Checkbox
+                  checked={grupEnChekBox[col.field] ?? true} // 👉 Correct binding to grupEnChekBox
+                  onChange={() => handleGrupEnChekBoxChange(col.field)} // 👉 Correct handler
+                  size="small"
+                  sx={{ p: 0 }}
+                />
+              )}
+              {col.headerName}
+            </div>
+          ),
+          width: col.Width,
+          align: col.ColumAlign || "left",
+          headerAlign: col.Align,
+          filterable: col.ColumFilter,
+          suggestionFilter: col.suggestionFilter,
+          headerNamesingle: col.headerName,
+          hrefLink: col.HrefLink,
+          summuryValueKey: col.summuryValueKey,
+          summaryTitle: col.summaryTitle,
+          ToFixedValue: col.ToFixedValue,
+          filterTypes: [
+            col.NormalFilter && "NormalFilter",
+            col.DateRangeFilter && "DateRangeFilter",
+            col.MultiSelection && "MultiSelection",
+            col.RangeFilter && "RangeFilter",
+            col.suggestionFilter && "suggestionFilter",
+            col.selectDropdownFilter && "selectDropdownFilter",
+          ].filter(Boolean),
+
+          renderCell: (params) => {
+            if (col.ToFixedValue) {
+              return (
+                <p
+                  style={{
+                    fontSize: col.FontSize || "inherit",
+                  }}
+                >
+                  {params.value?.toFixed(col.ToFixedValue)}
+                </p>
+              );
+            } else if (col.hrefLink) {
+              return (
+                <a
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{
+                    color: "blue",
+                    textDecoration: "underline",
+                    fontSize: col.FontSize || "inherit",
+                    padding: "5px 20px",
+                    cursor: "pointer",
+                    width: "120px",
+                    fontSize: col.FontSize || "inherit",
+                    textOverflow: "ellipsis",
+                    overflow: "hidden",
+                  }}
+                  onClick={() => handleCellClick(params)}
+                >
+                  {params.value}
+                </a>
+              );
+            } else {
+              return (
+                <span
+                  style={{
+                    color: col.Color || "inherit",
+                    backgroundColor: col.BackgroundColor || "inherit",
+                    fontSize: col.FontSize || "inherit",
+                    textTransform: col.ColumTitleCapital ? "uppercase" : "none",
+                    padding: "5px",
+                    borderRadius: col.BorderRadius,
+                  }}
+                >
+                  {params.value}
+                </span>
+              );
+            }
+          },
+        };
+      });
+    // setColumns(columnData);
+    setColumns(columnData);
+  }, [allColumData, grupEnChekBox]);
+
+  const handleCellClick = (params) => {
+    setSelectedDepartmentId(params?.row?.deptid);
+    setSelectedEmployeeCode(params?.row?.employeecode);
+    setOpen(true);
+  };
+
+  const originalRows =
+    allColumIdWiseName &&
+    allRowData?.map((row, index) => {
+      const formattedRow = {};
+      Object.keys(row).forEach((key) => {
+        formattedRow[allColumIdWiseName[0][key]] = row[key];
+      });
+      return { id: index, ...formattedRow };
+    });
+
+  const [pageSize, setPageSize] = useState(10);
+  const [filteredRows, setFilteredRows] = useState(originalRows);
+  const [filters, setFilters] = useState({});
+
+  useEffect(() => {
+    const hasActiveFilters = Object.values(filters).some(
+      (val) => val && (Array.isArray(val) ? val.length > 0 : val !== "")
+    );
+
+    if (!hasActiveFilters) {
+      setFilteredRows(originalRows);
+    }
+  }, [originalRows, filters]);
+
+  useEffect(() => {
+    const newFilteredRows = originalRows?.filter((row) => {
+      const passesFilters = Object.keys(filters).every((filterField) => {
+        if (!filters[filterField] || filters[filterField].length === 0)
+          return true;
+
+        const filterValue = filters[filterField];
+
+        if (Array.isArray(filterValue)) {
+          return filterValue.includes(row[filterField]);
+        }
+
+        if (filterField.includes("_min") || filterField.includes("_max")) {
+          const baseField = filterField.replace("_min", "").replace("_max", "");
+          const rowValue = parseFloat(row[baseField]);
+          if (isNaN(rowValue)) return false;
+          if (filterField.includes("_min") && filterValue) {
+            if (rowValue < parseFloat(filterValue)) return false;
+          }
+          if (filterField.includes("_max") && filterValue) {
+            if (rowValue > parseFloat(filterValue)) return false;
+          }
+
+          return true;
+        }
+
+        const rowValue = row[filterField] ? row[filterField].toString() : "";
+        return rowValue.toLowerCase().includes(filterValue.toLowerCase());
+      });
+
+      if (selectedColors.length > 0 && row.PriorityId) {
+        if (!selectedColors.includes(row.PriorityId)) {
+          return false; // If the row's PriorityId doesn't match selected color filter
+        }
+      }
+
+      if (passesFilters && fromDate && toDate) {
+        const dateColumn = columns.find(
+          (col) =>
+            col.filterTypes && col.filterTypes.includes("DateRangeFilter")
+        );
+        if (dateColumn) {
+          const rowDate = new Date(row[dateColumn.field]);
+          if (rowDate >= fromDate && rowDate <= toDate) {
+            return true;
+          }
+          return false;
+        }
+      }
+
+      if (passesFilters) {
+        return Object.values(row).some((value) =>
+          value?.toString()?.toLowerCase().includes(commonSearch?.toLowerCase())
+        );
+      }
+      return false;
+    });
+    // setFilteredRows(newFilteredRows);
+    const groupedRows = groupRows(newFilteredRows, grupEnChekBox);
+
+    const rowsWithSrNo = groupedRows?.map((row, index) => ({
+      ...row,
+      srNo: index + 1,
+    }));
+    setFilteredRows(rowsWithSrNo);
+  }, [filters, originalRows, commonSearch, fromDate, toDate, columns]);
+
+  // useEffect(() => {
+  //   const newFilteredRows = originalRows?.filter((row) => {
+  //     let isMatch = true;
+  //     for (const filterField of Object.keys(filters)) {
+  //       const filterValue = filters[filterField];
+  //       if (!filterValue || filterValue.length === 0) continue;
+
+  //       if (filterField.includes("_min") || filterField.includes("_max")) {
+  //         const baseField = filterField.replace("_min", "").replace("_max", "");
+  //         const rowValue = parseFloat(row[baseField]);
+  //         if (isNaN(rowValue)) {
+  //           isMatch = false;
+  //           break;
+  //         }
+  //         if (
+  //           filterField.includes("_min") &&
+  //           parseFloat(filterValue) > rowValue
+  //         ) {
+  //           isMatch = false;
+  //           break;
+  //         }
+  //         if (
+  //           filterField.includes("_max") &&
+  //           parseFloat(filterValue) < rowValue
+  //         ) {
+  //           isMatch = false;
+  //           break;
+  //         }
+  //       } else if (Array.isArray(filterValue)) {
+  //         if (!filterValue.includes(row[filterField])) {
+  //           isMatch = false;
+  //           break;
+  //         }
+  //       } else {
+  //         const rowValue = row[filterField]?.toString().toLowerCase() || "";
+  //         if (!rowValue.includes(filterValue.toLowerCase())) {
+  //           isMatch = false;
+  //           break;
+  //         }
+  //       }
+  //     }
+  //     if (isMatch && selectedColors.length > 0 && row.PriorityId) {
+  //       if (!selectedColors.includes(row.PriorityId)) {
+  //         isMatch = false;
+  //       }
+  //     }
+  //     if (isMatch && fromDate && toDate) {
+  //       const dateColumn = columns.find(
+  //         (col) =>
+  //           col.filterTypes && col.filterTypes.includes("DateRangeFilter")
+  //       );
+  //       if (dateColumn) {
+  //         const rowDate = new Date(row[dateColumn.field]);
+  //         if (
+  //           isNaN(rowDate.getTime()) ||
+  //           rowDate < fromDate ||
+  //           rowDate > toDate
+  //         ) {
+  //           isMatch = false;
+  //         }
+  //       }
+  //     }
+  //     if (isMatch && commonSearch) {
+  //       const searchText = commonSearch.toLowerCase();
+  //       const hasMatch = Object.values(row).some((value) =>
+  //         value?.toString().toLowerCase().includes(searchText)
+  //       );
+  //       if (!hasMatch) {
+  //         isMatch = false;
+  //       }
+  //     }
+  //     return isMatch;
+  //   });
+  //   const rowsWithSrNo = newFilteredRows?.map((row, index) => ({
+  //     ...row,
+  //     srNo: index + 1,
+  //   }));
+  //   setFilteredRows(rowsWithSrNo);
+  // }, [
+  //   filters,
+  //   commonSearch,
+  //   fromDate,
+  //   toDate,
+  //   columns,
+  //   originalRows,
+  //   selectedColors,
+  // ]);
+
+  // filters, originalRows, commonSearch, fromDate, toDate, columns
+
+  const handleFilterChange = (field, value, filterType) => {
+    setFilters((prevFilters) => {
+      if (filterType === "MultiSelection") {
+        const selectedValues = prevFilters[field] || [];
+        let newValues;
+
+        if (value.checked) {
+          newValues = [...selectedValues, value.value];
+        } else {
+          newValues = selectedValues.filter((v) => v !== value.value);
+        }
+
+        return {
+          ...prevFilters,
+          [field]: newValues,
+        };
+      }
+      return {
+        ...prevFilters,
+        [field]: value,
+      };
+    });
+  };
+
+  const renderFilter = (col) => {
+    if (!col.filterTypes || col.filterTypes.length === 0) return null;
+    const filtersToRender = col.filterTypes;
+    return filtersToRender.map((filterType) => {
+      switch (filterType) {
+        case "NormalFilter":
+          return (
+            <div style={{ width: "100%", margin: "5px 10px" }}>
+              <CustomTextField
+                key={`filter-${col.field}-NormalFilter`}
+                type="text"
+                placeholder={`${col.headerNamesingle}`}
+                value={filters[col.field] || ""}
+                onChange={(e) => handleFilterChange(col.field, e.target.value)}
+                className="filter_column_box"
+              />
+            </div>
+          );
+        case "suggestionFilter": {
+          const uniqueValues = [
+            ...new Set(originalRows.map((row) => row[col.field])),
+          ];
+
+          return (
+            <div
+              key={`filter-${col.field}-suggestionFilter`}
+              style={{ width: "100%", margin: "10px 20px" }}
+            >
+              <CustomTextField
+                fullWidth
+                placeholder={`Search ${col.headerName}`}
+                value={filters[col.field] || ""}
+                onChange={(e) => handleFilterChange(col.field, e.target.value)}
+                InputProps={{
+                  inputProps: {
+                    list: `suggestions-${col.field}`,
+                  },
+                }}
+                customBorderColor="rgba(47, 43, 61, 0.2)"
+                borderoutlinedColor="#00CFE8"
+                customTextColor="#2F2B3DC7"
+                customFontSize="0.8125rem"
+                size="small"
+                variant="filled"
+              />
+              <datalist id={`suggestions-${col.field}`}>
+                {uniqueValues.map((value) => (
+                  <option
+                    key={`suggestion-${col.field}-${value}`}
+                    value={value}
+                  />
+                ))}
+              </datalist>
+            </div>
+          );
+        }
+
+        default:
+          return null;
+      }
+    });
+  };
+
+  const renderDateFilter = (col) => {
+    if (!col.filterTypes || col.filterTypes.length === 0) return null;
+    const filtersToRender = col.filterTypes;
+
+    return filtersToRender.map((filterType) => {
+      switch (filterType) {
+        case "DateRangeFilter":
+          return (
+            <DatePicker
+              key={`filter-${col.field}-DateRangeFilter`}
+              selectsRange
+              showYearDropdown
+              showMonthDropdown
+              monthsShown={2}
+              endDate={toDate}
+              selected={fromDate}
+              startDate={fromDate}
+              shouldCloseOnSelect={false}
+              id="date-range-picker-months"
+              onChange={handleOnChangeRange}
+              customInput={
+                <CustomTextField
+                  customBorderColor="rgba(47, 43, 61, 0.2)"
+                  borderoutlinedColor="#00CFE8"
+                  customTextColor="#2F2B3DC7"
+                  customFontSize="0.8125rem"
+                  label="Specific Date Range"
+                />
+              }
+              popperPlacement={popperPlacement}
+              dateFormat="dd-MM-yyyy"
+              placeholderText={"dd-mm-yyyy dd-mm-yyyy"}
+              className="rangeDatePicker"
+            />
+          );
+        default:
+          return null;
+      }
+    });
+  };
+
+  const renderFilterDropDown = (col) => {
+    if (!col.filterTypes || col.filterTypes.length === 0) return null;
+    const filtersToRender = col.filterTypes;
+
+    return filtersToRender.map((filterType) => {
+      switch (filterType) {
+        case "selectDropdownFilter": {
+          const uniqueValues = [
+            ...new Set(originalRows.map((row) => row[col.field])),
+          ];
+          return (
+            <div
+              key={`filter-${col.field}-selectDropdownFilter`}
+              style={{ width: "100%", margin: "20px" }}
+            >
+              <CustomTextField
+                select
+                fullWidth
+                label={`Select ${col.headerName}`}
+                value={filters[col.field] || ""}
+                onChange={(e) => handleFilterChange(col.field, e.target.value)}
+                customBorderColor="rgba(47, 43, 61, 0.2)"
+                borderoutlinedColor="#00CFE8"
+                customTextColor="#2F2B3DC7"
+                customFontSize="0.8125rem"
+                size="small"
+                className="selectDropDownMain"
+                variant="filled"
+              >
+                <MenuItem value="">
+                  <em>{`Select Employee`}</em>
+                </MenuItem>
+                {uniqueValues.map((value) => (
+                  <MenuItem key={`select-${col.field}-${value}`} value={value}>
+                    {value}
+                  </MenuItem>
+                ))}
+              </CustomTextField>
+            </div>
+          );
+        }
+        default:
+          return null;
+      }
+    });
+  };
+
+  const renderFilterRange = (col) => {
+    if (!col.filterTypes || col.filterTypes.length === 0) return null;
+    const filtersToRender = col.filterTypes;
+    return filtersToRender.map((filterType) => {
+      switch (filterType) {
+        case "RangeFilter":
+          return (
+            <div key={`filter-${col.field}-RangeFilter`}>
+              <div>
+                <Typography>{col.headerName} :</Typography>
+              </div>
+              <CustomTextField
+                type="number"
+                className="minTexBox"
+                customBorderColor="rgba(47, 43, 61, 0.2)"
+                placeholder="Min"
+                value={filters[`${col.field}_min`] || ""}
+                onChange={(e) => {
+                  const value = e.target.value
+                    ? parseFloat(e.target.value)
+                    : "";
+                  setFilters((prev) => ({
+                    ...prev,
+                    [`${col.field}_min`]: value,
+                  }));
+                }}
+                InputLabelProps={{ shrink: true }}
+              />
+
+              <CustomTextField
+                type="number"
+                placeholder="Max"
+                className="minTexBox"
+                customBorderColor="rgba(47, 43, 61, 0.2)"
+                value={filters[`${col.field}_max`] || ""}
+                onChange={(e) => {
+                  const value = e.target.value
+                    ? parseFloat(e.target.value)
+                    : "";
+                  setFilters((prev) => ({
+                    ...prev,
+                    [`${col.field}_max`]: value,
+                  }));
+                }}
+                InputLabelProps={{ shrink: true }}
+                style={{ marginLeft: "10px" }}
+              />
+            </div>
+          );
+        default:
+          return null;
+      }
+    });
+  };
+
+  const renderFilterMulti = (col) => {
+    if (!col.filterTypes || col.filterTypes.length === 0) return null;
+    const filtersToRender = col.filterTypes;
+    return filtersToRender.map((filterType) => {
+      switch (filterType) {
+        case "MultiSelection":
+          const uniqueValues = [
+            ...new Set(originalRows.map((row) => row[col.field])),
+          ];
+          return (
+            <div key={col.field}>
+              <Accordion>
+                <AccordionSummary
+                  expandIcon={<MdExpandMore />}
+                  aria-controls={`${col.field}-content`}
+                  id={`${col.field}-header`}
+                >
+                  <Typography>{col.headerName}</Typography>
+                </AccordionSummary>
+                <AccordionDetails className="gridMetalComboMain">
+                  {uniqueValues.map((value) => (
+                    <label key={value}>
+                      <input
+                        type="checkbox"
+                        value={value}
+                        checked={(filters[col.field] || []).includes(value)}
+                        onChange={(e) =>
+                          handleFilterChange(
+                            col.field,
+                            { value, checked: e.target.checked },
+                            "MultiSelection"
+                          )
+                        }
+                      />
+                      {value}
+                    </label>
+                  ))}
+                </AccordionDetails>
+              </Accordion>
+            </div>
+          );
+
+        default:
+          return null;
+      }
+    });
+  };
+
+  const handleOnChangeRange = (dates) => {
+    const [start, end] = dates;
+    setFromDate(start);
+    setToDate(end);
+  };
+
+  const handleClose = () => setOpen(false);
+
+  const [sideFilterOpen, setSideFilterOpen] = useState(false);
+  const toggleDrawer = (newOpen) => () => {
+    setSideFilterOpen(newOpen);
+  };
+
+  const renderSummary = () => {
+    return (
+      <div className="summaryBox">
+        {summaryData?.map((col) => {
+          return (
+            <div className="summaryItem" key={col.field}>
+              <div className="AllEmploe_boxViewTotal">
+                <div>
+                  <p className="AllEmplo_boxViewTotalValue">{col.value}</p>
+                  <p className="boxViewTotalTitle">{col.title}</p>
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    );
+  };
+
+  const toggleFullScreen = () => {
+    if (!document.fullscreenElement) {
+      if (gridContainerRef.current.requestFullscreen) {
+        gridContainerRef.current.requestFullscreen();
+      } else if (gridContainerRef.current.mozRequestFullScreen) {
+        gridContainerRef.current.mozRequestFullScreen();
+      } else if (gridContainerRef.current.webkitRequestFullscreen) {
+        gridContainerRef.current.webkitRequestFullscreen();
+      } else if (gridContainerRef.current.msRequestFullscreen) {
+        gridContainerRef.current.msRequestFullscreen();
+      }
+    } else {
+      if (document.exitFullscreen) {
+        document.exitFullscreen();
+      }
+    }
+  };
+
+  const exportToExcel = () => {
+    const worksheet = XLSX.utils.json_to_sheet(filteredRows);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Data");
+
+    const excelBuffer = XLSX.write(workbook, {
+      bookType: "xlsx",
+      type: "array",
+    });
+    const data = new Blob([excelBuffer], { type: EXCEL_TYPE });
+    saveAs(data, "data.xlsx");
+  };
+
+  const handleClearFilter = () => {
+    setFromDate(null);
+    setToDate(null);
+    setCommonSearch("");
+    setFilters({});
+  };
+
+  const handleSendEmail = () => {
+    const templateParams = {
+      to_name: "Recipient",
+      from_name: "Sender",
+      message: "Your message content here",
+    };
+    emailjs
+      .send(
+        "YOUR_SERVICE_ID",
+        "YOUR_TEMPLATE_ID",
+        templateParams,
+        "YOUR_USER_ID"
+      )
+      .then(
+        (response) => {
+          console.log("Email sent successfully", response);
+        },
+        (error) => {
+          console.log("Error sending email", error);
+        }
+      );
+  };
+
+  const handlePrint = () => {};
+
+  const handleImg = () => {
+    setShowImageView((prevState) => !prevState);
+  };
+
+  const toggleColorSelection = (colorId) => {
+    setSelectedColors((prevSelected) => {
+      if (prevSelected.includes(colorId)) {
+        return prevSelected.filter((id) => id !== colorId);
+      } else {
+        return [...prevSelected, colorId];
+      }
+    });
+  };
+
+  const handleGrupEnChekBoxChange = (field) => {
+    setGrupEnChekBox((prev) => ({
+      ...prev,
+      [field]: !prev[field],
+    }));
+  };
+
+  const handleClickOpenPoup = () => {
+    setOpenPopup(true);
+  };
+
+  const handleClosePopup = () => {
+    setOpenPopup(false);
+  };
+
+  const handleCheckboxChange = (event) => {
+    setIsChecked(event.target.checked);
+  };
+
+  const handleSave = () => {
+    console.log("Saving data...");
+    console.log("Selected Date:", selectedDate);
+    console.log("Selected Rd3 Name:", selectedRd3Name);
+  };
+
+  const onDragEnd = () => {};
+
+  const groupRows = (rows, groupCheckBox) => {
+    const grouped = [];
+
+    if (!Array.isArray(rows)) {
+      console.warn("groupRows: rows is not an array!", rows);
+      return grouped;
+    }
+
+    rows.forEach((row) => {
+      const newRow = { ...row };
+      const keyParts = [];
+      for (const [field, checked] of Object.entries(groupCheckBox)) {
+        if (checked) {
+          keyParts.push(newRow[field]);
+        } else {
+          newRow[field] = "-";
+        }
+      }
+
+      const groupKey = keyParts.join("|");
+      if (!grouped[groupKey]) {
+        grouped[groupKey] = { ...newRow };
+      } else {
+        for (const col of OtherKeyData?.rd1) {
+          if (!col.GrupChekBox && typeof newRow[col.field] === "number") {
+            grouped[groupKey][col.field] =
+              (grouped[groupKey][col.field] || 0) + (newRow[col.field] || 0);
+          }
+        }
+      }
+    });
+
+    return Object.values(grouped).map((item, index) => ({
+      ...item,
+      id: index,
+      srNo: index + 1,
+    }));
+  };
+
+  useEffect(() => {
+    let metalAmount = 0;
+    let totalDiamondAmount = 0;
+    let totalCSTAmount = 0;
+    let totalMISCAmount = 0;
+    let metalWeight = 0;
+    let diamondWeight = 0,
+      diamondPcs = 0;
+    let colorStoneWeight = 0,
+      colorStonePcs = 0;
+    let miscWeight = 0,
+      miscPcs = 0;
+    let totalPureWeight = 0;
+    let totalAmount = 0;
+
+    filteredRows?.forEach((item) => {
+      const { material, amount, weight, pcs, purewt } = item;
+
+      if (material === "METAL") {
+        metalAmount += amount;
+      }
+
+      if (material === "METAL" || material === "FINDING") {
+        metalWeight += weight;
+      }
+
+      if (material === "DIAMOND") {
+        totalDiamondAmount += amount;
+        diamondWeight += weight;
+        diamondPcs += pcs;
+      }
+
+      if (material === "COLOR STONE") {
+        totalCSTAmount += amount;
+        colorStoneWeight += weight;
+        colorStonePcs += pcs;
+      }
+      if (material === "MISC") {
+        totalMISCAmount += amount;
+        miscWeight += weight;
+        miscPcs += pcs;
+      }
+
+      totalPureWeight += purewt;
+      totalAmount += amount;
+    });
+
+    const finalSummary = [
+      { title: "Total Metal Amt", value: metalAmount?.toFixed(2) },
+      { title: "Total Dia. Amt", value: totalDiamondAmount?.toFixed(2) },
+      { title: "Total CST Amt", value: totalCSTAmount?.toFixed(2) },
+      { title: "Total MISC Amt", value: totalMISCAmount?.toFixed(2) },
+      { title: "Metal Weight", value: metalWeight?.toFixed(3) },
+      {
+        title: "Diamond Wt/Pcs",
+        value: `${diamondWeight?.toFixed(3)} / ${diamondPcs}`,
+      },
+      {
+        title: "Colorstone Wt/Pcs",
+        value: `${colorStoneWeight?.toFixed(3)} / ${colorStonePcs}`,
+      },
+      { title: "MISC Wt/Pcs", value: `${miscWeight?.toFixed(3)} / ${miscPcs}` },
+      { title: "Total Pure Wt", value: totalPureWeight?.toFixed(3) },
+      { title: "Total Amount", value: totalAmount?.toFixed(2) },
+    ];
+
+    setSummaryData(finalSummary);
+  }, [filteredRows]);
+
+  // const groupedRows = useMemo(() => {
+  //   const rowsToGroup = filteredRows?.length > 0 ? filteredRows : originalRows;
+  //   return groupRows(rowsToGroup, grupEnChekBox);
+  // }, [filteredRows, grupEnChekBox, originalRows]);
+
+  // useEffect(() => {
+  //   setFilteredRows(groupedRows);
+  // }, [groupedRows]);
+
+  // console.log('summaryData', summaryData);
+
+  // console.log('filteredRows', filteredRows);
+
+  // const columnsNew = [
+  //   {
+  //     field: "id",
+  //     headerName: "Sr#",
+  //     width: 100,
+  //     renderCell: (params) => {
+  //       const rowIndex =
+  //       filteredRows?.findIndex((row) => row.id === params.row.id) + 1;
+  //       return (
+  //         <div style={{ display: "flex", alignItems: "center" }}>
+  //           <span>{rowIndex}</span>
+  //         </div>
+  //       );
+  //     },
+  //   },
+  //   ...columns.map((column) => {
+  //     return column;
+  //   }),
+  // ];
+
+  return (
+    <DragDropContext onDragEnd={onDragEnd}>
+      <div
+        className="MaterialWiseSaleReport_mainGridView"
+        sx={{ width: "100vw", display: "flex", flexDirection: "column" }}
+        ref={gridContainerRef}
+      >
+        {isLoading && (
+          <div className="loader-overlay">
+            <CircularProgress className="loadingBarManage" />
+          </div>
+        )}
+
+        <Dialog open={openPopup} onClose={handleClosePopup}>
+          <div className="ConversionMain">
+            <div className="filterDrawer">
+              <p className="dataGridPopupColumSetting">Column Settings</p>
+              <Droppable droppableId="columns-list" type="COLUMN">
+                {(provided) => (
+                  <div ref={provided.innerRef} {...provided.droppableProps}>
+                    {columns.map((col, index) => (
+                      <DraggableColumn
+                        key={col.field}
+                        col={col}
+                        index={index}
+                        checkedColumns={checkedColumns}
+                        setCheckedColumns={setCheckedColumns}
+                      />
+                    ))}
+                    {provided.placeholder}
+                  </div>
+                )}
+              </Droppable>
+              <Button>Save</Button>
+            </div>
+          </div>
+        </Dialog>
+
+        <Drawer
+          open={sideFilterOpen}
+          onClose={toggleDrawer(false)}
+          className="drawerMain"
+        >
+          <div
+            style={{
+              margin: "20px 10px 0px 10px",
+              fontSize: "25px",
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+            }}
+          >
+            <button onClick={handleClearFilter} className="ClearFilterButton">
+              <MdOutlineFilterAltOff style={{ fontSize: "25px" }} />
+              Clear
+            </button>
+
+            <CircleX
+              style={{
+                cursor: "pointer",
+                height: "30px",
+                width: "30px",
+              }}
+              onClick={() => setSideFilterOpen(false)}
+            />
+          </div>
+          {columns
+            .filter((col) => col.filterable)
+            .map((col) => (
+              <div key={col.field}>{renderFilterMulti(col)}</div>
+            ))}
+
+          {columns
+            .filter((col) => col.filterable)
+            .map((col) => (
+              <div key={col.field}>{renderFilterRange(col)}</div>
+            ))}
+
+          {columns
+            .filter((col) => col.filterable)
+            .map((col) => (
+              <div key={col.field} style={{ display: "flex", gap: "10px" }}>
+                {renderFilterDropDown(col)}
+              </div>
+            ))}
+
+          {columns
+            .filter((col) => col.filterable)
+            .map((col) => (
+              <div key={col.field} style={{ display: "flex", gap: "10px" }}>
+                {renderFilter(col)}
+              </div>
+            ))}
+        </Drawer>
+
+        <div style={{ display: "flex", justifyContent: "space-between" }}>
+          {renderSummary()}
+
+          {masterKeyData?.ColumnSettingPopup && (
+            <div className="topSettingBtnPopup" onClick={handleClickOpenPoup}>
+              <AiFillSetting style={{ height: "25px", width: "25px" }} />
+            </div>
+          )}
+
+          {masterKeyData?.fullScreenGridButton && (
+            <button className="fullScreenButton" onClick={toggleFullScreen}>
+              <RiFullscreenLine
+                style={{ marginInline: "5px", fontSize: "30px" }}
+              />
+            </button>
+          )}
+        </div>
+
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            padding: "10px 5px",
+          }}
+        >
+          <div style={{ display: "flex", gap: "10px", alignItems: "end" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+              <button onClick={toggleDrawer(true)} className="FiletrBtnOpen">
+                <MdOutlineFilterAlt style={{ height: "30px", width: "30px" }} />
+              </button>
+              <DualDatePicker
+                filterState={filterState}
+                setFilterState={setFilterState}
+                validDay={31}
+                validMonth={1}
+              />
+              {/* <p
+                style={{ fontWeight: 600, color: "#696262", fontSize: "17px" }}
+              >
+                {" "}
+                Last Updated :- {lastUpdated}
+              </p> */}
+            </div>
+            {columns
+              .filter((col) => col.filterable)
+              .map((col) => (
+                <div key={col.field} style={{ display: "flex", gap: "10px" }}>
+                  {renderDateFilter(col)}
+                </div>
+              ))}
+
+            <div
+              className="date-selector"
+              style={{ display: "flex", gap: "10px" }}
+            >
+              {masterKeyData?.progressFilter && (
+                <button
+                  className="FiletrBtnOpen"
+                  onClick={() => setOpenPDate(!openPDate)}
+                >
+                  Set P.Date
+                </button>
+              )}
+              <div
+                className={`transition-container ${
+                  openPDate ? "open" : "closed"
+                }`}
+                style={{
+                  transition: "0.5s ease",
+                  opacity: openPDate ? 1 : 0,
+                  maxHeight: openPDate ? "300px" : "0",
+                  overflow: "hidden",
+                  display: openPDate ? "flex" : "none",
+                  gap: "10px",
+                }}
+              >
+                <DatePicker
+                  selected={selectedDate}
+                  onChange={(date) => setSelectedDate(date)}
+                  dateFormat="dd-MM-yyyy"
+                  customInput={
+                    <CustomTextField
+                      customBorderColor="rgba(47, 43, 61, 0.2)"
+                      borderoutlinedColor="#00CFE8"
+                      customTextColor="#2F2B3DC7"
+                      customFontSize="0.8125rem"
+                      style={{ Width: "100px" }}
+                    />
+                  }
+                  placeholderText="Select Date"
+                />
+
+                {/* <CustomTextField
+                  select
+                  fullWidth
+                  value={filters.someField || ""}
+                  onChange={(e) => handleFilterChange(e.target.value)}
+                  customBorderColor="rgba(47, 43, 61, 0.2)"
+                  borderoutlinedColor="#00CFE8"
+                  customTextColor="#2F2B3DC7"
+                  customFontSize="0.8125rem"
+                  size="small"
+                  className="selectDropDownMain"
+                  variant="filled"
+                >
+                  <MenuItem value="">
+                    <em>None</em>
+                  </MenuItem>
+                  {masterData.rd3.map((item) => (
+                    <MenuItem key={item.id} value={item.name}>
+                      {item.name}
+                    </MenuItem>
+                  ))}
+                </CustomTextField> */}
+
+                <button
+                  onClick={handleSave}
+                  variant="contained"
+                  className="FiletrBtnOpen"
+                  sx={{ marginTop: 2 }}
+                >
+                  Save
+                </button>
+              </div>
+            </div>
+            {/* <div style={{ display: "flex" }}>
+              {masterData?.rd3.map((data) => (
+                <abbr title={data?.name}>
+                  <p
+                    key={data.id}
+                    style={{
+                      backgroundColor: data?.colorcode,
+                      cursor: "pointer",
+                      border: selectedColors.includes(data.id)
+                        ? "2px solid black"
+                        : "none",
+                    }}
+                    className="colorFiled"
+                    onClick={() => toggleColorSelection(data.id)} // Handle color click
+                  ></p>
+                </abbr>
+              ))}
+            </div> */}
+          </div>
+          <div style={{ display: "flex", alignItems: "end", gap: "10px" }}>
+            {masterKeyData?.mailButton && (
+              <img
+                src={mainButton}
+                style={{ cursor: "pointer" }}
+                onClick={handleSendEmail}
+              />
+            )}
+
+            {masterKeyData?.PrintButton && (
+              <img
+                src={printButton}
+                style={{ cursor: "pointer", height: "40px", width: "40px" }}
+                onClick={handlePrint}
+              />
+            )}
+
+            {masterKeyData?.imageView && (
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                {showImageView ? (
+                  <img
+                    src={gridView}
+                    className="imageViewImgGrid"
+                    onClick={handleImg}
+                  />
+                ) : (
+                  <img
+                    src={imageView}
+                    className="imageViewImg"
+                    onClick={handleImg}
+                  />
+                )}
+              </div>
+            )}
+
+            {/* {masterKeyData?.fullScreenGridButton && (
+              <button className="fullScreenButton" onClick={toggleFullScreen}>
+                <RiFullscreenLine
+                  style={{ marginInline: "5px", fontSize: "30px" }}
+                />
+              </button>
+            )} */}
+
+            <CustomTextField
+              type="text"
+              placeholder="Search..."
+              value={commonSearch}
+              customBorderColor="rgba(47, 43, 61, 0.2)"
+              onChange={(e) => setCommonSearch(e.target.value)}
+              InputProps={{
+                endAdornment: commonSearch && (
+                  <InputAdornment position="end">
+                    <IconButton
+                      edge="end"
+                      size="small"
+                      onClick={() => setCommonSearch("")}
+                      aria-label="clear"
+                    >
+                      <CircleX size={20} color="#888" />
+                    </IconButton>
+                  </InputAdornment>
+                ),
+              }}
+              style={{
+                width: "200px",
+              }}
+              className="mainSearchTextBox"
+              sx={{
+                "& .MuiInputBase-input": {
+                  padding: "4.5px !important",
+                },
+              }}
+            />
+
+            {masterKeyData?.ExcelExport && (
+              <button onClick={exportToExcel} className="All_exportButton">
+                <svg
+                  stroke="currentColor"
+                  fill="currentColor"
+                  stroke-width="0"
+                  viewBox="0 0 384 512"
+                  height="2em"
+                  width="2em"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path d="M224 136V0H24C10.7 0 0 10.7 0 24v464c0 13.3 10.7 24 24 24h336c13.3 0 24-10.7 24-24V160H248c-13.2 0-24-10.8-24-24zm60.1 106.5L224 336l60.1 93.5c5.1 8-.6 18.5-10.1 18.5h-34.9c-4.4 0-8.5-2.4-10.6-6.3C208.9 405.5 192 373 192 373c-6.4 14.8-10 20-36.6 68.8-2.1 3.9-6.1 6.3-10.5 6.3H110c-9.5 0-15.2-10.5-10.1-18.5l60.3-93.5-60.3-93.5c-5.2-8 .6-18.5 10.1-18.5h34.8c4.4 0 8.5 2.4 10.6 6.3 26.1 48.8 20 33.6 36.6 68.5 0 0 6.1-11.7 36.6-68.5 2.1-3.9 6.2-6.3 10.6-6.3H274c9.5-.1 15.2 10.4 10.1 18.4zM384 121.9v6.1H256V0h6.1c6.4 0 12.5 2.5 17 7l97.9 98c4.5 4.5 7 10.6 7 16.9z"></path>
+                </svg>
+              </button>
+            )}
+
+            {/* <button onClick={handleClearFilter} className="ClearFilterButton">
+              <svg
+                stroke="currentColor"
+                fill="currentColor"
+                stroke-width="0"
+                viewBox="0 0 512 512"
+                class="mr-2"
+                height="1em"
+                width="1em"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path d="M487.976 0H24.028C2.71 0-8.047 25.866 7.058 40.971L192 225.941V432c0 7.831 3.821 15.17 10.237 19.662l80 55.98C298.02 518.69 320 507.493 320 487.98V225.941l184.947-184.97C520.021 25.896 509.338 0 487.976 0z"></path>
+              </svg>
+              Clear Filters
+            </button> */}
+          </div>
+        </div>
+        <div
+          ref={gridRef}
+          style={{ height: "calc(100vh - 170px)", margin: "5px" }}
+        >
+          {showImageView ? (
+            <div>
+              <img
+                className="imageViewImgage"
+                src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQVXLW1j3zO3UP6dIu96A3IpZihTe3fVRsm9g&s"
+              />
+              <img
+                className="imageViewImgage"
+                src="https://help.earthsoft.com/ent-data_grid_widget-sample.png"
+              />
+              <img
+                className="imageViewImgage"
+                src="https://i0.wp.com/thewwwmagazine.com/wp-content/uploads/2020/07/Screenshot-2020-07-09-at-7.36.56-PM.png?resize=1404%2C1058&ssl=1"
+              />
+              <img
+                className="imageViewImgage"
+                src="https://docs.devexpress.com/WPF/images/wpf-data-grid.png"
+              />
+              <img
+                className="imageViewImgage"
+                src="https://www.infragistics.com/products/ignite-ui-web-components/web-components/images/general/landing-grid-page.png"
+              />
+              <img
+                className="imageViewImgage"
+                src="https://i0.wp.com/angularscript.com/wp-content/uploads/2020/04/Angular-Data-Grid-For-The-Enterprise-nGrid.png?fit=1245%2C620&ssl=1"
+              />
+              <img
+                className="imageViewImgage"
+                src="https://angularscript.com/wp-content/uploads/2015/12/ng-bootstrap-grid-370x297.jpg"
+              />
+            </div>
+          ) : (
+            <DataGrid
+              rows={filteredRows ?? []}
+              columns={columns ?? []}
+              pageSize={pageSize}
+              autoHeight={false}
+              columnBuffer={17}
+              localeText={{ noRowsLabel: "No Data" }}
+              initialState={{
+                columns: {
+                  columnVisibilityModel: {
+                    status: false,
+                    traderName: false,
+                  },
+                },
+              }}
+              slots={{
+                pagination: CustomPagination,
+              }}
+              onPageSizeChange={(newPageSize) => setPageSize(newPageSize)}
+              className="simpleGridView"
+              pagination
+              sx={{
+                "& .MuiDataGrid-menuIcon": {
+                  display: "none",
+                },
+                marginLeft: 2,
+                marginRight: 2,
+                marginBottom: 2,
+              }}
+            />
+          )}
+        </div>
+
+        {status500 && (
+          <div
+            style={{ display: "flex", width: "100%", justifyContent: "center" }}
+          >
+            <Box
+              minHeight="70vh"
+              display="flex"
+              alignItems="center"
+              justifyContent="center"
+              p={2}
+            >
+              <Paper
+                elevation={3}
+                sx={{
+                  maxWidth: 500,
+                  width: "100%",
+                  p: 4,
+                  borderRadius: "20px",
+                  textAlign: "center",
+                  boxShadow: "0 4px 20px rgba(0,0,0,0.1)",
+                }}
+              >
+                <Box
+                  display="flex"
+                  justifyContent="center"
+                  alignItems="center"
+                  mb={2}
+                >
+                  <AlertTriangle size={48} color="#f44336" />
+                </Box>
+
+                <Typography variant="h5" fontWeight={600} gutterBottom>
+                  Something Went Wrong
+                </Typography>
+
+                <Typography variant="body1" color="text.secondary" mb={3}>
+                  We're sorry, but an unexpected error has occurred. Please try
+                  again later.
+                </Typography>
+
+                {/* <Button
+                  variant="contained"
+                  color="error"
+                  sx={{ textTransform: "none", borderRadius: "10px", px: 4 }}
+                >
+                  Try Again
+                </Button> */}
+              </Paper>
+            </Box>
+          </div>
+        )}
+      </div>
+    </DragDropContext>
+  );
+}

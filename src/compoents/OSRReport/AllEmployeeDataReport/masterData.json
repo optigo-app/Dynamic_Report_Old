@@ -1,0 +1,1245 @@
+{
+  "rd": [
+      {
+          "id": 1,
+          "jadauname": "Jadau Casting"
+      },
+      {
+          "id": 2,
+          "jadauname": "Jadau Sourcing"
+      },
+      {
+          "id": 3,
+          "jadauname": "Jadau Collet"
+      },
+      {
+          "id": 4,
+          "jadauname": "Making Casting"
+      },
+      {
+          "id": 5,
+          "jadauname": "Making  Collet"
+      },
+      {
+          "id": 6,
+          "jadauname": "baba Casting3"
+      },
+      {
+          "id": 7,
+          "jadauname": "Out Casting"
+      },
+      {
+          "id": 9,
+          "jadauname": "Casting"
+      },
+      {
+          "id": 10,
+          "jadauname": "Polki"
+      }
+  ],
+  "rd1": [
+      {
+          "id": 1,
+          "productionstatusname": "Pending Request",
+          "DisplayOrder": 160
+      },
+      {
+          "id": 2,
+          "productionstatusname": "Casting-Issue",
+          "DisplayOrder": 50
+      },
+      {
+          "id": 3,
+          "productionstatusname": "Casting-Receive",
+          "DisplayOrder": 60
+      },
+      {
+          "id": 4,
+          "productionstatusname": "Filing-Issue",
+          "DisplayOrder": 90
+      },
+      {
+          "id": 5,
+          "productionstatusname": "Filing-Receive",
+          "DisplayOrder": 100
+      },
+      {
+          "id": 8,
+          "productionstatusname": "Pre Polish-Issue",
+          "DisplayOrder": 190
+      },
+      {
+          "id": 9,
+          "productionstatusname": "Pre Polish-Receive",
+          "DisplayOrder": 200
+      },
+      {
+          "id": 14,
+          "productionstatusname": "Soldering-Issue",
+          "DisplayOrder": 240
+      },
+      {
+          "id": 15,
+          "productionstatusname": "Soldering Receive",
+          "DisplayOrder": 230
+      },
+      {
+          "id": 16,
+          "productionstatusname": "setting-Issue",
+          "DisplayOrder": 210
+      },
+      {
+          "id": 17,
+          "productionstatusname": "setting-Receive",
+          "DisplayOrder": 220
+      },
+      {
+          "id": 20,
+          "productionstatusname": "Sprue Grinding-Issue",
+          "DisplayOrder": 270
+      },
+      {
+          "id": 21,
+          "productionstatusname": "Sprue Grinding-Receive",
+          "DisplayOrder": 280
+      },
+      {
+          "id": 24,
+          "productionstatusname": "Final Polish-Issue",
+          "DisplayOrder": 130
+      },
+      {
+          "id": 25,
+          "productionstatusname": "Final Polish-Receive",
+          "DisplayOrder": 140
+      },
+      {
+          "id": 26,
+          "productionstatusname": "Plate-Issue",
+          "DisplayOrder": 170
+      },
+      {
+          "id": 27,
+          "productionstatusname": "Plate-Receive",
+          "DisplayOrder": 180
+      },
+      {
+          "id": 28,
+          "productionstatusname": "Hand Over Export",
+          "DisplayOrder": 150
+      },
+      {
+          "id": 33,
+          "productionstatusname": "Bagging Running",
+          "DisplayOrder": 40
+      },
+      {
+          "id": 34,
+          "productionstatusname": "Bagging Completed",
+          "DisplayOrder": 30
+      },
+      {
+          "id": 35,
+          "productionstatusname": "Sprue Cutting-Issue",
+          "DisplayOrder": 250
+      },
+      {
+          "id": 36,
+          "productionstatusname": "Sprue Cutting-Receive",
+          "DisplayOrder": 260
+      },
+      {
+          "id": 40,
+          "productionstatusname": "Wax Engage Running",
+          "DisplayOrder": 300
+      },
+      {
+          "id": 41,
+          "productionstatusname": "Wax Engage Completed",
+          "DisplayOrder": 290
+      },
+      {
+          "id": 42,
+          "productionstatusname": "Wax Setting-Issue",
+          "DisplayOrder": 310
+      },
+      {
+          "id": 43,
+          "productionstatusname": "Wax Setting-Receive",
+          "DisplayOrder": 320
+      },
+      {
+          "id": 162,
+          "productionstatusname": "Bag Preparation Wax Setting-Issue",
+          "DisplayOrder": 10
+      },
+      {
+          "id": 163,
+          "productionstatusname": "Bag Preparation Wax Setting-Receive",
+          "DisplayOrder": 20
+      },
+      {
+          "id": 164,
+          "productionstatusname": "RPT-Issue",
+          "DisplayOrder": 100
+      },
+      {
+          "id": 165,
+          "productionstatusname": "RPT-Receive",
+          "DisplayOrder": 100
+      },
+      {
+          "id": 166,
+          "productionstatusname": "RM-Issue",
+          "DisplayOrder": 100
+      },
+      {
+          "id": 167,
+          "productionstatusname": "RM-Receive",
+          "DisplayOrder": 100
+      },
+      {
+          "id": 168,
+          "productionstatusname": "CAD-Issue",
+          "DisplayOrder": 100
+      },
+      {
+          "id": 169,
+          "productionstatusname": "CAD-Receive",
+          "DisplayOrder": 100
+      },
+      {
+          "id": 170,
+          "productionstatusname": "Production manager-Issue",
+          "DisplayOrder": 100
+      },
+      {
+          "id": 171,
+          "productionstatusname": "Production manager-Receive",
+          "DisplayOrder": 100
+      },
+      {
+          "id": 172,
+          "productionstatusname": "SEGREGATION-Issue",
+          "DisplayOrder": 100
+      },
+      {
+          "id": 173,
+          "productionstatusname": "SEGREGATION-Receive",
+          "DisplayOrder": 100
+      },
+      {
+          "id": 174,
+          "productionstatusname": "Ske1-Issue",
+          "DisplayOrder": 100
+      },
+      {
+          "id": 175,
+          "productionstatusname": "Ske1-Receive",
+          "DisplayOrder": 100
+      },
+      {
+          "id": 178,
+          "productionstatusname": "Final Polish Qc-Issue",
+          "DisplayOrder": 100
+      },
+      {
+          "id": 179,
+          "productionstatusname": "Final Polish Qc-Receive",
+          "DisplayOrder": 100
+      },
+      {
+          "id": 180,
+          "productionstatusname": "Wax Pulling-Issue",
+          "DisplayOrder": 100
+      },
+      {
+          "id": 181,
+          "productionstatusname": "Wax Pulling-Receive",
+          "DisplayOrder": 100
+      },
+      {
+          "id": 182,
+          "productionstatusname": "Assembly-Issue",
+          "DisplayOrder": 100
+      },
+      {
+          "id": 183,
+          "productionstatusname": "Assembly-Receive",
+          "DisplayOrder": 100
+      },
+      {
+          "id": 184,
+          "productionstatusname": "Rolling-Issue",
+          "DisplayOrder": 100
+      },
+      {
+          "id": 185,
+          "productionstatusname": "Rolling-Receive",
+          "DisplayOrder": 100
+      },
+      {
+          "id": 186,
+          "productionstatusname": "Sk1-Issue",
+          "DisplayOrder": 100
+      },
+      {
+          "id": 187,
+          "productionstatusname": "Sk1-Receive",
+          "DisplayOrder": 100
+      },
+      {
+          "id": 188,
+          "productionstatusname": "Wax Cleaning-Issue",
+          "DisplayOrder": 100
+      },
+      {
+          "id": 189,
+          "productionstatusname": "Wax Cleaning-Receive",
+          "DisplayOrder": 100
+      },
+      {
+          "id": 190,
+          "productionstatusname": "AMDEPT1-Issue",
+          "DisplayOrder": 100
+      },
+      {
+          "id": 191,
+          "productionstatusname": "AMDEPT1-Receive",
+          "DisplayOrder": 100
+      },
+      {
+          "id": 192,
+          "productionstatusname": "AMDEPT1-Pending",
+          "DisplayOrder": 100
+      },
+      {
+          "id": 193,
+          "productionstatusname": "Assembly-Pending",
+          "DisplayOrder": 100
+      },
+      {
+          "id": 194,
+          "productionstatusname": "Bag Preparation Wax Setting-Pending",
+          "DisplayOrder": 100
+      },
+      {
+          "id": 195,
+          "productionstatusname": "Bagging-Pending",
+          "DisplayOrder": 100
+      },
+      {
+          "id": 196,
+          "productionstatusname": "CAD-Pending",
+          "DisplayOrder": 100
+      },
+      {
+          "id": 197,
+          "productionstatusname": "Casting-Pending",
+          "DisplayOrder": 100
+      },
+      {
+          "id": 198,
+          "productionstatusname": "Filing-Pending",
+          "DisplayOrder": 100
+      },
+      {
+          "id": 199,
+          "productionstatusname": "Final Polish-Pending",
+          "DisplayOrder": 100
+      },
+      {
+          "id": 200,
+          "productionstatusname": "Final Polish Qc-Pending",
+          "DisplayOrder": 100
+      },
+      {
+          "id": 201,
+          "productionstatusname": "Plate-Pending",
+          "DisplayOrder": 100
+      },
+      {
+          "id": 202,
+          "productionstatusname": "Pre Polish-Pending",
+          "DisplayOrder": 100
+      },
+      {
+          "id": 203,
+          "productionstatusname": "Production manager-Pending",
+          "DisplayOrder": 100
+      },
+      {
+          "id": 204,
+          "productionstatusname": "RM-Pending",
+          "DisplayOrder": 100
+      },
+      {
+          "id": 205,
+          "productionstatusname": "Rolling-Pending",
+          "DisplayOrder": 100
+      },
+      {
+          "id": 206,
+          "productionstatusname": "RPT-Pending",
+          "DisplayOrder": 100
+      },
+      {
+          "id": 207,
+          "productionstatusname": "SEGREGATION-Pending",
+          "DisplayOrder": 100
+      },
+      {
+          "id": 208,
+          "productionstatusname": "setting-Pending",
+          "DisplayOrder": 100
+      },
+      {
+          "id": 209,
+          "productionstatusname": "Sk1-Pending",
+          "DisplayOrder": 100
+      },
+      {
+          "id": 210,
+          "productionstatusname": "Ske1-Pending",
+          "DisplayOrder": 100
+      },
+      {
+          "id": 211,
+          "productionstatusname": "Soldering-Pending",
+          "DisplayOrder": 100
+      },
+      {
+          "id": 212,
+          "productionstatusname": "Sprue Cutting-Pending",
+          "DisplayOrder": 100
+      },
+      {
+          "id": 213,
+          "productionstatusname": "Sprue Grinding-Pending",
+          "DisplayOrder": 100
+      },
+      {
+          "id": 214,
+          "productionstatusname": "Wax Cleaning-Pending",
+          "DisplayOrder": 100
+      },
+      {
+          "id": 215,
+          "productionstatusname": "Wax Pulling-Pending",
+          "DisplayOrder": 100
+      },
+      {
+          "id": 217,
+          "productionstatusname": "Wax Setting-Pending",
+          "DisplayOrder": 100
+      },
+      {
+          "id": 218,
+          "productionstatusname": "EC-Issue",
+          "DisplayOrder": 100
+      },
+      {
+          "id": 219,
+          "productionstatusname": "EC-Receive",
+          "DisplayOrder": 100
+      },
+      {
+          "id": 220,
+          "productionstatusname": "EC-Pending",
+          "DisplayOrder": 100
+      },
+      {
+          "id": 221,
+          "productionstatusname": "CAM-Issue",
+          "DisplayOrder": 100
+      },
+      {
+          "id": 222,
+          "productionstatusname": "CAM-Receive",
+          "DisplayOrder": 100
+      },
+      {
+          "id": 223,
+          "productionstatusname": "CAM-Pending",
+          "DisplayOrder": 100
+      },
+      {
+          "id": 224,
+          "productionstatusname": "QC setting-Issue",
+          "DisplayOrder": 100
+      },
+      {
+          "id": 225,
+          "productionstatusname": "QC setting-Receive",
+          "DisplayOrder": 100
+      },
+      {
+          "id": 226,
+          "productionstatusname": "QC setting-Pending",
+          "DisplayOrder": 100
+      },
+      {
+          "id": 227,
+          "productionstatusname": "MFGTEST12-Issue",
+          "DisplayOrder": 100
+      },
+      {
+          "id": 228,
+          "productionstatusname": "MFGTEST12-Receive",
+          "DisplayOrder": 100
+      },
+      {
+          "id": 229,
+          "productionstatusname": "MFGTEST12-Pending",
+          "DisplayOrder": 100
+      },
+      {
+          "id": 230,
+          "productionstatusname": "Findings-Issue",
+          "DisplayOrder": 100
+      },
+      {
+          "id": 231,
+          "productionstatusname": "Findings-Receive",
+          "DisplayOrder": 100
+      },
+      {
+          "id": 232,
+          "productionstatusname": "Findings-Pending",
+          "DisplayOrder": 100
+      },
+      {
+          "id": 233,
+          "productionstatusname": "Cleaning-Issue",
+          "DisplayOrder": 100
+      },
+      {
+          "id": 234,
+          "productionstatusname": "Cleaning-Receive",
+          "DisplayOrder": 100
+      },
+      {
+          "id": 235,
+          "productionstatusname": "Cleaning-Pending",
+          "DisplayOrder": 100
+      },
+      {
+          "id": 236,
+          "productionstatusname": "PROMISE-Issue",
+          "DisplayOrder": 100
+      },
+      {
+          "id": 237,
+          "productionstatusname": "PROMISE-Receive",
+          "DisplayOrder": 100
+      },
+      {
+          "id": 238,
+          "productionstatusname": "PROMISE-Pending",
+          "DisplayOrder": 100
+      },
+      {
+          "id": 239,
+          "productionstatusname": "AM1-Issue",
+          "DisplayOrder": 100
+      },
+      {
+          "id": 240,
+          "productionstatusname": "AM1-Receive",
+          "DisplayOrder": 100
+      },
+      {
+          "id": 241,
+          "productionstatusname": "AM1-Pending",
+          "DisplayOrder": 100
+      },
+      {
+          "id": 242,
+          "productionstatusname": "EC polish-Issue",
+          "DisplayOrder": 100
+      },
+      {
+          "id": 243,
+          "productionstatusname": "EC polish-Receive",
+          "DisplayOrder": 100
+      },
+      {
+          "id": 244,
+          "productionstatusname": "EC polish-Pending",
+          "DisplayOrder": 100
+      },
+      {
+          "id": 245,
+          "productionstatusname": "Department-Issue",
+          "DisplayOrder": 100
+      },
+      {
+          "id": 246,
+          "productionstatusname": "Department-Receive",
+          "DisplayOrder": 100
+      },
+      {
+          "id": 247,
+          "productionstatusname": "Department-Pending",
+          "DisplayOrder": 100
+      }
+  ],
+  "rd2": [
+      {
+          "id": 1,
+          "manufacturelocationname": "INDIA"
+      },
+      {
+          "id": 2,
+          "manufacturelocationname": "US"
+      },
+      {
+          "id": 3,
+          "manufacturelocationname": "Surat"
+      },
+      {
+          "id": 4,
+          "manufacturelocationname": "Mumbai"
+      },
+      {
+          "id": 5,
+          "manufacturelocationname": "Chennai"
+      }
+  ],
+  "rd3": [
+      {
+          "id": 7,
+          "name": "any time",
+          "colorcode": "#efc4f2",
+          "fontcolorcode": "#a400f0"
+      },
+      {
+          "id": 1,
+          "name": "HIGH",
+          "colorcode": "#ff0000",
+          "fontcolorcode": "#ffffff"
+      },
+      {
+          "id": 5,
+          "name": "mid-urgent",
+          "colorcode": "#cda023",
+          "fontcolorcode": "#e6e6e0"
+      },
+      {
+          "id": 2,
+          "name": "NORMAL",
+          "colorcode": "#9cc770",
+          "fontcolorcode": "#f7f7f7"
+      },
+      {
+          "id": 8,
+          "name": "Quartly",
+          "colorcode": "#b6ece8",
+          "fontcolorcode": "#071a64"
+      },
+      {
+          "id": 4,
+          "name": "tatkal",
+          "colorcode": "#a2a176",
+          "fontcolorcode": "#000000"
+      },
+      {
+          "id": 3,
+          "name": "URGENT",
+          "colorcode": "#0033ff",
+          "fontcolorcode": "#eceaea"
+      },
+      {
+          "id": 6,
+          "name": "Very High",
+          "colorcode": "#8a1919",
+          "fontcolorcode": "#f88282"
+      },
+      {
+          "id": 9,
+          "name": "very low",
+          "colorcode": "#c7b2b2",
+          "fontcolorcode": "#ce5f5f"
+      }
+  ],
+  "rd4": [
+      {
+          "id": 1,
+          "OrderType": "PD Order"
+      },
+      {
+          "id": 2,
+          "OrderType": "RM Order"
+      },
+      {
+          "id": 3,
+          "OrderType": "Rubber Mould"
+      },
+      {
+          "id": 4,
+          "OrderType": "RND Order"
+      },
+      {
+          "id": 5,
+          "OrderType": "Direct Casting Order"
+      },
+      {
+          "id": 6,
+          "OrderType": "Customer Sample Order"
+      },
+      {
+          "id": 7,
+          "OrderType": "Jadau Order"
+      },
+      {
+          "id": 8,
+          "OrderType": "Export Order"
+      },
+      {
+          "id": 9,
+          "OrderType": "Corporate Order"
+      },
+      {
+          "id": 10,
+          "OrderType": "R-D Order"
+      },
+      {
+          "id": 11,
+          "OrderType": "Sampleline Order"
+      },
+      {
+          "id": 12,
+          "OrderType": "Regular Order"
+      }
+  ],
+  "rd5": [
+      {
+          "jobtypeid": "regularjobs",
+          "jobtypename": "Regular Job"
+      },
+      {
+          "jobtypeid": "samplelinejobs",
+          "jobtypename": "Sample line Jobs"
+      },
+      {
+          "jobtypeid": "repairjobs",
+          "jobtypename": "Repair Jobs"
+      }
+  ],
+  "rd6": [
+      {
+          "id": -1003,
+          "Name": "Pending Request",
+          "productionstatusids": "1",
+          "DisplayOrder": -1003
+      },
+      {
+          "id": -1001,
+          "Name": "Bagging Running",
+          "productionstatusids": "33",
+          "DisplayOrder": -1001
+      },
+      {
+          "id": -1000,
+          "Name": "Wax Engage Running",
+          "productionstatusids": "40",
+          "DisplayOrder": -1000
+      },
+      {
+          "id": -999,
+          "Name": "Wax Engage Completed",
+          "productionstatusids": "41",
+          "DisplayOrder": -999
+      },
+      {
+          "id": -998,
+          "Name": "Bagging Completed",
+          "productionstatusids": "34",
+          "DisplayOrder": -998
+      },
+      {
+          "id": 55,
+          "Name": "Sk1",
+          "productionstatusids": "186,187,209",
+          "DisplayOrder": 0
+      },
+      {
+          "id": 22,
+          "Name": "Filing",
+          "productionstatusids": "198,4,5",
+          "DisplayOrder": 0
+      },
+      {
+          "id": 27,
+          "Name": "Casting",
+          "productionstatusids": "2,3,197",
+          "DisplayOrder": 0
+      },
+      {
+          "id": 52,
+          "Name": "Wax Pulling",
+          "productionstatusids": "180,181,215",
+          "DisplayOrder": 1
+      },
+      {
+          "id": 57,
+          "Name": "AMDEPT1",
+          "productionstatusids": "190,191,192",
+          "DisplayOrder": 1
+      },
+      {
+          "id": 61,
+          "Name": "MFGTEST12",
+          "productionstatusids": "227,228,229",
+          "DisplayOrder": 1
+      },
+      {
+          "id": 63,
+          "Name": "Cleaning",
+          "productionstatusids": "233,234,235",
+          "DisplayOrder": 1
+      },
+      {
+          "id": 65,
+          "Name": "AM1",
+          "productionstatusids": "239,240,241",
+          "DisplayOrder": 1
+      },
+      {
+          "id": 67,
+          "Name": "Department",
+          "productionstatusids": "245,246,247",
+          "DisplayOrder": 1
+      },
+      {
+          "id": 49,
+          "Name": "Ske1",
+          "productionstatusids": "174,175,210",
+          "DisplayOrder": 3
+      },
+      {
+          "id": 23,
+          "Name": "Pre Polish",
+          "productionstatusids": "8,9,202",
+          "DisplayOrder": 5
+      },
+      {
+          "id": 64,
+          "Name": "PROMISE",
+          "productionstatusids": "236,237,238",
+          "DisplayOrder": 10
+      },
+      {
+          "id": 62,
+          "Name": "Findings",
+          "productionstatusids": "230,231,232",
+          "DisplayOrder": 10
+      },
+      {
+          "id": 48,
+          "Name": "SEGREGATION",
+          "productionstatusids": "207,172,173",
+          "DisplayOrder": 10
+      },
+      {
+          "id": 44,
+          "Name": "RPT",
+          "productionstatusids": "206,164,165",
+          "DisplayOrder": 13
+      },
+      {
+          "id": 45,
+          "Name": "RM",
+          "productionstatusids": "166,167,204",
+          "DisplayOrder": 14
+      },
+      {
+          "id": 46,
+          "Name": "CAD",
+          "productionstatusids": "196,168,169",
+          "DisplayOrder": 15
+      },
+      {
+          "id": 47,
+          "Name": "Production manager",
+          "productionstatusids": "170,171,203",
+          "DisplayOrder": 30
+      },
+      {
+          "id": 43,
+          "Name": "Bag Preparation Wax Setting",
+          "productionstatusids": "162,163,194",
+          "DisplayOrder": 30
+      },
+      {
+          "id": 26,
+          "Name": "Final Polish",
+          "productionstatusids": "24,25,199",
+          "DisplayOrder": 140
+      },
+      {
+          "id": 60,
+          "Name": "QC setting",
+          "productionstatusids": "224,225,226",
+          "DisplayOrder": 150
+      },
+      {
+          "id": 56,
+          "Name": "Wax Cleaning",
+          "productionstatusids": "214,188,189",
+          "DisplayOrder": 150
+      },
+      {
+          "id": 66,
+          "Name": "EC polish",
+          "productionstatusids": "242,243,244",
+          "DisplayOrder": 150
+      },
+      {
+          "id": 58,
+          "Name": "EC",
+          "productionstatusids": "218,219,220",
+          "DisplayOrder": 180
+      },
+      {
+          "id": 59,
+          "Name": "CAM",
+          "productionstatusids": "221,222,223",
+          "DisplayOrder": 200
+      },
+      {
+          "id": 51,
+          "Name": "Final Polish Qc",
+          "productionstatusids": "178,179,200",
+          "DisplayOrder": 222
+      },
+      {
+          "id": 36,
+          "Name": "Plate",
+          "productionstatusids": "26,27,201",
+          "DisplayOrder": 240
+      },
+      {
+          "id": 25,
+          "Name": "setting",
+          "productionstatusids": "16,17,208",
+          "DisplayOrder": 310
+      },
+      {
+          "id": 32,
+          "Name": "Soldering",
+          "productionstatusids": "14,15,211",
+          "DisplayOrder": 320
+      },
+      {
+          "id": 41,
+          "Name": "Sprue Cutting",
+          "productionstatusids": "35,36,212",
+          "DisplayOrder": 330
+      },
+      {
+          "id": 34,
+          "Name": "Sprue Grinding",
+          "productionstatusids": "213,20,21",
+          "DisplayOrder": 340
+      },
+      {
+          "id": 42,
+          "Name": "Wax Setting",
+          "productionstatusids": "217,42,43",
+          "DisplayOrder": 370
+      },
+      {
+          "id": 53,
+          "Name": "Assembly",
+          "productionstatusids": "182,183,193",
+          "DisplayOrder": 500
+      },
+      {
+          "id": 54,
+          "Name": "Rolling",
+          "productionstatusids": "205,184,185",
+          "DisplayOrder": 656
+      }
+  ],
+  "rd7": [
+      {
+          "id": 17277,
+          "customercode": "0017277"
+      },
+      {
+          "id": 11519,
+          "customercode": "15962"
+      },
+      {
+          "id": 12,
+          "customercode": "21A"
+      },
+      {
+          "id": 13,
+          "customercode": "21E"
+      },
+      {
+          "id": 17166,
+          "customercode": "456"
+      },
+      {
+          "id": 17153,
+          "customercode": "678"
+      },
+      {
+          "id": 9,
+          "customercode": "A21"
+      },
+      {
+          "id": 33,
+          "customercode": "adam"
+      },
+      {
+          "id": 16012,
+          "customercode": "amrut"
+      },
+      {
+          "id": 17116,
+          "customercode": "amruta"
+      },
+      {
+          "id": 15811,
+          "customercode": "Anny"
+      },
+      {
+          "id": 18550,
+          "customercode": "atm1"
+      },
+      {
+          "id": 67,
+          "customercode": "Carving"
+      },
+      {
+          "id": 17215,
+          "customercode": "DEmp2"
+      },
+      {
+          "id": 74,
+          "customercode": "driya"
+      },
+      {
+          "id": 17405,
+          "customercode": "emp3"
+      },
+      {
+          "id": 115,
+          "customercode": "FRT12"
+      },
+      {
+          "id": 17104,
+          "customercode": "harsh"
+      },
+      {
+          "id": 17264,
+          "customercode": "Hetal"
+      },
+      {
+          "id": 11536,
+          "customercode": "himan"
+      },
+      {
+          "id": 19,
+          "customercode": "Himanshu_emp"
+      },
+      {
+          "id": 23,
+          "customercode": "HS"
+      },
+      {
+          "id": 1183,
+          "customercode": "Jaimik"
+      },
+      {
+          "id": 1205,
+          "customercode": "jatin"
+      },
+      {
+          "id": 8297,
+          "customercode": "kapil"
+      },
+      {
+          "id": 58,
+          "customercode": "KP"
+      },
+      {
+          "id": 8,
+          "customercode": "MakAdm"
+      },
+      {
+          "id": 15815,
+          "customercode": "mansi021"
+      },
+      {
+          "id": 17434,
+          "customercode": "Mihir1"
+      },
+      {
+          "id": 17432,
+          "customercode": "navneet"
+      },
+      {
+          "id": 73,
+          "customercode": "nehaji"
+      },
+      {
+          "id": 1192,
+          "customercode": "new"
+      },
+      {
+          "id": 2438,
+          "customercode": "nishant"
+      },
+      {
+          "id": 7,
+          "customercode": "parth"
+      },
+      {
+          "id": 15934,
+          "customercode": "PK"
+      },
+      {
+          "id": 10375,
+          "customercode": "prachi"
+      },
+      {
+          "id": 110,
+          "customercode": "PRIT22"
+      },
+      {
+          "id": 17325,
+          "customercode": "production"
+      },
+      {
+          "id": 83,
+          "customercode": "qwerty"
+      },
+      {
+          "id": 17175,
+          "customercode": "radmin"
+      },
+      {
+          "id": 15912,
+          "customercode": "rak484"
+      },
+      {
+          "id": 4141,
+          "customercode": "RAMA"
+      },
+      {
+          "id": 17435,
+          "customercode": "ravi98"
+      },
+      {
+          "id": 151,
+          "customercode": "rk22"
+      },
+      {
+          "id": 1188,
+          "customercode": "RR"
+      },
+      {
+          "id": 24,
+          "customercode": "sales"
+      },
+      {
+          "id": 3,
+          "customercode": "salesrep"
+      },
+      {
+          "id": 22,
+          "customercode": "Sas001"
+      },
+      {
+          "id": 17161,
+          "customercode": "shekhar"
+      },
+      {
+          "id": 35,
+          "customercode": "shiv"
+      },
+      {
+          "id": 15864,
+          "customercode": "shreon"
+      },
+      {
+          "id": 32,
+          "customercode": "shridhar"
+      },
+      {
+          "id": 11532,
+          "customercode": "shruti12"
+      },
+      {
+          "id": 11475,
+          "customercode": "SKM"
+      },
+      {
+          "id": 63,
+          "customercode": "Soha"
+      },
+      {
+          "id": 1198,
+          "customercode": "T1"
+      },
+      {
+          "id": 16020,
+          "customercode": "Umesh"
+      },
+      {
+          "id": 16018,
+          "customercode": "veer"
+      },
+      {
+          "id": 15860,
+          "customercode": "vihan"
+      },
+      {
+          "id": 17115,
+          "customercode": "vsg"
+      }
+  ],
+  "rd8": [
+      {
+          "id": 1,
+          "jadauname": "Jadau Casting"
+      },
+      {
+          "id": 2,
+          "jadauname": "Jadau Sourcing"
+      },
+      {
+          "id": 3,
+          "jadauname": "Jadau Collet"
+      },
+      {
+          "id": 4,
+          "jadauname": "Making Casting"
+      },
+      {
+          "id": 5,
+          "jadauname": "Making  Collet"
+      },
+      {
+          "id": 6,
+          "jadauname": "baba Casting3"
+      },
+      {
+          "id": 7,
+          "jadauname": "Out Casting"
+      },
+      {
+          "id": 9,
+          "jadauname": "Casting"
+      },
+      {
+          "id": 10,
+          "jadauname": "Polki"
+      }
+  ]
+}

@@ -1,0 +1,300 @@
+.Fgreport_sliperViewMain_top {
+  .employee-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-top: 10px;
+    height: 74vh;
+    overflow: auto;
+  }
+  .employee-list::-webkit-scrollbar {
+    width: 5px;
+  }
+  .employee-list::-webkit-scrollbar-track {
+    background: #f0f0f0;
+    border-radius: 4px;
+  }
+
+  .employee-list::-webkit-scrollbar-thumb {
+    background-color: #776cf0;
+    border-radius: 8px;
+    border: 2px solid #f0f0f0;
+  }
+
+  .employee-list::-webkit-scrollbar-thumb:hover {
+    background-color: #0056b3;
+  }
+
+  /* Firefox styling */
+  .employee-list {
+    scrollbar-color: #776cf0 #f0f0f0;
+    scrollbar-width: thin;
+  }
+
+  .employee-card {
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    padding: 10px 8px;
+    transition: all 0.3s ease;
+    background-color: white;
+  }
+  .employee_card_selected {
+    border: none;
+    border-radius: 8px;
+    padding: 10px 8px;
+    transition: all 0.3s ease;
+    background-color: white; /* optional fallback */
+    background: linear-gradient(
+      270deg,
+      rgba(115, 103, 240, 0.7) 0%,
+      rgb(115, 103, 240) 100%
+    ) !important;
+  }
+
+  .employee-header {
+    cursor: pointer;
+    user-select: none;
+  }
+
+  .location_top_name {
+    font-size: 20px;
+    color: white;
+  }
+  .location_first {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 25px;
+  }
+
+  .location_select_button {
+    background-color: rgb(82, 79, 241) !important;
+    color: white !important;
+    padding: 5px;
+    border-radius: 5px;
+    height: 30px !important;
+  }
+
+  .employee_detail_title {
+    color: white;
+    font-size: 12px !important;
+    margin: 0px;
+  }
+
+  .employee_detail {
+    color: black;
+    font-size: 12px !important;
+  }
+
+  .employee-details {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.5s ease, padding 0.3s ease;
+    padding-left: 0;
+  }
+
+  .employee-details.expanded {
+    max-height: 300px; /* adjust based on expected content */
+    margin-top: 5px;
+  }
+
+  .slipter_department {
+    font-size: 17px;
+    font-weight: 600;
+    height: 35px;
+    display: flex;
+    align-items: center;
+    color: #807d7d;
+  }
+
+  .select_month_dropDown {
+    height: 35px;
+    border: 1px solid lightgray;
+    border-radius: 5px;
+    padding: 5px 8px;
+    outline: none;
+    border-radius: 5px;
+  }
+
+  .Search_button {
+    height: 30px;
+    background-color: #ccc;
+    width: 50px;
+    border-radius: 5px;
+  }
+
+  .pane {
+    height: 100vh;
+    overflow: auto;
+    padding: 0px;
+    box-sizing: border-box;
+  }
+
+  .splitter {
+    width: 7px;
+    background-color: #ededed;
+    cursor: col-resize;
+    height: 100%;
+    z-index: 10;
+  }
+
+  .dataGrid_spliterView {
+    height: 95vh !important;
+  }
+
+  .department_show_div {
+    display: flex;
+    cursor: pointer;
+    gap: 30px;
+    flex-wrap: wrap;
+  }
+
+  .departmentNameShow {
+    box-shadow: 0 3px 12px rgba(47, 43, 61, 0.14), 0 0 transparent,
+      0 0 transparent;
+    padding: 30px !important;
+    color: black !important;
+    font-weight: 600 !important;
+  }
+
+  .react-datepicker__header {
+    height: 80px !important;
+  }
+
+  .react-datepicker__header__dropdown {
+    min-height: 20px !important;
+  }
+
+  .collapse-button {
+    background: none;
+    border: none;
+    font-size: 16px;
+    cursor: pointer;
+  }
+
+  .collapse-button-expand {
+    width: 16px;
+    height: 100%;
+    background-color: #f0f0f0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+  }
+
+  .dual-slide-wrapper {
+    display: flex;
+    height: 50px; /* adjust as needed */
+    transition: all 0.5s ease;
+  }
+  .toggle-wrapper {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+  }
+
+  .slider-container {
+    position: relative;
+    display: flex;
+    width: 400px; /* adjust as needed */
+    height: 33px;
+    border-radius: 8px;
+    overflow: hidden;
+    background-color: #e0e0e0;
+    cursor: pointer;
+  }
+
+  /* Sliding background indicator */
+  .active-indicator {
+    position: absolute;
+    width: 50%;
+    height: 100%;
+    background-color: #887df2;
+    transition: transform 0.4s ease;
+    z-index: 1;
+    top: 0;
+    border-radius: 8px;
+    font-weight: 600 !important;
+  }
+
+  /* Move indicator to left or right */
+  .active-indicator.left {
+    transform: translateX(0%);
+  }
+
+  .active-indicator.right {
+    transform: translateX(100%);
+  }
+
+  .panel {
+    width: 50%;
+    z-index: 2;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: #938a8a;
+    transition: color 0.3s ease;
+    font-size: 15px;
+  }
+
+  .panel h2 {
+    margin: 0;
+    z-index: 2;
+    pointer-events: none;
+  }
+
+  /* Text color when active */
+  .slider-container .left ~ .department-panel p,
+  .slider-container .right ~ .employee-panel p {
+    color: white;
+    font-weight: 600;
+    font-size: 16px;
+  }
+
+  .dropdownList_metal {
+    height: 35px;
+    border-radius: 5px;
+    width: 100%;
+    border: 1px solid lightgray;
+    background-color: transparent;
+  }
+
+  .loader-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: white;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    bottom: 0;
+  }
+  .loadingBarManage {
+    color: #7d7f85 !important;
+  }
+
+  .bottomTotla_main {
+    height: 5vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-around;
+
+    .bottomTotal_box_main {
+      background-color: #887df2;
+      box-shadow: rgba(99, 99, 99, 0.2) 0px 2px 8px 0px;
+      padding: 3px;
+      width: 30%;
+    }
+
+    .bottomTotal_box_title {
+      margin: 0px;
+      text-align: center;
+      font-weight: 600;
+      color: white;
+      font-size: 12px;
+    }
+  }
+}

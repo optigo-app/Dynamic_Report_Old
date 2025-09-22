@@ -1,0 +1,379 @@
+.dynamic_sample_report_main {
+  // background-color: #f8f7fa;
+  background-color: white;
+  height: 100vh;
+  font-family: "Poppins", sans-serif;
+
+  .summaryBox {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    padding: 10px 5px;
+  }
+
+  .AllEmploe_boxViewTotal {
+    display: flex;
+    align-items: center;
+    padding: 5px;
+    border-radius: 8px;
+    border: 1px solid rgb(115, 103, 240);
+    background-color: white;
+    margin: 0px;
+    min-width: 130px;
+    max-width: 130px;
+  }
+
+  .boxViewTotalTitle {
+    margin: 0px;
+    font-size: 13px;
+    color: rgb(117, 117, 117);
+    cursor: pointer;
+    font-weight: 600;
+  }
+
+  .AllEmplo_boxViewTotalValue {
+    font-weight: 600;
+    font-size: 15px;
+    color: rgb(115, 103, 240);
+    margin: 0px;
+    min-width: 70px;
+    line-height: 20px;
+  }
+
+  .drawerMain .MuiDrawer-paper {
+    width: 400px !important;
+  }
+
+  .selectDropDownMain {
+    width: 100% !important;
+  }
+
+  .simpleGridView {
+    box-shadow: 0 0.1875rem 0.75rem 0 rgba(47, 43, 61, 0.14);
+    background-color: white;
+    font-family: "Poppins", sans-serif;
+    margin: 0px;
+  }
+
+  .minTexBox {
+    width: 150px !important;
+  }
+
+  .btn_FiletrBtnOpen {
+    height: 35px;
+    width: 50px;
+    border-radius: 3px;
+    background: linear-gradient(270deg, #7367f0b3, #7367f0) !important;
+    box-shadow: 0 2px 6px 0 #7367f04d !important;
+    border: none;
+    color: white;
+    outline: none;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 15px;
+  }
+
+  .btn_Action_FiletrBtnOpen {
+    height: 35px;
+    border-radius: 3px;
+    background: linear-gradient(270deg, #7367f0b3, #7367f0) !important;
+    border: none;
+    color: white;
+    outline: none;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 15px;
+  }
+
+  .btn_FiletrBtnAll {
+    height: 35px;
+    width: 40px;
+    min-width: 50px;
+    margin: 0px;
+    padding: 0px;
+    border-radius: 3px;
+    background: linear-gradient(270deg, #7367f0b3, #7367f0) !important;
+    box-shadow: 0 2px 6px 0 #7367f04d !important;
+    color: white !important;
+    border: none;
+    outline: none;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 15px;
+  }
+
+  .accordianMain {
+    margin: 20px !important;
+  }
+
+  .gridMetalComboMain {
+    display: flex !important;
+    flex-direction: column !important;
+    max-height: 340px;
+    overflow: auto;
+    scrollbar-width: thin;
+  }
+
+  .mainName {
+    height: 20px;
+    display: flex;
+    margin: 0px;
+    align-items: center;
+    font-weight: 600;
+  }
+
+  .subname {
+    height: 20px;
+    display: flex;
+    margin: 0px;
+    align-items: center;
+  }
+
+  .imageViewImgGrid {
+    height: 35px;
+    width: 35px;
+    cursor: pointer;
+  }
+
+  .imageViewImg {
+    height: 35px;
+    width: 35px;
+    cursor: pointer;
+  }
+
+  .imageViewImgage {
+    height: 300px;
+    width: 24%;
+    object-fit: cover;
+    padding: 5px;
+  }
+  .colorFiled {
+    height: 30px;
+    width: 30px;
+    margin: 5px;
+    cursor: pointer;
+    border-radius: 5px;
+  }
+  .topSettingBtnPopup {
+    padding: 10px;
+    height: fit-content;
+    background-color: lavender;
+    border-radius: 5px;
+    margin: 20px;
+    cursor: pointer;
+  }
+
+  .ConversionMain {
+    width: 400px !important;
+    padding: 20px;
+  }
+
+  .react-datepicker {
+    height: 280px !important;
+    box-shadow: 0 0.1875rem 0.75rem 0 rgba(47, 43, 61, 0.14) !important;
+    border: none !important;
+    background-color: white !important;
+  }
+  .react-datepicker__header {
+    height: 60px !important;
+    background-color: white !important;
+    border: 0px !important;
+  }
+
+  .react-datepicker__header__dropdown {
+    height: 20px !important;
+    margin-top: 8px !important;
+  }
+  .react-datepicker__day-names {
+    color: black !important;
+  }
+  .react-datepicker__day-name,
+  .react-datepicker__day,
+  .react-datepicker__time-name {
+    color: #00000094 !important;
+  }
+  .react-datepicker__day--selected,
+  .react-datepicker__day--in-selecting-range,
+  .react-datepicker__day--in-range,
+  .react-datepicker__month-text--selected,
+  .react-datepicker__month-text--in-selecting-range,
+  .react-datepicker__month-text--in-range,
+  .react-datepicker__quarter-text--selected,
+  .react-datepicker__quarter-text--in-selecting-range,
+  .react-datepicker__quarter-text--in-range,
+  .react-datepicker__year-text--selected,
+  .react-datepicker__year-text--in-selecting-range,
+  .react-datepicker__year-text--in-range {
+    color: white !important;
+    background-color: #1c8de5e3 !important;
+  }
+  .react-datepicker__month-dropdown {
+    background-color: white !important;
+  }
+  .react-datepicker__year-dropdown {
+    background-color: white !important;
+  }
+
+  /* Testgrid.css */
+
+  .transition-container {
+    max-height: 0;
+    opacity: 0;
+    overflow: hidden;
+    transition: max-height 0.5s ease, opacity 0.5s ease;
+  }
+
+  .transition-container.open {
+    max-height: 300px;
+    opacity: 1;
+  }
+
+  .transition-container.closed {
+    max-height: 0;
+    opacity: 0;
+  }
+
+  .All_exportButton {
+    background-color: rgb(21, 163, 75);
+    color: white;
+    font-size: 16px;
+    width: 40px;
+    height: 40px;
+    font-weight: 500;
+    border: none;
+    outline: none;
+    margin-inline: 5px;
+    border-radius: 3px;
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  .All_exportButton:hover {
+    background-color: rgb(34, 194, 95);
+    transition: transform 0.3s ease, background-color 0.3s ease;
+  }
+
+  .fullScreenButton {
+    background: linear-gradient(
+      270deg,
+      rgba(115, 103, 240, 0.7) 0%,
+      rgb(115, 103, 240) 100%
+    ) !important;
+    color: white;
+    font-size: 16px;
+    width: 50px;
+    height: 40px;
+    font-weight: 500;
+    border: none;
+    outline: none;
+    margin-inline: 5px;
+    border-radius: 3px;
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-radius: 5px;
+    margin: 10px;
+  }
+  .fullScreenButton:hover {
+    background-color: #237bbe;
+    transition: transform 0.3s ease, background-color 0.3s ease;
+  }
+
+  .loader-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: white;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    bottom: 0;
+  }
+  .loadingBarManage {
+    color: #7d7f85 !important;
+  }
+
+  .loader-overlay_signle {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgb(235 230 230 / 20%);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    bottom: 0;
+  }
+  .loadingBarManage {
+    color: #7d7f85 !important;
+  }
+
+  /* 
+  .MuiDataGrid-columnHeadersInner{
+    transform: translate3d(-4px, 0px, 0px) !important;
+  } */
+
+  .MuiList-root {
+    max-height: 500px !important;
+  }
+
+  .MuiDataGrid-menuIcon {
+    display: none !important;
+  }
+}
+
+.dataGridPopupColumSetting {
+  font-weight: 600;
+  text-align: center;
+  font-size: 18px;
+  text-decoration: underline;
+  margin: 0px;
+}
+
+.filter_column_box {
+  width: 100% !important;
+
+  .MuiFormControl-root {
+    width: 100% !important;
+  }
+  .MuiInputBase-root {
+    width: 100% !important;
+  }
+}
+
+.btn_ClearFilterButton {
+  background-color: rgb(250 77 77);
+  color: white;
+  font-size: 16px;
+  width: 80px;
+  height: 35px;
+  font-weight: 500;
+  border: none;
+  outline: none;
+  border-radius: 3px;
+  cursor: pointer;
+  margin-inline: 5px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.btn_ClearFilterButton:hover {
+  background-color: rgb(238, 37, 37);
+  transition: transform 0.3s ease, background-color 0.3s ease;
+}
+
+.btn_SaveColumModel {
+  background: linear-gradient(
+    270deg,
+    rgba(115, 103, 240, 0.7) 0%,
+    rgb(115, 103, 240) 100%
+  ) !important;
+  color: white !important;
+}

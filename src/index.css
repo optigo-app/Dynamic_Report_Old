@@ -1,0 +1,66 @@
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, "Courier New", monospace;
+}
+.custom-daterange-picker {
+  .MuiGrid-root.MuiGrid-container.MuiGrid-direction-xs-row.css-1fbdox-MuiGrid-root {
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+    gap: 8px !important;
+    padding: 0px 16px !important;
+  }
+}
+
+/* Target the weekday typography within this specific container
+.MuiGrid-root.MuiGrid-container.MuiGrid-direction-xs-row.css-1fbdox-MuiGrid-root .MuiTypography-caption {
+  flex: 1 1 auto !important;
+  text-align: center !important;
+  font-size: 0.75rem !important;
+  font-weight: 600 !important;
+  color: #6B7280 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.5px !important;
+  min-width: 28px !important;
+  display: block !important;
+} */
+
+/* Method 3: Using CSS containment for better performance */
+/* .custom-datepicker-wrapper .MuiGrid-root.MuiGrid-container.MuiGrid-direction-xs-row {
+  contain: layout style !important;
+  display: flex !important;
+  justify-content: space-evenly !important;
+  align-items: center !important;
+  padding: 12px 20px !important;
+  margin: 0 0 16px 0 !important;
+  background: #FFFFFF !important;
+  border: 1px solid #E5E7EB !important;
+  border-radius: 12px !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1) !important;
+}
+
+.custom-datepicker-wrapper .MuiGrid-root.MuiGrid-container.MuiGrid-direction-xs-row .MuiTypography-caption {
+  flex: 1 !important;
+  text-align: center !important;
+  padding: 8px 6px !important;
+  font-size: 0.8125rem !important;
+  font-weight: 600 !important;
+  color: #374151 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.05em !important;
+  border-radius: 6px !important;
+  transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  cursor: default !important;
+}
+
+.custom-datepicker-wrapper .MuiGrid-root.MuiGrid-container.MuiGrid-direction-xs-row .MuiTypography-caption:hover {
+  background-color: rgba(123, 97, 255, 0.06) !important;
+  color: #7B61FF !important;
+  transform: translateY(-1px) !important;
+} */
