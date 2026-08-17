@@ -38,12 +38,10 @@ export default function DeviceSpliter({ isLoadingNew }) {
     const onMouseMove = (moveEvent) => {
       const delta = moveEvent.clientX - startX;
       const percentDelta = (delta / containerWidth) * 100;
-
       const newWidths = [...startWidths];
       newWidths[index] = Math.max(5, startWidths[index] + percentDelta);
       newWidths[index + 1] = Math.max(5, startWidths[index + 1] - percentDelta);
       const total = newWidths.reduce((a, b) => a + b, 0);
-
       if (total <= 100) {
         setPaneWidths(newWidths.map((w) => `${w}%`));
       }
@@ -68,6 +66,8 @@ export default function DeviceSpliter({ isLoadingNew }) {
   const [groupedDepartments, setGroupedDepartments] = useState([]);
   const [groupedEmployeeData, setGroupedEmployeeData] = useState([]);
   const [AllFinalData, setFinalData] = useState();
+  const [packageMasterData, setPackageMasterData] = useState();
+  const [settingMasterData, setSettingMasterData] = useState();
   const [searchParams] = useSearchParams();
   const [customerBindeChnaged, setCustomerBindeChnaged] = useState(false);
 
@@ -81,18 +81,31 @@ export default function DeviceSpliter({ isLoadingNew }) {
     }
   }, [customerBindeChnaged]);
 
-  const fetchData = async (stat, end) => {
+  const fetchData = async (selected) => {
+    const clientIpAddress = sessionStorage.getItem("clientIpAddress");
+
     try {
       setIsLoading(true);
       const sp = searchParams.get("sp");
       let AllData = JSON.parse(sessionStorage.getItem("AuthqueryParams"));
 
       const body = {
-        con: `{"id":"","mode":"AppGrid","appuserid":"${AllData?.uid}"}`,
+        con: `{"id":"","mode":"AppGrid","appuserid":"${AllData?.uid}", "IPAddress": "${clientIpAddress}"}`,
         p: "",
         f: "Task Management (taskmaster)",
       };
+
+      const bodyMaster = {
+        con: `{"id":"","mode":"MasterBind","appuserid":"${AllData?.uid}", "IPAddress": "${clientIpAddress}"}`,
+        p: "",
+        f: "Task Management (taskmaster)",
+      };
+
       const fetchedData = await GetWorkerData(body, sp);
+      const fetchedDataMaster = await GetWorkerData(bodyMaster, sp);
+      setPackageMasterData(fetchedDataMaster?.Data?.rd);
+      setSettingMasterData(fetchedDataMaster?.Data?.rd1);
+
       const { rd, rd1, rd2 } = fetchedData?.Data || {};
       setFinalData(fetchedData?.Data);
       sessionStorage.setItem("soketVariable", JSON.stringify(rd2));
@@ -100,6 +113,7 @@ export default function DeviceSpliter({ isLoadingNew }) {
         setIsLoading(false);
         return;
       }
+
       const keyMap = Object.entries(rd[0] || {}).reduce(
         (acc, [numKey, name]) => {
           acc[numKey] = name.toLowerCase();
@@ -107,6 +121,7 @@ export default function DeviceSpliter({ isLoadingNew }) {
         },
         {}
       );
+
       const mergedData = rd1.map((record) => {
         const mapped = {};
         for (const [key, value] of Object.entries(record)) {
@@ -139,8 +154,8 @@ export default function DeviceSpliter({ isLoadingNew }) {
           selectedFileter === "App"
             ? item.app
             : selectedFileter === "Employee"
-            ? item.employee
-            : item.devicename,
+              ? item.employee
+              : item.devicename,
         deptdisplayorder: 1,
         netissuewt: parseFloat(item.issuewt || 0),
         netretunwt: parseFloat(item.returnwt || 0),
@@ -168,9 +183,9 @@ export default function DeviceSpliter({ isLoadingNew }) {
         }
       } else {
         setSelectedDepartment(filteredData[0]?.app || "");
-        console.log("calllllllllll else main");
         setCustomerBindeChnaged(false);
       }
+      // setSelectedDepartment(selected);
     } catch (error) {
       console.error("Fetch failed:", error);
     } finally {
@@ -195,10 +210,9 @@ export default function DeviceSpliter({ isLoadingNew }) {
   }, []);
 
   const subRef = useRef();
-
   const handleRefresh = () => {
     // if (!isRefreshEnabled) return;
-    fetchData();
+    fetchData(selectedDepartment);
     if (subRef.current) {
       subRef.current.handleClearFilter();
     }
@@ -206,9 +220,7 @@ export default function DeviceSpliter({ isLoadingNew }) {
     // startEnableTimer();
   };
 
-  // Add this inside DeviceSpliter before return()
   const [isPaneCollapsed, setIsPaneCollapsed] = useState(false);
-
   const handleClose = () => {
     setIsPaneCollapsed(true);
     setPaneWidths(["0%", "0%", "100%"]);
@@ -244,7 +256,6 @@ export default function DeviceSpliter({ isLoadingNew }) {
                 <div className="Location_department_title_div">
                   <p style={{ margin: "0px", lineHeight: "0px" }}>Location</p>
                 </div>
-
               </div>
               <div
                 className="employee-list"
@@ -252,52 +263,52 @@ export default function DeviceSpliter({ isLoadingNew }) {
               >
                 {locationSummaryData?.length != 0
                   ? locationSummaryData?.map((emp) => {
-                      const isExpanded = expandedEmployee === emp.location;
-                      return (
-                        <div
-                          key={emp.location}
-                          className={
-                            selectedLocation == emp.location
-                              ? "employee_card_selected"
-                              : "employee-card"
-                          }
-                        >
-                          <div className="employee-header">
-                            <div className="location_first">
-                              <span
-                                className={
-                                  selectedLocation == emp.location &&
-                                  "location_top_name"
-                                }
-                              >
-                                {emp.location}
-                              </span>
-                            </div>
+                    const isExpanded = expandedEmployee === emp.location;
+                    return (
+                      <div
+                        key={emp.location}
+                        className={
+                          selectedLocation == emp.location
+                            ? "employee_card_selected"
+                            : "employee-card"
+                        }
+                      >
+                        <div className="employee-header">
+                          <div className="location_first">
+                            <span
+                              className={
+                                selectedLocation == emp.location &&
+                                "location_top_name"
+                              }
+                            >
+                              {emp.location}
+                            </span>
                           </div>
                         </div>
-                      );
-                    })
+                      </div>
+                    );
+                  })
                   : !isLoading && (
-                      <div
+                    <div
+                      style={{
+                        height: "60vh",
+                        display: "flex",
+                        justifyContent: "center",
+                        alignItems: "center",
+                        flexDirection: "column",
+                      }}
+                    >
+                      <p
                         style={{
-                          height: "60vh",
-                          display: "flex",
-                          justifyContent: "center",
-                          alignItems: "center",
-                          flexDirection: "column",
+                          fontWeight: 600,
+                          fontSize: "17px",
+                          margin: "0px",
                         }}
                       >
-                        <p
-                          style={{
-                            fontWeight: 600,
-                            fontSize: "17px",
-                            margin: "0px",
-                          }}
-                        >
-                          No Location Available
-                        </p>
-                      </div>
-                    )}
+                        No Location Available
+                      </p>
+                    </div>
+                  )}
               </div>
             </div>
           </div>
@@ -325,51 +336,51 @@ export default function DeviceSpliter({ isLoadingNew }) {
                 >
                   {groupedDepartments?.length != 0
                     ? groupedDepartments?.map((emp) => {
-                        const isExpanded = selectedDepartment === emp.app;
-                        return (
+                      const isExpanded = selectedDepartment === emp.app;
+                      return (
+                        <div
+                          key={emp.location}
+                          className={
+                            selectedDepartment == emp.app
+                              ? "employee_card_selected"
+                              : "employee-card"
+                          }
+                        >
                           <div
-                            key={emp.location}
-                            className={
-                              selectedDepartment == emp.app
-                                ? "employee_card_selected"
-                                : "employee-card"
-                            }
+                            className="employee-header"
+                            onClick={() => {
+                              handleToggle(emp.app);
+                              setSelectedDepartment(emp.app);
+                            }}
                           >
-                            <div
-                              className="employee-header"
-                              onClick={() => {
-                                handleToggle(emp.app);
-                                setSelectedDepartment(emp.app);
-                              }}
-                            >
-                              <div className="location_first">
-                                <span
-                                  className={
-                                    selectedDepartment == emp.app &&
-                                    "location_top_name"
-                                  }
-                                >
-                                  {emp.app}
-                                </span>
-                              </div>
+                            <div className="location_first">
+                              <span
+                                className={
+                                  selectedDepartment == emp.app &&
+                                  "location_top_name"
+                                }
+                              >
+                                {emp.app}
+                              </span>
                             </div>
                           </div>
-                        );
-                      })
-                    : !isLoading && (
-                        <div
-                          style={{
-                            height: "62vh",
-                            display: "flex",
-                            justifyContent: "center",
-                            alignItems: "center",
-                          }}
-                        >
-                          <p style={{ fontWeight: 600 }}>
-                            No Department Available
-                          </p>
                         </div>
-                      )}
+                      );
+                    })
+                    : !isLoading && (
+                      <div
+                        style={{
+                          height: "62vh",
+                          display: "flex",
+                          justifyContent: "center",
+                          alignItems: "center",
+                        }}
+                      >
+                        <p style={{ fontWeight: 600 }}>
+                          No Department Available
+                        </p>
+                      </div>
+                    )}
                 </div>
               </div>
             </div>
@@ -390,6 +401,8 @@ export default function DeviceSpliter({ isLoadingNew }) {
                 isPaneCollapsed={isPaneCollapsed}
                 setCustomerBindeChnaged={setCustomerBindeChnaged}
                 handleRefresh={handleRefresh}
+                packageMasterData={packageMasterData}
+                settingMasterData={settingMasterData}
               />
             </div>
           </>

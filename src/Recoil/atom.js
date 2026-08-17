@@ -4,4 +4,3 @@ export const deviceOnorOff = atom({
   key: 'deviceOnorOff',
   default: ""
 })
-

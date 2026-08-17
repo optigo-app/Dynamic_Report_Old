@@ -741,7 +741,7 @@ export default function MaterialWiseWIP() {
   const renderFilter = (col) => {
     if (!col.filterTypes || col.filterTypes.length === 0) return null;
     const filtersToRender = col.filterTypes;
-
+    
     return filtersToRender.map((filterType) => {
       switch (filterType) {
         case "NormalFilter":
@@ -838,7 +838,7 @@ export default function MaterialWiseWIP() {
         >
           <CustomTextField
             fullWidth
-            placeholder={col.field}
+            placeholder={col.headerNamesingle}
             value={filters[col.field] || ""}
             onChange={(e) => handleInputChange(e.target.value)}
             onFocus={() => {
@@ -1521,7 +1521,7 @@ export default function MaterialWiseWIP() {
 
           <div
             style={{
-              margin: "10px",
+              margin: "10px 10px 100px 10px",
               display: "flex",
               flexDirection: "column",
               gap: "5px",

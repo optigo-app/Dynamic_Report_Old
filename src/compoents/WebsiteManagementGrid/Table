@@ -1,0 +1,80 @@
+USE [404146_CentralUser]
+GO
+IF OBJECT_ID('dbo.WebSite_BannerType_Config', 'U') IS NULL
+BEGIN
+    CREATE TABLE dbo.WebSite_BannerType_Config
+    (
+        id              INT IDENTITY(1,1) PRIMARY KEY,
+        WebsiteId       DECIMAL(38,0)   NOT NULL,   -- FK -> WebSite_Domain_Setting.id
+        BannerTypeId    INT             NOT NULL,   -- matches BANNER_TYPES.BannerTypeId
+        TypeKey         NVARCHAR(100)   NULL,
+        TypeName        NVARCHAR(200)   NULL,
+        IsActive        BIT             NOT NULL DEFAULT (1),
+        CreatedDate     DATETIME        NOT NULL DEFAULT (GETDATE()),
+        CreatedBy       NVARCHAR(100)   NULL,
+        ModifiedDate    DATETIME        NULL,
+        ModifiedBy      NVARCHAR(100)   NULL,
+        CONSTRAINT FK_WebSiteBannerType_Website
+            FOREIGN KEY (WebsiteId) REFERENCES dbo.WebSite_Domain_Setting(id),
+        CONSTRAINT UQ_WebSiteBannerType_Website_Type
+            UNIQUE (WebsiteId, BannerTypeId)
+    )
+END
+GO
+
+
+
+
+
+USE [404146_CentralUser]
+GO
+IF OBJECT_ID('dbo.WebSite_Status_Config', 'U') IS NULL
+BEGIN
+    CREATE TABLE dbo.WebSite_Status_Config
+    (
+        id              INT IDENTITY(1,1) PRIMARY KEY,
+        WebsiteId       DECIMAL(38,0)   NOT NULL,   -- FK -> WebSite_Domain_Setting.id
+        IsActive        BIT             NOT NULL DEFAULT (1),
+        ModifiedDate    DATETIME        NOT NULL DEFAULT (GETDATE()),
+        ModifiedBy      NVARCHAR(100)   NULL,
+        CONSTRAINT FK_WebSiteStatus_Website
+            FOREIGN KEY (WebsiteId) REFERENCES dbo.WebSite_Domain_Setting(id),
+        CONSTRAINT UQ_WebSiteStatus_Website
+            UNIQUE (WebsiteId)
+    )
+END
+GO
+
+
+
+
+
+
+
+IF OBJECT_ID('dbo.WebSite_Banner','U') IS NULL
+BEGIN
+    CREATE TABLE dbo.WebSite_Banner
+    (
+         Id              BIGINT IDENTITY(1,1) PRIMARY KEY
+        ,WebsiteId       INT             NOT NULL
+        ,BannerTypeId    INT             NOT NULL
+        ,BannerTitle     NVARCHAR(200)   NULL
+        ,BannerJson      NVARCHAR(MAX)   NULL      -- full banner config (text, link, overlay, etc.)
+        ,MediaType       VARCHAR(10)     NOT NULL DEFAULT ('image')   -- 'image' | 'video' | 'gif'
+        ,ImageUrl        NVARCHAR(500)   NULL
+        ,MobileImageUrl  NVARCHAR(500)   NULL
+        ,SortOrder       INT             NOT NULL DEFAULT (0)
+        ,IsActive        BIT             NOT NULL DEFAULT (1)
+        ,IsDeleted       BIT             NOT NULL DEFAULT (0)
+        ,CreatedBy       NVARCHAR(100)   NULL
+        ,CreatedDate     DATETIME        NOT NULL DEFAULT (GETDATE())
+        ,ModifiedBy      NVARCHAR(100)   NULL
+        ,ModifiedDate    DATETIME        NULL
+
+        ,CONSTRAINT CK_WebSite_Banner_MediaType CHECK (MediaType IN ('image','video','gif'))
+    )
+
+    CREATE INDEX IX_WebSite_Banner_Lookup
+        ON dbo.WebSite_Banner (WebsiteId, BannerTypeId, IsDeleted, SortOrder)
+END
+GO

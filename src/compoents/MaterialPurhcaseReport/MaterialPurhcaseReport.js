@@ -1598,6 +1598,7 @@ export default function MaterialPurhcaseReport() {
   //               parent.addTab('Customer Receive', 'icon-InventoryManagement_invoiceSummary', ADPT + 'mfg/app/InventoryManagement_invoiceList?invoiceof=customer&invoiceno=' + invoiceno + '&IsOldMetal=' + IsOldMetal)
   //           }
   //       }
+
   // window.parent.addTab(
   //   "Job Completion Report",
   //   "tabs-icon icon-report",
@@ -1606,20 +1607,15 @@ export default function MaterialPurhcaseReport() {
 
   const handleClick = (params) => {
     const url_optigo = sessionStorage.getItem("url_optigo");
-    const url =
+
+    window.parent.addTab(
+      "Material Purchase",
+      "icon-InventoryManagement_invoiceSummary",
       url_optigo +
-      "mfg/app/InventoryManagement_invoiceList?invoiceof=supplier&invoiceno=" +
-      btoa(params?.formattedValue) +
-      "&IsOldMetal=" +
-      params?.row?.isoldmetal;
-    window.parent.postMessage(
-      {
-        type: "OPEN_TAB",
-        title: "Material Purchase",
-        icon: "icon-InventoryManagement_invoiceSummary",
-        url: url,
-      },
-      "*" 
+        "mfg/app/InventoryManagement_invoiceList?invoiceof=supplier&invoiceno=" +
+        params?.formattedValue +
+        "&IsOldMetal=" +
+        params?.row?.isoldmetal
     );
   };
 

@@ -1,0 +1,15 @@
+.banner_type_check_dialog {
+  &__subtitle {
+    display: block;
+    font-size: 12px;
+    font-weight: 400;
+    color: #6b7280;
+    margin-top: 2px;
+  }
+  
+  &__loading {
+    display: flex;
+    justify-content: center;
+    padding: 24px 0;
+  }
+}

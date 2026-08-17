@@ -1,6 +1,6 @@
 {
   "rd": {
-    "ExcelExport": false,
+    "ExcelExport": true,
     "PrintButton": false,
     "mailButton": false,
     "fullScreenGridButton": false,

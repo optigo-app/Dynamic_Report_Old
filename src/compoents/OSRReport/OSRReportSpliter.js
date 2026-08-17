@@ -148,7 +148,7 @@ export default function OSRReportSpliter() {
     const sp = searchParams.get("sp");
     setIsLoading(true);
     const body = {
-      con: '{"id":"","mode":"osrreport","appuserid":"amrut@eg.com"}',
+      con: '{"id":"","mode":"osrreport","appuserid":""}',
       p: "{}",
       f: "Task Management (taskmaster)",
     };
@@ -420,10 +420,9 @@ export default function OSRReportSpliter() {
   };
 
   const filteredCustomerData = salesRepSummaryData?.filter((emp) =>
-    emp.customerfirmname.toLowerCase().includes(customerSearch.toLowerCase())
+    emp.customerfirmname.toLowerCase().includes(customerSearch.toLowerCase()) ||
+    emp.customercode.toLowerCase().includes(customerSearch.toLowerCase())
   );
-
-  console.log("selectCustomerCode", selectCustomerCode);
 
   return (
     <div className="OSRReportSpliter_top">

@@ -1,0 +1,17 @@
+export const BANNER_TYPES = [
+  { BannerTypeId: 1, TypeKey: "HomepageSlider", TypeName: "Homepage slider", SortOrder: 1 },
+  { BannerTypeId: 2, TypeKey: "HomeMainBanner", TypeName: "Home page Mainbanner", SortOrder: 2 },
+  { BannerTypeId: 3, TypeKey: "HomeMiddleBanner", TypeName: "Homepage Middle banner", SortOrder: 3 },
+  { BannerTypeId: 4, TypeKey: "HomeBestsellerBanner", TypeName: "Homepage Bestsaller banner", SortOrder: 4 },
+  { BannerTypeId: 5, TypeKey: "HomeTrendingBanner", TypeName: "Homepage Trending banenrs", SortOrder: 5 },
+  { BannerTypeId: 6, TypeKey: "HomeBottomBanner", TypeName: "Homepage Bottom banner", SortOrder: 6 },
+  { BannerTypeId: 7, TypeKey: "HomeSocialMediaBanner", TypeName: "Homepage Social media banner", SortOrder: 7 },
+  { BannerTypeId: 8, TypeKey: "PromotionalBanner", TypeName: "Promotional banner", SortOrder: 8 },
+  { BannerTypeId: 9, TypeKey: "LoginPageBanner", TypeName: "Login page banner", SortOrder: 9 },
+  { BannerTypeId: 10, TypeKey: "ProductPageTopBanner", TypeName: "Product Page Top Banner", SortOrder: 10 },
+  { BannerTypeId: 11, TypeKey: "LookBookBanner", TypeName: "Look book banner", SortOrder: 11 },
+  { BannerTypeId: 12, TypeKey: "DiamondStoreBanner", TypeName: "Diamond store banner", SortOrder: 12 },
+  { BannerTypeId: 13, TypeKey: "FooterBanner", TypeName: "Footer banners", SortOrder: 13 },
+  { BannerTypeId: 14, TypeKey: "SocialMediaIconsLink", TypeName: "Social media icons & link", SortOrder: 14 },
+  { BannerTypeId: 15, TypeKey: "PaymentIcons", TypeName: "Payment icons", SortOrder: 15 },
+];

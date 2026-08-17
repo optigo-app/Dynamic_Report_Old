@@ -326,7 +326,7 @@
       "hrefLink": "",
       "ColumShow": true,
       "ColumFilter": true,
-      "NormalFilter": true,
+      "NormalFilter": false,
       "DateRangeFilter": false,
       "multiSelection": true,
       "RangeFilter": false,

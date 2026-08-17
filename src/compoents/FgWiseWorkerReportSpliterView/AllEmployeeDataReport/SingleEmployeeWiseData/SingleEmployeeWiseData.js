@@ -151,7 +151,7 @@ export default function SingleEmployeeWiseData({
     let AllData = JSON.parse(sessionStorage.getItem("AuthqueryParams"));
     setIsLoading(true);
     const body = {
-      con: `{"id":"","mode":"workerwithoutfindingdetail","appuserid":"${AllData?.uid}"}`,
+      con: `{"id":"","mode":"fgworkerwithoutfindingdetail","appuserid":"${AllData?.uid}"}`,
       p: `{\"fdate\":\"${selectedDateDetail}",\"tdate\":\"${selectedDateDetail}",\"deptid\":\"${selectedDepartmentId}",\"locationname\":\"${
         currentLocation ?? showDeatilSelectedLocation
       }",\"employeecode\":\"${selectedEmployeeCode}"}`,

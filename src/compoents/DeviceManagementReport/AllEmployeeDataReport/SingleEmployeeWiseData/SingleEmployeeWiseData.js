@@ -142,7 +142,7 @@ export default function SingleEmployeeWiseData({
   const APICall = async () => {
     setIsLoading(true);
     const body = {
-      con: '{"id":"","mode":"workerwithoutfindingdetail","appuserid":"amrut@eg.com"}',
+      con: '{"id":"","mode":"workerwithoutfindingdetail","appuserid":""}',
       p: `{\"fdate\":\"${NewStartDate}",\"tdate\":\"${newEndDate}",\"deptid\":\"${selectedDepartmentId}",\"locationname\":\"${currentLocation}",\"employeecode\":\"${selectedEmployeeCode}"}`,
       f: "Task Management (taskmaster)",
     };

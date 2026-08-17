@@ -263,7 +263,7 @@
       "columDescending": false,
       "proiorityFilter": false,
       "copyButton": false,
-      "EditData": false,
+      "EditData": true,
       "summaryTitle": "Gross Issue",
       "summuryValueKey": 3
     },

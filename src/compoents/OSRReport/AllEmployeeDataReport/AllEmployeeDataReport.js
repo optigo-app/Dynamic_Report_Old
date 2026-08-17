@@ -369,9 +369,10 @@ export default function AllEmployeeDataReport({
                     className="hyperLinkShow"
                     onClick={() => handleCellClick(params)}
                   >
-                    {params.value}{" "}
+                    {/* {params.value}{" "} */}
                   </span>
-                  / {params?.row?.inqabookwt?.toFixed(3)}
+                  {/* /  */}
+                  {params?.row?.inqabookwt?.toFixed(3)}
                 </span>
               );
             } else if (params?.field == "inqccnt") {
@@ -1098,12 +1099,9 @@ export default function AllEmployeeDataReport({
         acc[title].push(col);
         return acc;
       }, {});
-
-    // ✅ Check if summaryGroups is valid before using Object.entries
     if (!summaryGroups || Object.keys(summaryGroups).length === 0) {
-      return null; // or return <div>No summary data available</div>
+      return null; 
     }
-
     return (
       <div className="summaryBox">
         {Object.entries(summaryGroups).map(([title, cols]) => {

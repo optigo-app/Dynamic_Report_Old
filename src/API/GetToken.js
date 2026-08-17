@@ -10,7 +10,10 @@ export const GetToken = async (body, yCode, sv, sp) => {
     window.location.hostname == "localhost" ||
     window.location.hostname == "nzen"
       ? "http://newnextjs.web/api/report"
-      : "https://livenx.optigoapps.com/api/report";
+      : "https://apilx.optigoapps.com/api/report";
+
+  // const APIURL = "https://apilx.optigoapps.com/api/report";
+
   try {
     const headers = {
       Authorization: "",

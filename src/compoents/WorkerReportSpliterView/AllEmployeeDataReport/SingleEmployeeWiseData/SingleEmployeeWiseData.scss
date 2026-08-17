@@ -44,6 +44,29 @@
     max-width: 130px;
   }
 
+  .All_exportButton {
+    background-color: rgb(21, 163, 75);
+    color: white;
+    font-size: 16px;
+    width: 40px;
+    height: 40px;
+    font-weight: 500;
+    border: none;
+    outline: none;
+    margin-inline: 5px;
+    border-radius: 3px;
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  .All_exportButton:hover {
+    background-color: rgb(34, 194, 95);
+    transition:
+      transform 0.3s ease,
+      background-color 0.3s ease;
+  }
+
   .boxViewTotalTitle {
     margin: 0px;
     font-size: 14px;
@@ -204,7 +227,9 @@
     max-height: 0;
     opacity: 0;
     overflow: hidden;
-    transition: max-height 0.5s ease, opacity 0.5s ease;
+    transition:
+      max-height 0.5s ease,
+      opacity 0.5s ease;
   }
 
   .transition-container.open {
@@ -235,7 +260,9 @@
   }
   .ClearFilterButton:hover {
     background-color: rgb(238, 37, 37);
-    transition: transform 0.3s ease, background-color 0.3s ease;
+    transition:
+      transform 0.3s ease,
+      background-color 0.3s ease;
   }
 
   .exportButton {
@@ -256,7 +283,9 @@
   }
   .exportButton:hover {
     background-color: rgb(34, 194, 95);
-    transition: transform 0.3s ease, background-color 0.3s ease;
+    transition:
+      transform 0.3s ease,
+      background-color 0.3s ease;
   }
 
   .Grid_CloseIcone {
@@ -284,7 +313,9 @@
 
   .Grid_CloseIcone:hover {
     background-color: rgb(238, 37, 37);
-    transition: transform 0.3s ease, background-color 0.3s ease;
+    transition:
+      transform 0.3s ease,
+      background-color 0.3s ease;
   }
 
   .loader-overlay_signle {

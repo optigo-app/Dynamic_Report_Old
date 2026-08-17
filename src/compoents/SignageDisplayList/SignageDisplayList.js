@@ -107,6 +107,7 @@ export default function SignageDisplayList({ isLoadingNew }) {
         const signageLocationList = fetchedMasterData.Data.rd.filter(
           (item) => item.MasterName === "SignageLocation"
         );
+        
         const signageDisplayList = fetchedMasterData.Data.rd1.filter(
           (item) => item.MasterName === "SignageDisplay"
         );
@@ -170,7 +171,6 @@ export default function SignageDisplayList({ isLoadingNew }) {
         location: item.location,
         department: item.department,
       }));
-
       const nonEmptyAppData = filteredData?.filter(
         (item) => item.app && item.app.trim() !== ""
       );
@@ -191,7 +191,6 @@ export default function SignageDisplayList({ isLoadingNew }) {
         }
       } else {
         setSelectedDepartment(filteredData[0]?.app || "");
-        console.log("calllllllllll else main");
         setCustomerBindeChnaged(false);
       }
     } catch (error) {
@@ -241,7 +240,6 @@ export default function SignageDisplayList({ isLoadingNew }) {
     setIsPaneCollapsed(false);
     setPaneWidths(["15%", "15%", "70%"]);
   };
-
   return (
     <div className="DeviceSpliter_top">
       {isLoading && (
@@ -371,7 +369,7 @@ export default function SignageDisplayList({ isLoadingNew }) {
                                     "location_top_name"
                                   }
                                 >
-                                  TV APP
+                                  {emp?.app}
                                 </span>
                               </div>
                             </div>

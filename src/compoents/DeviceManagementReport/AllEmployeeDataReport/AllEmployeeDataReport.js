@@ -17,17 +17,24 @@ import {
   Checkbox,
   CircularProgress,
   Dialog,
+  Divider,
   Drawer,
   FormControl,
   FormControlLabel,
   IconButton,
   InputAdornment,
   InputLabel,
+  ListItemIcon,
+  ListItemText,
+  Menu,
   MenuItem,
   Modal,
   Select,
   Slide,
+  Stack,
+  Switch,
   TextField,
+  Tooltip,
   Typography,
 } from "@mui/material";
 import emailjs from "emailjs-com";
@@ -40,14 +47,15 @@ import OtherKeyData from "./AllEmployeeData.json";
 import OtherKeyDataAdmin from "./AdminApp.json";
 import OtherKeyDataSales from "./SalesRep.json";
 import OtherKeyDataExpress from "./ExpressApp.json";
+import OtherKeyDataEvoApp from "./evoApp.json";
 import OtherKeyDataIcate from "./IcateApp.json";
+import OtherKeyDataOptigoScan from "./OptigoScan.json";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import SingleEmployeeWiseData from "./SingleEmployeeWiseData/SingleEmployeeWiseData";
 import { GetWorkerData } from "../../../API/GetWorkerData/GetWorkerData";
 import { useSearchParams } from "react-router-dom";
 import { useSetRecoilState } from "recoil";
 import CustomerBind from "./CustomerBind.json";
-import { deviceOnorOff } from "../../../Recoil/atom";
 import { useDeviceStatus } from "../../../DeviceStatusContext";
 import { IoMdLogOut } from "react-icons/io";
 import { MdFormatClear } from "react-icons/md";
@@ -55,14 +63,21 @@ import { MdOutlineFilterAlt } from "react-icons/md";
 import { MdOutlineFilterAltOff } from "react-icons/md";
 import LoadingBackdrop from "../../../Utils/LoadingBackdrop";
 import { showToast } from "../../../Utils/Tostify/ToastManager";
-import { FaExclamationTriangle } from "react-icons/fa";
 import {
   ChevronsLeft,
   ChevronsRight,
   CircleX,
+  Download,
+  Edit,
+  Settings,
+  ToggleLeft,
+  Trash,
   TriangleAlert,
 } from "lucide-react";
 import { IoRefreshCircle } from "react-icons/io5";
+import { LocalizationProvider, MobileDatePicker, DatePicker as MuiDatePicker } from "@mui/x-date-pickers";
+import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
+import dayjs from "dayjs";
 
 let popperPlacement = "bottom-start";
 const ItemType = {
@@ -78,8 +93,10 @@ const style = {
   transform: "translate(-50%, -50%)",
   width: 400,
   bgcolor: "background.paper",
-  border: "2px solid #000",
+  border: "0px",
+  outline: 'none',
   boxShadow: 24,
+  borderRadius: 2,
   p: 4,
 };
 
@@ -136,11 +153,14 @@ export default function AllEmployeeDataReport({
   isPaneCollapsed,
   setCustomerBindeChnaged,
   handleRefresh,
+  packageMasterData,
+  settingMasterData
 }) {
   const [commonSearch, setCommonSearch] = React.useState("");
   const [toDate, setToDate] = React.useState(null);
   const [fromDate, setFromDate] = React.useState(null);
   const [open, setOpen] = React.useState(false);
+  const [settingOpen, setSettingOpen] = React.useState(false);
   const gridContainerRef = React.useRef(null);
   const [showImageView, setShowImageView] = React.useState(false);
   const [selectedColors, setSelectedColors] = React.useState([]);
@@ -179,9 +199,28 @@ export default function AllEmployeeDataReport({
   const [customerBindIsloading, setCustomerBindIsLoading] = React.useState();
   const [lastUpdated, setLastUpdated] = React.useState(false);
   const gridRef = React.useRef(null);
+  const [defaultPin, setDefaultPin] = React.useState("");
+  const [priceBreak, setPriceBreak] = React.useState(false);
+  // Bulk delete (Evo)
+  const [selectionModel, setSelectionModel] = React.useState([]);
+  const [showBulkDeleteModal, setShowBulkDeleteModal] = React.useState(false);
+  const [page, setPage] = React.useState(0);
+
+  const selectionModelRef = React.useRef(selectionModel);
+  selectionModelRef.current = selectionModel;
+
+  const handleChange = (event) => {
+    setPriceBreak(event.target.checked);
+  };
+
+  React.useEffect(() => {
+    if (settingOpen && settingMasterData?.length > 0) {
+      const data = settingMasterData[0];
+      setPriceBreak(data?.IsPriceBreakUp === 1);
+    }
+  }, [settingOpen, settingMasterData]);
 
   //selecino.... main
-
   const useDeviceSummary = (AllFinalData) => {
     const [summary, setSummary] = React.useState({
       totalDevices: 0,
@@ -239,10 +278,6 @@ export default function AllEmployeeDataReport({
 
     return summary;
   };
-
-
-  console.log('selectedFileter', selectedFilterCategory);
-  
   const records = AllFinalData?.rd1 || [];
   const employeeSummary = {
     connectedDevices: records.filter((r) => r["4"]).length,
@@ -263,17 +298,6 @@ export default function AllEmployeeDataReport({
       ...new Set(records.map((r) => r["1"]).filter(Boolean)),
     ].join(", "),
   };
-
-  /*
-{
-  totalDevices: 3,
-  activeDevices: 1,
-  deactiveDevices: 2,
-  upcomingExpiryDevices: 3,
-  enableCount: 3,
-  disableCount: 0
-}
-*/
 
   const APICall = () => {
     setIsLoading(true);
@@ -297,6 +321,10 @@ export default function AllEmployeeDataReport({
           filteredDataColumKey = OtherKeyDataSales?.rd1;
         } else if (selectedFilterCategory === "ExpressApp") {
           filteredDataColumKey = OtherKeyDataExpress?.rd1;
+        } else if (selectedFilterCategory === "Evo") {
+          filteredDataColumKey = OtherKeyDataEvoApp?.rd1;
+        }  else if (selectedFilterCategory === "Optigo Scan") {
+          filteredDataColumKey = OtherKeyDataOptigoScan?.rd1;
         } else {
           filteredDataColumKey = OtherKeyDataIcate?.rd1;
         }
@@ -314,7 +342,6 @@ export default function AllEmployeeDataReport({
         );
         filteredDataColumKey = OtherKeyData?.rd1;
         break;
-
       default:
         console.warn("Unknown filter type");
     }
@@ -355,42 +382,52 @@ export default function AllEmployeeDataReport({
   const [filters, setFilters] = React.useState({});
   const summary = useDeviceSummary(filteredRows);
 
+  const filteredRowsRef = React.useRef(filteredRows);
+  filteredRowsRef.current = filteredRows;
+
+  const pageRef = React.useRef(page);
+  pageRef.current = page;
+
+  const pageSizeRef = React.useRef(pageSize);
+  pageSizeRef.current = pageSize;
+
+
   const summaryArray =
     selectedFileter === "App"
       ? [
-          {
-            field: "totalDevices",
-            Title: summary.totalDevices,
-            summaryTitle: "Total Devices",
-          },
-          {
-            field: "activeDevices",
-            Title: summary.activeDevices,
-            summaryTitle: "Active Devices",
-          },
-          {
-            field: "deactiveDevices",
-            Title: summary.deactiveDevices,
-            summaryTitle: "Deactive Devices",
-          },
-          {
-            field: "upcomingExpiryDevices",
-            Title: summary.upcomingExpiryDevices,
-            summaryTitle: "Expiring Soon",
-          },
-          {
-            field: "enableCount",
-            Title: summary.enableCount,
-            summaryTitle: "Enabled",
-          },
-          {
-            field: "disableCount",
-            Title: summary.disableCount,
-            summaryTitle: "Disabled",
-          },
-        ]
+        {
+          field: "totalDevices",
+          Title: summary.totalDevices,
+          summaryTitle: "Total Devices",
+        },
+        {
+          field: "activeDevices",
+          Title: summary.activeDevices,
+          summaryTitle: "Active Devices",
+        },
+        {
+          field: "deactiveDevices",
+          Title: summary.deactiveDevices,
+          summaryTitle: "Deactive Devices",
+        },
+        {
+          field: "upcomingExpiryDevices",
+          Title: summary.upcomingExpiryDevices,
+          summaryTitle: "Expiring Soon",
+        },
+        {
+          field: "enableCount",
+          Title: summary.enableCount,
+          summaryTitle: "Enabled",
+        },
+        {
+          field: "disableCount",
+          Title: summary.disableCount,
+          summaryTitle: "Disabled",
+        },
+      ]
       : selectedFileter === "Employee"
-      ? [
+        ? [
           {
             field: "connectedDevices",
             Title: employeeSummary.connectedDevices,
@@ -418,35 +455,35 @@ export default function AllEmployeeDataReport({
             summaryTitle: "Apps",
           },
         ]
-      : selectedFileter === "Device"
-      ? [
-          {
-            field: "activeDevices",
-            Title: deviceSummary.activeDevices,
-            summaryTitle: "Active Devices",
-          },
-          {
-            field: "deactiveDevices",
-            Title: deviceSummary.deactiveDevices,
-            summaryTitle: "Deactive Devices",
-          },
-          {
-            field: "connectedDevices",
-            Title: deviceSummary.connectedDevices,
-            summaryTitle: "Connected Devices",
-          },
-          {
-            field: "timeLeft",
-            Title: deviceSummary.timeLeft,
-            summaryTitle: "Time Left",
-          },
-          {
-            field: "connectedApps",
-            Title: deviceSummary.connectedApps,
-            summaryTitle: "App Names",
-          },
-        ]
-      : [];
+        : selectedFileter === "Device"
+          ? [
+            {
+              field: "activeDevices",
+              Title: deviceSummary.activeDevices,
+              summaryTitle: "Active Devices",
+            },
+            {
+              field: "deactiveDevices",
+              Title: deviceSummary.deactiveDevices,
+              summaryTitle: "Deactive Devices",
+            },
+            {
+              field: "connectedDevices",
+              Title: deviceSummary.connectedDevices,
+              summaryTitle: "Connected Devices",
+            },
+            {
+              field: "timeLeft",
+              Title: deviceSummary.timeLeft,
+              summaryTitle: "Time Left",
+            },
+            {
+              field: "connectedApps",
+              Title: deviceSummary.connectedApps,
+              summaryTitle: "App Names",
+            },
+          ]
+          : [];
 
   React.useEffect(() => {
     if (!allColumData) return;
@@ -466,6 +503,7 @@ export default function AllEmployeeDataReport({
           summuryValueKey: col.summuryValueKey,
           summaryTitle: col.summaryTitle,
           ToFixedValue: col.ToFixedValue,
+          editable: col.EditData,
           filterTypes: [
             col.NormalFilter && "NormalFilter",
             col.DateRangeFilter && "DateRangeFilter",
@@ -587,6 +625,400 @@ export default function AllEmployeeDataReport({
     setColumns(columnData);
   }, [allColumData]);
 
+
+  React.useEffect(() => {
+    if (!columns.length) return;
+    if (columns[0]?.field === "selCheckbox") return; // build only once
+
+    const selColumn = {
+      field: "selCheckbox",
+      headerName: "",
+      width: 60,
+      sortable: false,
+      filterable: false,
+
+      renderHeader: () => {
+        const rows = filteredRowsRef.current ?? [];
+        const pg = pageRef.current;
+        const ps = pageSizeRef.current;
+        const sel = selectionModelRef.current;
+
+        const pageIds = rows.slice(pg * ps, pg * ps + ps).map((r) => r.id);
+        const allSelected = pageIds.length > 0 && pageIds.every((id) => sel.includes(id));
+        const someSelected = pageIds.some((id) => sel.includes(id));
+
+        return (
+          <Checkbox
+            size="small"
+            checked={allSelected}
+            indeterminate={!allSelected && someSelected}
+            onChange={(e) => {
+              if (e.target.checked) {
+                setSelectionModel((prev) => [...new Set([...prev, ...pageIds])]);
+              } else {
+                setSelectionModel((prev) => prev.filter((id) => !pageIds.includes(id)));
+              }
+            }}
+          />
+        );
+      },
+
+      renderCell: (params) => (
+        <Checkbox
+          size="small"
+          checked={selectionModelRef.current.includes(params.id)}
+          onClick={(e) => e.stopPropagation()}
+          onChange={() => {
+            setSelectionModel((prev) =>
+              prev.includes(params.id)
+                ? prev.filter((id) => id !== params.id)
+                : [...prev, params.id]
+            );
+          }}
+        />
+      ),
+    };
+
+    setColumns((prev) => [selColumn, ...prev]);
+  }, [columns.length]);
+
+
+  const selectedBulkIds = React.useMemo(() => {
+    if (!filteredRows) return [];
+    return filteredRows
+      .filter((row) => selectionModel.includes(row.id))
+      .map((row) => row.Id)
+      .filter((id) => id !== undefined && id !== null);
+  }, [selectionModel, filteredRows]);
+
+  const getRawKeyByFieldName = (fieldName) => {
+    if (!allColumIdWiseName || !allColumIdWiseName[0]) return null;
+    return Object.keys(allColumIdWiseName[0]).find(
+      (k) => allColumIdWiseName[0][k] === fieldName
+    );
+  };
+
+  const handleBulkDelete = async () => {
+    if (!selectedBulkIds.length) return;
+    const AllData = JSON.parse(sessionStorage.getItem("AuthqueryParams"));
+    const idListString = selectedBulkIds.join(",");
+
+    const body = {
+      con: `{"id":"","mode":"DeviceBulkDelete","appuserid":"${AllData?.uid}", "IPAddress": "${clientIpAddress}"}`,
+      p: `{"AppDevRowIdList":"${idListString}"}`,
+      f: "Task Management (taskmaster)",
+    };
+
+    const sp = searchParams.get("sp");
+    try {
+      setIsLoading(true);
+      const response = await GetWorkerData(body, sp);
+      if (response?.Data?.rd[0]?.msg === "Success") {
+        setFilteredRows((prev) =>
+          prev.filter((r) => !selectedBulkIds.includes(r.Id))
+        );
+        setAllRowData((prev) =>
+          prev.filter((r) => !selectedBulkIds.includes(r["19"]))
+        );
+        setSelectionModel([]);
+        showToast({
+          message: "Selected devices deleted successfully",
+          bgColor: "#3bab3b",
+          fontColor: "#fff",
+          duration: 4000,
+        });
+      } else {
+        showToast({
+          message: "Failed to delete selected devices",
+          bgColor: "#d32f2f",
+          fontColor: "#fff",
+          duration: 4000,
+        });
+      }
+    } catch (err) {
+      console.error("Error bulk deleting devices:", err);
+    } finally {
+      setIsLoading(false);
+      setShowBulkDeleteModal(false);
+    }
+  };
+
+
+  const handleExpiryDateChange = async (date, row) => {
+    const AllData = JSON.parse(sessionStorage.getItem("AuthqueryParams"));
+    const formattedDate = date.toISOString().split("T")[0]; // e.g. "2027-02-25"
+
+    const body = {
+      con: `{"id":"","mode":"UpdateExpiryDate","appuserid":"${AllData?.uid}", "IPAddress": "${clientIpAddress}"}`,
+      p: `{"ExpiryDate":"${formattedDate}","AppDevRowId":${row.Id}}`,
+      f: "Task Management (taskmaster)",
+    };
+
+    const sp = searchParams.get("sp");
+    try {
+      const response = await GetWorkerData(body, sp);
+      if (response?.Data?.rd[0]?.msg === "Success") {
+        const expiryKey = getRawKeyByFieldName("Expirydate");
+        if (expiryKey) {
+          setAllRowData((prevData) =>
+            prevData.map((r) =>
+              r["19"] === row.Id ? { ...r, [expiryKey]: formattedDate } : r
+            )
+          );
+        }
+        showToast({
+          message: `Expiry date updated for ${row.App}`,
+          bgColor: "#3bab3b",
+          fontColor: "#fff",
+          duration: 4000,
+        });
+      } else {
+        showToast({
+          message: "Failed to update expiry date",
+          bgColor: "#d32f2f",
+          fontColor: "#fff",
+          duration: 4000,
+        });
+      }
+    } catch (err) {
+      console.error("Error updating expiry date:", err);
+    }
+  };
+
+  function ExpiryDateCell({ params, handleExpiryDateChange }) {
+    const parseDate = (val) => {
+      if (!val) return null;
+      const d = dayjs(val);
+      return d.isValid() ? d : null;
+    };
+
+    const [showPicker, setShowPicker] = React.useState(false);
+    const [selected, setSelected] = React.useState(parseDate(params.row.Expirydate));
+    // Tracks the in-progress pick while the calendar is open, separate from the committed value
+    const [draftValue, setDraftValue] = React.useState(selected);
+    const anchorRef = React.useRef(null);
+
+    React.useEffect(() => {
+      const val = parseDate(params.row.Expirydate);
+      setSelected(val);
+      setDraftValue(val);
+    }, [params.row.Expirydate]);
+
+    const handleOpen = () => {
+      setDraftValue(selected); // start fresh from the last saved value each time it opens
+      setShowPicker(true);
+    };
+
+    // Fires as the user clicks around the calendar — updates the visible selection only
+    const handleChange = (newValue) => {
+      setDraftValue(newValue);
+    };
+
+    // Fires only when Save is clicked
+    const handleAccept = (newValue) => {
+      setShowPicker(false);
+      if (!newValue || !newValue.isValid()) return;
+      const jsDate = newValue.toDate();
+      setSelected(newValue);
+      handleExpiryDateChange(jsDate, params.row);
+    };
+
+    // Fires on Cancel or outside-click/dismiss
+    const handleCancel = () => {
+      setDraftValue(selected); // discard whatever was clicked
+      setShowPicker(false);
+    };
+
+    return (
+      <div
+        ref={anchorRef}
+        style={{ display: "flex", alignItems: "center", height: "100%" }}
+      >
+
+        <a
+          style={{ color: "blue", textDecoration: "underline", cursor: "pointer" }}
+          onClick={(e) => {
+            e.stopPropagation();
+            handleOpen();
+          }}
+        >
+          {selected
+            ? selected.toDate().toLocaleDateString("en-GB", {
+              day: "2-digit",
+              month: "short",
+              year: "numeric",
+            })
+            : "Set Date"}
+        </a>
+
+        {
+          showPicker && (
+            <LocalizationProvider dateAdapter={AdapterDayjs}>
+              <MuiDatePicker
+                label="Expiry Date"
+                value={draftValue}
+                onChange={handleChange}
+                referenceDate={selected || dayjs()}
+                open={showPicker}
+                onClose={handleCancel}
+                onAccept={handleAccept}
+                closeOnSelect={false}
+                views={["year", "month", "day"]}
+                openTo="day"
+                localeText={{
+                  cancelButtonLabel: "CANCEL",
+                  okButtonLabel: "SAVE",
+                }}
+                slotProps={{
+                  textField: {
+                    style: {
+                      position: "absolute",
+                      width: 0,
+                      height: 0,
+                      padding: 0,
+                      border: "none",
+                      opacity: 0,
+                      pointerEvents: "none",
+                    },
+                  },
+                  actionBar: {
+                    actions: ["cancel", "accept"],
+                  },
+                  popper: {
+                    anchorEl: anchorRef.current,
+                    placement: "bottom-start",
+                    sx: { zIndex: 1500 },
+                  },
+                }}
+              />
+            </LocalizationProvider>
+          )
+        }
+      </div >
+    );
+  }
+
+  function AlwaysEditableDevicePinCell({
+    params,
+    handleInlinePinChange,
+    showToast,
+  }) {
+    const [value, setValue] = React.useState(params.row.DevicePIN || "");
+    const [isEditing, setIsEditing] = React.useState(false);
+    const inputRef = React.useRef(null);
+
+    React.useEffect(() => {
+      if (isEditing && inputRef.current) {
+        inputRef.current.focus();
+        inputRef.current.select();
+      }
+    }, [isEditing]);
+
+    React.useEffect(() => {
+      setValue(params.row.DevicePIN ?? "");
+    }, [params.row.DevicePIN]);
+
+    const handleChange = (e) => {
+      const val = e.target.value;
+      if (/^\d{0,4}$/.test(val)) setValue(val);
+    };
+
+    const commitChange = async () => {
+      const trimmedValue = value.trim();
+      const originalValue = params.row.DevicePIN || "";
+
+      // CASE 1: original empty + new empty → do nothing
+      if (originalValue === "" && trimmedValue === "") {
+        setIsEditing(false);
+        return;
+      }
+
+      // CASE 2: original had PIN + now empty → call API with empty PIN
+      if (originalValue !== "" && trimmedValue === "") {
+        handleInlinePinChange("", params.row);
+        setIsEditing(false);
+        return;
+      }
+
+      // invalid length (1–3)
+      if (trimmedValue.length > 0 && trimmedValue.length < 4) {
+        showToast({
+          message: "Enter a valid 4-digit numeric PIN",
+          bgColor: "#d32f2f",
+          fontColor: "#fff",
+          duration: 4000,
+        });
+        setValue(originalValue); // restore
+        setIsEditing(false);
+        return;
+      }
+
+      // valid 4-digit PIN
+      if (trimmedValue.length === 4) {
+        handleInlinePinChange(trimmedValue, params.row);
+      }
+      setIsEditing(false);
+    };
+
+    return (
+      <div
+        onClick={() => setIsEditing(true)}
+        style={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          height: "100%",
+        }}
+      >
+        {isEditing ? (
+          <input
+            ref={inputRef}
+            value={value}
+            onChange={handleChange}
+            onBlur={commitChange}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                commitChange();
+                e.stopPropagation();
+              } else if (e.key === "Escape") {
+                setValue(params.row.DevicePIN || "");
+                setIsEditing(false);
+              }
+            }}
+            maxLength={4}
+            inputMode="numeric"
+            style={{
+              width: "70px",
+              textAlign: "center",
+              border: "1px solid #ccc",
+              borderRadius: "4px",
+              padding: "6px",
+              outline: "none",
+            }}
+          />
+        ) : (
+          <div
+            style={{
+              width: "70px",
+              textAlign: "center",
+              border: "1px solid #ccc",
+              borderRadius: "4px",
+              padding: "6px",
+              backgroundColor: "#fff",
+              cursor: "text",
+              height: "15px",
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+            }}
+          >
+            {value}
+          </div>
+        )}
+      </div>
+    );
+  }
+
   React.useEffect(() => {
     setColumns((prev) =>
       prev.map((col) => {
@@ -598,6 +1030,17 @@ export default function AllEmployeeDataReport({
                 checked={params.row.Access == 1}
                 onClick={(e) => e.stopPropagation()}
                 onChange={(e) => handleAccessChange(e, params.row)}
+              />
+            ),
+          };
+        } else if (col.field === "Expirydate" && selectedFilterCategory === "Evo") {
+          return {
+            ...col,
+            sortable: false,
+            renderCell: (params) => (
+              <ExpiryDateCell
+                params={params}
+                handleExpiryDateChange={handleExpiryDateChange}
               />
             ),
           };
@@ -652,6 +1095,73 @@ export default function AllEmployeeDataReport({
                   </Select>
                 )}
               </div>
+            ),
+          };
+        } else if (col.field === "Package") {
+          return {
+            ...col,
+            renderCell: (params) => (
+              <div>
+                {selectedFilterCategory === "Icatalog" ? (
+                  <Select
+                    value={params.row.Package ?? 0}
+                    onChange={(e) =>
+                      handleCustomerPackChange(e.target.value, params.row)
+                    }
+                    size="small"
+                    fullWidth
+                    className="MenuSelectItem"
+                    MenuProps={{
+                      PaperProps: {
+                        sx: {
+                          maxHeight: 300,
+                          overflowY: "auto",
+                        },
+                      },
+                    }}
+                  >
+                    <MenuItem value={0}>Select Package</MenuItem>
+                    {packageMasterData?.map((item) => (
+                      <MenuItem
+                        key={item.id}
+                        value={item.id}
+                        className="MenuSelectItem_select"
+                      >
+                        {item.PackageName}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                ) : (
+                  <span
+                    style={{
+                      color: col.Color || "inherit",
+                      backgroundColor: col.BackgroundColor || "inherit",
+                      fontSize: col.FontSize || "inherit",
+                      textTransform: col.ColumTitleCapital
+                        ? "uppercase"
+                        : "none",
+                      padding: "5px 0px",
+                      borderRadius: col.BorderRadius,
+                    }}
+                  >
+                    {params.value}
+                  </span>
+                )}
+              </div>
+            ),
+          };
+        } else if (col.field === "DevicePIN") {
+          return {
+            ...col,
+            sortable: false,
+            filterable: false,
+            editable: false,
+            renderCell: (params) => (
+              <AlwaysEditableDevicePinCell
+                params={params}
+                handleInlinePinChange={handleInlinePinChange}
+                showToast={showToast}
+              />
             ),
           };
         }
@@ -757,6 +1267,9 @@ export default function AllEmployeeDataReport({
     setFilteredRows(rowsWithSrNo);
   }, [filters, commonSearch, fromDate, toDate, columns, selectedColors]);
 
+  const AllData = JSON.parse(sessionStorage.getItem("AuthqueryParams"));
+  const clientIpAddress = sessionStorage.getItem("clientIpAddress");
+
   const handleLogoutDevice = async (Row) => {
     const sp = searchParams.get("sp");
 
@@ -764,10 +1277,11 @@ export default function AllEmployeeDataReport({
     const soketMode = isDeleteModel ? "AccountDeleted" : "ForceLogout";
 
     const body = {
-      con: `{"id":"","mode":"${mode}","appuserid":"amrut@eg.com"}`,
+      con: `{"id":"","mode":"${mode}","appuserid":"${AllData?.uid}", "IPAddress": "${clientIpAddress}"}`,
       p: `{\"AppDevRowId\":${Row?.Id}}`,
       f: "Task Management (taskmaster)",
     };
+
     try {
       const response = await GetWorkerData(body, sp);
       if (response?.Data?.rd[0]?.msg === "Success") {
@@ -793,7 +1307,7 @@ export default function AllEmployeeDataReport({
 
   const handleCustomerBindChange = async (newBindId, row) => {
     const body = {
-      con: '{"id":"","mode":"DeviceCustomerBind","appuserid":"amrut@eg.com"}',
+      con: `{"id":"","mode":"DeviceCustomerBind","appuserid":"${AllData?.uid}", "IPAddress": "${clientIpAddress}"}`,
       p: `{\"AppDevRowId\":${row.Id},\"CustomerBindTypeId\":${newBindId}}`,
       f: "Task Management (taskmaster)",
     };
@@ -823,10 +1337,44 @@ export default function AllEmployeeDataReport({
     }
   };
 
+  const handleCustomerPackChange = async (newBindId, row) => {
+    let AllData = JSON.parse(sessionStorage.getItem("AuthqueryParams"));
+    const body = {
+      con: `{"id":"","mode":"DevicePackageBind","appuserid":"${AllData?.uid}", "IPAddress": "${clientIpAddress}"}`,
+      p: `{\"AppDevRowId\":${row.Id},\"PackageId\":${newBindId}}`,
+      f: "Task Management (taskmaster)",
+    };
+
+    const sp = searchParams.get("sp");
+    try {
+      const response = await GetWorkerData(body, sp);
+      if (response?.Data?.rd[0]?.msg === "Success") {
+        setAllRowData((prevData) => {
+          return prevData.map((r) => {
+            if (r["19"] === row.Id) {
+              return {
+                ...r,
+                9: newBindId,
+              };
+            }
+            return r;
+          });
+        });
+        // setDeviceStatus({
+        //   type: "CustomerBindChanged",
+        //   timestamp: Date.now(),
+        //   uniqueId: row?.UniqueID,
+        // });
+      }
+    } catch (err) {
+      console.error("Error updating customer bind:", err);
+    }
+  };
+
   const handleAccessChange = async (event, row) => {
     const isChecked = event.target.checked;
     const body = {
-      con: '{"id":"","mode":"DeviceEnbDcb","appuserid":"amrut@eg.com"}',
+      con: `{"id":"","mode":"DeviceEnbDcb","appuserid":"${AllData?.uid}", "IPAddress": "${clientIpAddress}"}`,
       p: `{"AppDevRowId":${row?.Id},"IsEnable":${isChecked ? 1 : 0}}`,
       f: "Task Management (taskmaster)",
     };
@@ -854,8 +1402,7 @@ export default function AllEmployeeDataReport({
           timestamp: Date.now(),
           uniqueId: row?.UniqueID,
         });
-
-        setAllColumData((prev) => [...prev]); // If needed to refresh columns
+        setAllColumData((prev) => [...prev]);
       }
     } catch (error) {
       console.error("Failed to update Access:", error);
@@ -1265,7 +1812,7 @@ export default function AllEmployeeDataReport({
       );
   };
 
-  const handlePrint = () => {};
+  const handlePrint = () => { };
 
   const handleImg = () => {
     setShowImageView((prevState) => !prevState);
@@ -1306,22 +1853,139 @@ export default function AllEmployeeDataReport({
     setIsChecked(event.target.checked);
   };
 
+  const handleSaveDevicePIN = async () => {
+    const AllData = JSON.parse(sessionStorage.getItem("AuthqueryParams"));
+    const AppId = AllData?.AppId || "2";
+
+    if (!/^\d{4}$/.test(defaultPin)) {
+      showToast({
+        message: "Enter a valid 4-digit numeric PIN",
+        bgColor: "#d32f2f",
+        fontColor: "#fff",
+        duration: 4000,
+      });
+      return;
+    }
+
+    try {
+      setIsLoading(true);
+      const body = {
+        con: `{"id":"","mode":"DevicePinBind","appuserid":"${AllData?.uid}", "IPAddress": "${clientIpAddress}"}`,
+        p: `{"AppDevRowId":${0},"DevicePIN":"${defaultPin}","AppId":"${AppId}"}`,
+        f: "Task Management (taskmaster)",
+      };
+
+      const sp = searchParams.get("sp");
+      const response = await GetWorkerData(body, sp);
+
+      if (response?.Data?.rd[0]?.msg === "Success") {
+        setAllRowData((prevData) =>
+          prevData.map((r) => ({
+            ...r,
+            7: defaultPin,
+          }))
+        );
+        showToast({
+          message: "Default PIN updated successfully",
+          bgColor: "#3bab3b",
+          fontColor: "#fff",
+          duration: 4000,
+        });
+        handleClosePopupPin();
+      } else {
+        showToast({
+          message: "Failed to update PIN",
+          bgColor: "#d32f2f",
+          fontColor: "#fff",
+          duration: 4000,
+        });
+      }
+    } catch (err) {
+      console.error("Error setting default PIN:", err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleInlinePinChange = async (newPin, row) => {
+    // if (!/^\d{4}$/.test(newPin)) {
+    //   showToast({
+    //     message: "Enter a valid 4-digit numeric PIN",
+    //     bgColor: "#d32f2f",
+    //     fontColor: "#fff",
+    //     duration: 4000,
+    //   });
+    //   return;
+    // }
+
+    const AllData = JSON.parse(sessionStorage.getItem("AuthqueryParams"));
+    const AppId = AllData?.AppId || "2";
+
+    const body = {
+      con: `{"id":"","mode":"DevicePinBind","appuserid":"${AllData?.uid}", "IPAddress": "${clientIpAddress}"}`,
+      p: `{"AppDevRowId":${row.Id},"DevicePIN":"${newPin}","AppId":"${AppId}"}`,
+      f: "Task Management (taskmaster)",
+    };
+
+    const sp = searchParams.get("sp");
+
+    console.log("PackagePackage", allRowData);
+
+    try {
+      const response = await GetWorkerData(body, sp);
+      if (response?.Data?.rd[0]?.msg === "Success") {
+        setAllRowData((prevData) => {
+          return prevData.map((r) => {
+            if (r["19"] === row.Id) {
+              return {
+                ...r,
+                7: newPin,
+              };
+            }
+            return r;
+          });
+        });
+        // setAllRowData((prev) =>
+        //   prev.map((r) => (r.Id === row.Id ? { ...r, 7: newPin } : r))
+        // );
+        showToast({
+          message: `PIN updated for ${row.App}`,
+          bgColor: "#3bab3b",
+          fontColor: "#fff",
+          duration: 4000,
+        });
+      } else {
+        showToast({
+          message: "Failed to update PIN",
+          bgColor: "#d32f2f",
+          fontColor: "#fff",
+          duration: 4000,
+        });
+      }
+    } catch (err) {
+      console.error("Error updating PIN:", err);
+    }
+  };
+
   const handleSave = () => {
     console.log("Saving data...");
     console.log("Selected Date:", selectedDate);
     console.log("Selected Rd3 Name:", selectedRd3Name);
   };
 
-  const onDragEnd = () => {};
+  const onDragEnd = () => { };
   const handleRecalculate = async () => {
     try {
       setLodingRecakulate(true);
       const sp = searchParams.get("sp");
 
-      const modeSetting =  selectedFilterCategory == 'Icatalog' ? "IcatStockCalCulate" : "EvoStockCalCulate";
+      const modeSetting =
+        selectedFilterCategory == "Icatalog"
+          ? "IcatStockCalCulate"
+          : "EvoStockCalCulate";
       let AllData = JSON.parse(sessionStorage.getItem("AuthqueryParams"));
       const body = {
-        con: `{"id":"","mode":"${modeSetting}","appuserid":"${AllData?.uid}"}`,
+        con: `{"id":"","mode":"${modeSetting}","appuserid":"${AllData?.uid}", "IPAddress": "${clientIpAddress}"}`,
         p: "",
         f: "Task Management (taskmaster)",
       };
@@ -1348,8 +2012,7 @@ export default function AllEmployeeDataReport({
     const sp = searchParams.get("sp");
     let AllData = JSON.parse(sessionStorage.getItem("AuthqueryParams"));
     const body = {
-      con: `{"id":"","mode":"CustomerBindGrid","appuserid":"${AllData?.uid}"}`,
-      p: "",
+      con: `{"id":"","mode":"CustomerBindGrid","appuserid":"${AllData?.uid}", "IPAddress": "${clientIpAddress}"}`,
       p: `{\"AppDevRowId\":${data?.Id}}`,
       f: "Task Management (taskmaster)",
     };
@@ -1508,8 +2171,9 @@ export default function AllEmployeeDataReport({
         id: "",
         mode: shouldBind
           ? "CustomerBindWithDevice"
-          : "CustomerUnBindWithDevice",
-        appuserid: allData?.uid || "",
+          : "CustomerUnBindWithDevice"
+        , appuserid: AllData?.uid,
+        IPAddress: clientIpAddress
       }),
       p: JSON.stringify({
         AppDevRowId: selectedRowIdApi,
@@ -1554,9 +2218,110 @@ export default function AllEmployeeDataReport({
     }
   };
 
+
+  const handleSaveSetting = async () => {
+    const AllData = JSON.parse(sessionStorage.getItem("AuthqueryParams"));
+    try {
+      setIsLoading(true);
+      const body = {
+        con: `{"id":"","mode":"EvoSettingSave","appuserid":"${AllData?.uid}", "IPAddress": "${clientIpAddress}"}`,
+        p: `{"IsPriceBreakUp":${priceBreak ? 1 : 0}}`,
+        f: "EvoSettingSave (handleSaveSetting)",
+      };
+      const sp = searchParams.get("sp");
+      const response = await GetWorkerData(body, sp);
+      if (response?.Data?.rd[0]?.msg === "Success") {
+        showToast({
+          message: "Updated successfully",
+          bgColor: "#3bab3b",
+          fontColor: "#fff",
+          duration: 4000,
+        });
+      } else {
+        showToast({
+          message: "Failed to update",
+          bgColor: "#d32f2f",
+          fontColor: "#fff",
+          duration: 4000,
+        });
+      }
+    } catch (err) {
+      console.error("Error setting default PIN:", err);
+    } finally {
+      setIsLoading(false);
+    }
+    setSettingOpen(false)
+  }
+
   return (
     <DragDropContext onDragEnd={onDragEnd}>
       <LoadingBackdrop isLoading={lodingRecakulate} />
+
+      <Modal
+        open={settingOpen}
+        onClose={() => setSettingOpen(false)}
+      >
+        <Box sx={style}>
+          <Typography
+            variant="h6"
+            sx={{ fontWeight: 600, mb: 1 }}
+          >
+            Settings
+          </Typography>
+          <Divider sx={{ mb: 2 }} />
+          <Stack spacing={2}>
+            <Box
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                padding: "8px 10px",
+                borderRadius: "8px",
+                "&:hover": {
+                  background: "#f6f6f6"
+                }
+              }}
+            >
+              <Typography fontWeight={500}>
+                Price Break
+              </Typography>
+
+              <Switch
+                checked={priceBreak}
+                onChange={handleChange}
+                color="primary"
+              />
+            </Box>
+          </Stack>
+          <Divider sx={{ mt: 3, mb: 2 }} />
+          <Stack
+            direction="row"
+            justifyContent="flex-end"
+            spacing={1}
+          >
+            <Button
+              variant="outlined"
+              onClick={() => setSettingOpen(false)}
+            >
+              Cancel
+            </Button>
+
+            <Button
+              variant="contained"
+              onClick={handleSaveSetting}
+              sx={{
+                background: "#7468f0",
+                "&:hover": {
+                  background: "#6155e0"
+                }
+              }}
+            >
+              Save
+            </Button>
+          </Stack>
+
+        </Box>
+      </Modal>
 
       <Modal
         open={openCustomerBideModel}
@@ -1876,11 +2641,36 @@ export default function AllEmployeeDataReport({
         </Dialog>
 
         <Dialog open={openDefaultPin} onClose={handleClosePopupPin}>
-          <div className="Deafult_Pin_main">
-            <p style={{ fontWeight: 600 }}>Enter Default Pin</p>
-            <CustomTextField type="text" />
-            <Button onClick={handleClosePopupPin} className="Save_btn">
-              Save
+          <div
+            className="Deafult_Pin_main"
+            style={{ padding: "20px", width: "300px" }}
+          >
+            <p style={{ fontWeight: 600, marginBottom: "10px" }}>
+              Enter Default Pin
+            </p>
+            <TextField
+              type="text"
+              value={defaultPin}
+              onChange={(e) => {
+                const val = e.target.value;
+                if (/^\d*$/.test(val)) setDefaultPin(val);
+              }}
+              inputProps={{ maxLength: 4 }}
+              fullWidth
+              size="small"
+            />
+            <Button
+              onClick={handleSaveDevicePIN}
+              variant="contained"
+              color="primary"
+              fullWidth
+              style={{ marginTop: "15px" }}
+            >
+              {isLoading ? (
+                <CircularProgress size={20} color="inherit" />
+              ) : (
+                "Save"
+              )}
             </Button>
           </div>
         </Dialog>
@@ -1889,9 +2679,15 @@ export default function AllEmployeeDataReport({
           onClose={toggleDrawer(false)}
           className="drawerMain"
         >
-          <p style={{ margin: "20px 20px 0px 20px", fontSize: "25px" }}>
-            Filter
-          </p>
+          <div style={{ display: 'flex', margin: "20px 20px 0px 20px", justifyContent: 'space-between', alignItems: 'center' }}>
+            <p style={{ fontSize: "25px", margin: '0px' }}>
+              Filter
+            </p>
+            <button onClick={handleClearFilter} className="ClearFilterButton">
+              <MdOutlineFilterAltOff style={{ fontSize: "25px" }} />
+              Clear
+            </button>
+          </div>
           <div style={{ display: "flex", flexDirection: "column", gap: "5px" }}>
             {columns
               .filter(
@@ -1967,32 +2763,62 @@ export default function AllEmployeeDataReport({
               </button>
             )}
 
-            <Button
-              style={{
-                display: "flex",
-                height: "100%",
-                margin: "-20px 30px 0px 0px",
-                backgroundColor: "#7468f0",
-                minWidth: "40px",
-              }}
-            >
-              <IoRefreshCircle
-                onClick={handleRefresh}
-                style={{
-                  color: "white",
-                  fontSize: "29px",
-                  cursor: "pointer",
-                  opacity: 1,
-                }}
-              />
-            </Button>
+            <div style={{ display: 'flex', alignItems: 'flex-start', gap: '10px' }}>
+              <Tooltip title="Refresh" arrow>
+                <IconButton
+                  onClick={handleRefresh}
+                  size="small"
+                  sx={{
+                    border: "1px solid #e0e0e0",
+                    background: "#fff",
+                    "&:hover": {
+                      background: "#f5f5f5"
+                    }
+                  }}
+                  style={{
+                    display: "flex",
+                    margin: "-20px 0px 0px 0px",
+                    minWidth: "40px",
+                  }}
+                >
+                  <IoRefreshCircle size={30} color="#7468f0" />
+                </IconButton>
+              </Tooltip>
+
+              {selectedFilterCategory == "Evo" && (
+                <Box
+                  sx={{
+                    display: "flex",
+                    justifyContent: "flex-end",
+                    width: "100%",
+                    margin: "-18px 30px 0px 0px",
+                  }}
+                >
+                  <Tooltip title="Settings" arrow>
+                    <IconButton
+                      onClick={() => setSettingOpen(true)}
+                      size="small"
+                      sx={{
+                        border: "1px solid #e0e0e0",
+                        background: "#fff",
+                        "&:hover": {
+                          background: "#f5f5f5"
+                        }
+                      }}
+                    >
+                      <Settings size={25} color="#7468f0" />
+                    </IconButton>
+                  </Tooltip>
+                </Box>
+              )}
+            </div>
           </div>
         </div>
         <div
           style={{
             display: "flex",
             justifyContent: "space-between",
-            padding: "20px",
+            padding: "10px",
           }}
         >
           <div style={{ display: "flex", gap: "10px", alignItems: "end" }}>
@@ -2001,11 +2827,27 @@ export default function AllEmployeeDataReport({
                 <MdOutlineFilterAlt style={{ fontSize: "25px" }} />
                 Filter
               </Button>
-              <button onClick={handleClearFilter} className="ClearFilterButton">
-                <MdOutlineFilterAltOff style={{ fontSize: "25px" }} />
-                Clear
-              </button>
 
+
+              {selectedFilterCategory === "Evo" && (
+                <IconButton
+                  style={{ backgroundColor: "rgb(238, 37, 37)", color: "#fff" }}
+                  onClick={() => {
+                    if (!selectedBulkIds.length) {
+                      showToast({
+                        message: "Please select at least one row to delete",
+                        bgColor: "#f39c12",
+                        fontColor: "#fff",
+                        duration: 4000,
+                      });
+                      return;
+                    }
+                    setShowBulkDeleteModal(true);
+                  }}
+                >
+                  <Trash />
+                </IconButton>
+              )}
               {/* <p
                 style={{ fontWeight: 600, color: "#696262", fontSize: "17px" }}
               >
@@ -2034,9 +2876,8 @@ export default function AllEmployeeDataReport({
                 </button>
               )}
               <div
-                className={`transition-container ${
-                  openPDate ? "open" : "closed"
-                }`}
+                className={`transition-container ${openPDate ? "open" : "closed"
+                  }`}
                 style={{
                   transition: "0.5s ease",
                   opacity: openPDate ? 1 : 0,
@@ -2114,7 +2955,7 @@ export default function AllEmployeeDataReport({
               </div>
             )}
 
-            {selectedFilterCategory != "ExpressApp" && (
+            {selectedFilterCategory == "Icatalog" && (
               <Button
                 className="SetDefault_pin"
                 onClick={handleClickOpenPopupDeafiltPin}
@@ -2122,7 +2963,9 @@ export default function AllEmployeeDataReport({
                 Set Default Pin
               </Button>
             )}
-            {selectedFilterCategory != "ExpressApp" && (
+
+
+            {(selectedFilterCategory == "Evo" || selectedFilterCategory == "Icatalog") && (
               <Button
                 className="Re_CalculateButton"
                 onClick={handleRecalculate}
@@ -2159,7 +3002,7 @@ export default function AllEmployeeDataReport({
 
         <div
           ref={gridRef}
-          style={{ height: "calc(100vh - 305px)", margin: "5px" }}
+          style={{ height: "calc(100vh - 200px)", margin: "5px" }}
         >
           {showImageView ? (
             <div>
@@ -2197,8 +3040,10 @@ export default function AllEmployeeDataReport({
               rows={filteredRows ?? []}
               columns={columns ?? []}
               pageSize={pageSize}
+              page={page}
+              onPageChange={(newPage) => setPage(newPage)}
               autoHeight={false}
-              checkboxSelection
+              disableSelectionOnClick
               columnBuffer={17}
               localeText={{ noRowsLabel: "No Data" }}
               initialState={{
@@ -2275,50 +3120,74 @@ export default function AllEmployeeDataReport({
         </div>
       </div>
 
-      {/* <Modal
-        open={open}
-        // onClose={handleClose}
-        disableEnforceFocus
-        disableAutoFocus
-        hideBackdrop
+      <Modal
+        open={showBulkDeleteModal}
         style={{
           display: "flex",
           justifyContent: "center",
           alignItems: "center",
-          border: "0px",
-          outline: "0px",
-          pointerEvents: "none",
         }}
       >
-        <Slide in={open} direction="down" timeout={500}>
-          <Box
-            sx={{
-              transform: "translate(-50%, -50%)",
-              bgcolor: "background.paper",
-              boxShadow: 24,
-              borderRadius: 2,
-              width: "97%",
-              maxHeight: "95vh",
-              overflowY: "auto",
-              border: "none",
-              outline: "none",
-              pointerEvents: "auto",
-            }}
-          >
-            <SingleEmployeeWiseData
-              selectedDepartmentId={selectedDepartmentId}
-              selectedEmployeeCode={selectedEmployeeCode}
-              // currentLocation={selectedLocation}
-              startDate={startDate}
-              endDate={endDate}
-              handleClose={handleClose}
-              selectedEmployeeBarCode={selectedEmployeeBarCode}
-              selectedEmployeeName={selectedEmployeeName}
-              selectedMetalType={selectedMetalType}
+        <div
+          style={{
+            backgroundColor: "white",
+            padding: "25px 20px",
+            width: "22%",
+            borderRadius: "10px",
+            position: "relative",
+            boxShadow: "0 0 20px rgba(0, 0, 0, 0.1)",
+          }}
+        >
+          <div style={{ position: "absolute", right: "20px", top: "15px" }}>
+            <CircleX
+              onClick={() => setShowBulkDeleteModal(false)}
+              style={{ color: "gray", cursor: "pointer", fontSize: "20px" }}
             />
-          </Box>
-        </Slide>
-      </Modal> */}
+          </div>
+          <div style={{ display: "flex", justifyContent: "center", marginBottom: "15px" }}>
+            <TriangleAlert
+              style={{
+                backgroundColor: "#f3cbca",
+                color: "red",
+                padding: "10px",
+                fontSize: "30px",
+                borderRadius: "50%",
+              }}
+            />
+          </div>
+          <p style={{ textAlign: "center", fontWeight: "bold", fontSize: "18px", marginBottom: "10px" }}>
+            Confirm Deletion
+          </p>
+          <p style={{ textAlign: "center", fontSize: "15px", color: "#716b6b", fontWeight: 500 }}>
+            You're about to delete {selectedBulkIds.length} device(s).
+          </p>
+          <p style={{ textAlign: "center", fontSize: "15px", color: "#716b6b", fontWeight: 500 }}>
+            This action <b>cannot be undone.</b>
+          </p>
+          <div style={{ display: "flex", justifyContent: "center", gap: "10px", marginTop: "15px" }}>
+            <Button
+              onClick={() => setShowBulkDeleteModal(false)}
+              style={{
+                height: "35px", width: "100px", backgroundColor: "#ccc",
+                fontWeight: 600, fontSize: "14px", color: "#333",
+                border: "none", cursor: "pointer", borderRadius: "5px",
+              }}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleBulkDelete}
+              style={{
+                height: "35px", width: "160px", backgroundColor: "#e73838",
+                fontWeight: 600, fontSize: "14px", border: "none",
+                color: "white", cursor: "pointer", borderRadius: "5px",
+              }}
+            >
+              Confirm Delete
+            </Button>
+          </div>
+        </div>
+      </Modal>
     </DragDropContext>
   );
 }

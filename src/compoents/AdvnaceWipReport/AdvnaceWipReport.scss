@@ -1,0 +1,441 @@
+.AdvanceWip_root {
+  background-color: white;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  font-family: "Public Sans", "Poppins", sans-serif;
+}
+
+// ─── Loader overlay ─────────────────────────────────────────────────
+.AdvanceWip_loaderOverlay {
+  position: fixed;
+  inset: 0;
+  background: white;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+.AdvanceWip_loader {
+  color: #7d7f85 !important;
+}
+
+// ─── Drawer ─────────────────────────────────────────────────────────
+.AdvanceWip_drawer .MuiDrawer-paper {
+  width: 380px !important;
+}
+.AdvanceWip_drawerHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 14px 10px;
+}
+.AdvanceWip_clearBtn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: #ff3b30;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 6px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  &:hover {
+    background: #e02d22;
+  }
+}
+
+// ─── Column settings dialog ──────────────────────────────────────────
+.AdvanceWip_colSettings {
+  width: 380px;
+  padding: 20px;
+}
+.AdvanceWip_colSettingsTitle {
+  font-size: 15px;
+  font-weight: 600;
+  margin: 0 0 12px;
+  color: #333;
+}
+
+// ─── Top bar ─────────────────────────────────────────────────────────
+.AdvanceWip_topBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 24px 8px;
+  background: #fff;
+  border-bottom: 1px solid #ede9f5;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.AdvanceWip_topBarLeft {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.AdvanceWip_topBarRight {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+// Date range pill
+.AdvanceWip_dateRangeWrap {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: #fff;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  padding: 5px 10px;
+  font-size: 13px;
+  color: #444;
+  height: 36px;
+}
+.AdvanceWip_calIcon {
+  color: #7367f0;
+  flex-shrink: 0;
+}
+.AdvanceWip_dateLabel {
+  font-size: 12px;
+  color: #888;
+  white-space: nowrap;
+}
+
+// Apply button
+.AdvanceWip_applyBtn {
+  height: 36px;
+  padding: 0 18px;
+  background: linear-gradient(270deg, #7367f0b3, #7367f0);
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 2px 6px 0 #7367f040;
+  white-space: nowrap;
+  &:hover {
+    opacity: 0.9;
+  }
+}
+
+// Search box
+.AdvanceWip_searchWrap {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: #fff;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  padding: 0 10px;
+  height: 36px;
+  min-width: 200px;
+}
+.AdvanceWip_searchIcon {
+  color: #aaa;
+  flex-shrink: 0;
+}
+.AdvanceWip_searchInput {
+  border: none;
+  outline: none;
+  font-size: 13px;
+  width: 100%;
+  color: #333;
+  background: transparent;
+  &::placeholder {
+    color: #bbb;
+  }
+}
+.AdvanceWip_searchClear {
+  color: #aaa;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+// Excel export button (green pill)
+.AdvanceWip_exportBtn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 36px;
+  padding: 0 14px;
+  background: #fff;
+  border: 1.5px solid #2e7d32;
+  border-radius: 6px;
+  color: #2e7d32;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  &:hover {
+    background: #e8f5e9;
+  }
+}
+
+// ─── 2×2 card grid ───────────────────────────────────────────────────
+.AdvanceWip_gridArea {
+  flex: 1;
+  padding: 16px 20px 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+.AdvanceWip_cardGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+// Individual card
+.AdvanceWip_card {
+  background: #fff;
+  border-radius: 10px;
+  border: 1px solid #ede9f5;
+  box-shadow: 0 2px 8px 0 rgba(47, 43, 61, 0.07);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+.AdvanceWip_cardHeader {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 16px 10px;
+  border-bottom: 1px solid #f2f0f9;
+}
+.AdvanceWip_cardHeaderIcon {
+  color: #7367f0;
+}
+.AdvanceWip_cardTitle {
+  font-size: 15px;
+  font-weight: 700;
+  color: #7367f0;
+  letter-spacing: 0.01em;
+}
+
+// DataGrid inside card
+.AdvanceWip_dataGrid {
+  height: 320px !important;
+  border: none !important;
+  border-radius: 0 !important;
+  font-family: "Public Sans", "Poppins", sans-serif !important;
+
+  // Pinned total row styling (add class "totalRow" via getRowClassName)
+  .totalRow {
+    background-color: #f5f3ff !important;
+    font-weight: 700;
+    color: #7367f0;
+    border-top: 2px solid #e2defe !important;
+  }
+  .MuiDataGrid-footerContainer {
+    min-height: 28px;
+    border-top: 1px solid #f0f0f0;
+  }
+  .MuiTablePagination-toolbar {
+    min-height: 28px;
+    font-size: 12px;
+  }
+}
+
+// ─── Bottom summary bar ───────────────────────────────────────────────
+.AdvanceWip_summaryBar {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  background: #fff;
+  border-top: 1px solid #ede9f5;
+  padding: 10px 24px;
+  flex-wrap: wrap;
+  margin-top: auto;
+}
+.AdvanceWip_summaryChip {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 20px 6px 0;
+  border-right: 1px solid #f0eeff;
+  margin-right: 20px;
+  &:last-child {
+    border-right: none;
+    margin-right: 0;
+  }
+}
+.AdvanceWip_summaryIconWrap {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.AdvanceWip_summaryText {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+.AdvanceWip_summaryLabel {
+  font-size: 11px;
+  color: #888;
+  font-weight: 500;
+  white-space: nowrap;
+}
+.AdvanceWip_summaryValue {
+  font-size: 16px;
+  font-weight: 700;
+  color: #333;
+  line-height: 1.2;
+}
+
+// ─── Misc kept ────────────────────────────────────────────────────────
+.MuiList-root {
+  max-height: 500px !important;
+}
+.react-datepicker {
+  box-shadow: 0 3px 12px 0 rgba(47, 43, 61, 0.14) !important;
+  border: none !important;
+}
+.react-datepicker__header {
+  background-color: white !important;
+  border: none !important;
+}
+.react-datepicker__day--selected,
+.react-datepicker__day--in-range {
+  background-color: #7367f0 !important;
+  color: white !important;
+}
+
+.AdvanceWip_gridArea {
+  flex: 1;
+  overflow: hidden; /* prevent outer scroll */
+  padding: 12px;
+}
+
+.AdvanceWip_dateTypeSelect {
+  height: 32px;
+  padding: 0 8px;
+  border: 1px solid #d0cfe8;
+  border-radius: 6px;
+  font-size: 12.5px;
+  font-family: "Public Sans", "Poppins", sans-serif;
+  color: #555;
+  background: #fff;
+  cursor: pointer;
+  outline: none;
+  min-width: 130px;
+  flex-shrink: 0;
+
+  &:hover {
+    border-color: #7367f0;
+  }
+  &:focus {
+    border-color: #7367f0;
+    box-shadow: 0 0 0 2px rgba(115, 103, 240, 0.15);
+  }
+}
+
+.AdvanceWip_cardGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  height: 89vh;
+  overflow: auto;
+
+  scrollbar-width: thin !important;
+  scrollbar-color: #7367f0 #f0eeff;
+
+  *::-webkit-scrollbar {
+    width: 5px !important; /* vertical bar width */
+    height: 6px; /* horizontal bar height */
+  }
+
+  *::-webkit-scrollbar-track {
+    background: #f0eeff;
+    border-radius: 999px;
+  }
+
+  *::-webkit-scrollbar-thumb {
+    background: #7367f0;
+    border-radius: 999px;
+  }
+
+  *::-webkit-scrollbar-thumb:hover {
+    background: #5e50ee;
+  }
+
+  /* bottom-right corner where both bars meet */
+  *::-webkit-scrollbar-corner {
+    background: #f0eeff;
+  }
+}
+
+.AdvanceWip_card {
+  display: flex;
+  flex-direction: column;
+  height: 420px; /* ← fixed height per card, adjust as needed */
+  background: #f8f7fa;
+  border: 0.5px solid var(--color-border-tertiary);
+  border-radius: var(--border-radius-lg);
+  overflow: hidden;
+}
+
+.AdvanceWip_cardHeader {
+  flex-shrink: 0; /* header never shrinks */
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border-bottom: 1px solid lightgray;
+}
+
+/* The DataGrid wrapper must fill remaining card height */
+.AdvanceWip_card > * + * {
+  /* Warper div directly inside card */
+  flex: 1;
+  min-height: 0; /* ← critical: lets flex child shrink below content */
+  overflow: hidden;
+}
+
+/* DataGrid itself fills its container */
+.AdvanceWip_dataGrid {
+  height: 100% !important;
+}
+
+.AdvanceWip_dataGrid,
+.AdvanceWip_card {
+  /* Firefox */
+  scrollbar-width: thin !important;
+  scrollbar-color: #7367f0 #f0eeff;
+
+  *::-webkit-scrollbar {
+    width: 5px !important; /* vertical bar width */
+    height: 6px; /* horizontal bar height */
+  }
+
+  *::-webkit-scrollbar-track {
+    background: #f0eeff;
+    border-radius: 999px;
+  }
+
+  *::-webkit-scrollbar-thumb {
+    background: #7367f0;
+    border-radius: 999px;
+  }
+
+  *::-webkit-scrollbar-thumb:hover {
+    background: #5e50ee;
+  }
+
+  /* bottom-right corner where both bars meet */
+  *::-webkit-scrollbar-corner {
+    background: #f0eeff;
+  }
+}
+
+@media (max-width: 1700px) {
+  .AdvanceWip_cardGrid {
+    height: 86vh !important;
+  }
+}

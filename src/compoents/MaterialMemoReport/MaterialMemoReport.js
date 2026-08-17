@@ -641,10 +641,9 @@ export default function Materialmemoreport() {
   ];
 
   useEffect(() => {
+    
     const newFilteredRows = originalRows?.filter((row) => {
       let isMatch = true;
-
-      // 1. Hybrid Filter
       if (
         selectedDateColumnHyBrid === "Hybrid" &&
         parseInt(row.ishybridbill) !== 1
@@ -788,7 +787,6 @@ export default function Materialmemoreport() {
     }));
 
     const safeRows = Array.isArray(rowsWithSrNo) ? rowsWithSrNo : [];
-
     const sorted = [...safeRows].sort((a, b) => {
       return parseDate(b.voucherdate) - parseDate(a.voucherdate);
     });
@@ -800,7 +798,6 @@ export default function Materialmemoreport() {
     fromDate,
     toDate,
     columns,
-    originalRows,
     selectedColors,
     selectedDateColumn,
     selectedDateColumnHyBrid,
@@ -1523,11 +1520,11 @@ export default function Materialmemoreport() {
         sx={{ width: "100vw", display: "flex", flexDirection: "column" }}
         ref={gridContainerRef}
       >
-        {isLoading && (
-          <div className="loader-overlay">
-            <CircularProgress className="loadingBarManage" />
-          </div>
-        )}
+  {/* //       {isLoading && (
+  //         <div className="loader-overlay">
+  //           <CircularProgress className="loadingBarManage" />
+  //         </div>
+  //       )} */}
 
         <Dialog open={openPopup} onClose={handleClosePopup}>
           <div className="ConversionMain">
@@ -1711,13 +1708,6 @@ export default function Materialmemoreport() {
                   } else {
                     fetchData(startDate, endDate, 0);
                   }
-                  // setFilterState({
-                  //   ...filterState,
-                  //   dateRange: {
-                  //     startDate: "",
-                  //     endDate: "",
-                  //   },
-                  // });
                   setFromDate(null);
                   setToDate(null);
                   setCommonSearch("");
@@ -1726,94 +1716,6 @@ export default function Materialmemoreport() {
               >
                 Pending Memo Voucher
               </Button>
-
-              {/* <FormControl size="small" sx={{ minWidth: 150, margin: "0px" }}>
-                <Select
-                  value={selectedCustomer}
-                  onChange={(e) => setSelectedCustomer(e.target.value)}
-                  displayEmpty
-                  MenuProps={{
-                    PaperProps: {
-                      style: {
-                        maxHeight: 300,
-                        overflowY: "auto",
-                      },
-                    },
-                  }}
-                  style={{
-                    fontSize: "14px",
-                    display: "flex",
-                    alignItems: "center",
-                  }}
-                  sx={{
-                    "& .MuiSelect-select": {
-                      padding: "7px !important",
-                    },
-                  }}
-                >
-                  {uniqueCustomers?.map((cust, index) => (
-                    <MenuItem
-                      key={index}
-                      value={cust}
-                      style={{
-                        fontSize: "14px",
-                      }}
-                      s
-                    >
-                      {cust}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-              <FormControl size="small" sx={{ width: 150, margin: "0px" }}>
-                <Select
-                  value={selectedDateColumn}
-                  onChange={(e) => setSelectedDateColumn(e.target.value)}
-                  MenuProps={{
-                    PaperProps: {
-                      style: {
-                        maxHeight: 300,
-                        overflowY: "auto",
-                      },
-                    },
-                  }}
-                  style={{
-                    fontSize: "14px",
-                    display: "flex",
-                    alignItems: "center",
-                  }}
-                  sx={{
-                    "& .MuiSelect-select": {
-                      padding: "7px !important",
-                    },
-                  }}
-                >
-                  <MenuItem
-                    value="ALL"
-                    style={{
-                      fontSize: "14px",
-                    }}
-                  >
-                    ALL
-                  </MenuItem>
-                  <MenuItem
-                    value="pendingmemo"
-                    style={{
-                      fontSize: "14px",
-                    }}
-                  >
-                    Pending Memo
-                  </MenuItem>
-                  <MenuItem
-                    value="pendingmemovoucher"
-                    style={{
-                      fontSize: "14px",
-                    }}
-                  >
-                    Pending Memo Voucher
-                  </MenuItem>
-                </Select>
-              </FormControl> */}
             </div>
             {columns
               .filter((col) => col.filterable)
@@ -2034,6 +1936,7 @@ export default function Materialmemoreport() {
                 columns={columns ?? []}
                 autoHeight={false}
                 rowHeight={40}
+                loading={isLoading}
                 headerHeight={40}
                 columnBuffer={17}
                 localeText={{ noRowsLabel: "No Data" }}

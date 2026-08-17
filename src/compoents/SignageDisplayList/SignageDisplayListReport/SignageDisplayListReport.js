@@ -143,7 +143,6 @@ export default function SignageDisplayListReport({
   const [openPDate, setOpenPDate] = React.useState(false);
   const [selectedDate, setSelectedDate] = React.useState(null);
   const [selectedRd3Name, setSelectedRd3Name] = React.useState("");
-
   const [masterKeyData, setMasterKeyData] = React.useState();
   const [allColumIdWiseName, setAllColumIdWiseName] = React.useState();
   const [allColumData, setAllColumData] = React.useState();
@@ -151,26 +150,16 @@ export default function SignageDisplayListReport({
   const [isLoading, setIsLoading] = React.useState(false);
   const [lodingRecakulate, setLodingRecakulate] = React.useState(false);
   const [checkedColumns, setCheckedColumns] = React.useState({});
-  const [selectedDepartmentId, setSelectedDepartmentId] = React.useState();
-  const [selectedEmployeeCode, setSelectedEmployeeCode] = React.useState();
-  const [selectedEmployeeName, setSelectedEmployeeName] = React.useState();
   const [searchParams] = useSearchParams();
   const [logoutRow, setLogoutRow] = React.useState(null);
   const [showLogoutModal, setShowLogoutModal] = React.useState(false);
-  const [openCustomerBideModel, setOpenCustomerBideModel] =
-    React.useState(false);
   const [showSuccess, setShowSuccess] = React.useState(false);
   const [isDeleteModel, setIsDeleteMode] = React.useState(false);
-  const { setDeviceStatus } = useDeviceStatus();
-  const [selectedRowId, setSelectedRowId] = React.useState();
-  const [selectedRowIdApi, setSelectedRowIdApi] = React.useState();
-
-  const [selectedEmployeeBarCode, setSelectedEmployeeBarCode] =
-    React.useState();
-  const [customerBindAllData, setCustomerBindAllData] = React.useState();
-  const [customerBindIsloading, setCustomerBindIsLoading] = React.useState();
-  const [lastUpdated, setLastUpdated] = React.useState(false);
   const gridRef = React.useRef(null);
+  const { setDeviceStatus } = useDeviceStatus();
+  const AllData = JSON.parse(sessionStorage.getItem("AuthqueryParams"));
+  const clientIpAddress = sessionStorage.getItem("clientIpAddress");
+
   const useDeviceSummary = (AllFinalData) => {
     const [summary, setSummary] = React.useState({
       totalDevices: 0,
@@ -230,6 +219,7 @@ export default function SignageDisplayListReport({
   };
 
   const records = AllFinalData?.rd1 || [];
+
   const employeeSummary = {
     connectedDevices: records.filter((r) => r["4"]).length,
     activeDevices: records.filter((r) => r["5"] === "Active").length,
@@ -257,16 +247,22 @@ export default function SignageDisplayListReport({
       console.warn("Invalid data format");
       return;
     }
+
+    const records = (AllFinalData?.rd1 || []).filter(
+      (row) => !selectedFilterCategory || row["1"] === selectedFilterCategory
+    );
+
+    console.log("OtherKeyData", AllFinalData);
     setMasterKeyData(OtherKeyData?.rd);
     setAllColumData(OtherKeyData?.rd1);
     setAllColumIdWiseName(AllFinalData?.rd);
-    setAllRowData(rd1);
+    setAllRowData(records);
     setIsLoading(false);
   };
 
   React.useEffect(() => {
     APICall();
-  }, [AllFinalData]);
+  }, [AllFinalData, selectedFilterCategory]);
 
   React.useEffect(() => {
     if (allColumData) {
@@ -296,39 +292,39 @@ export default function SignageDisplayListReport({
   const summaryArray =
     selectedFileter === "App"
       ? [
-          {
-            field: "totalDevices",
-            Title: summary.totalDevices,
-            summaryTitle: "Total Devices",
-          },
-          {
-            field: "activeDevices",
-            Title: summary.activeDevices,
-            summaryTitle: "Active Devices",
-          },
-          {
-            field: "deactiveDevices",
-            Title: summary.deactiveDevices,
-            summaryTitle: "Deactive Devices",
-          },
-          {
-            field: "upcomingExpiryDevices",
-            Title: summary.upcomingExpiryDevices,
-            summaryTitle: "Expiring Soon",
-          },
-          {
-            field: "enableCount",
-            Title: summary.enableCount,
-            summaryTitle: "Enabled",
-          },
-          {
-            field: "disableCount",
-            Title: summary.disableCount,
-            summaryTitle: "Disabled",
-          },
-        ]
+        {
+          field: "totalDevices",
+          Title: summary.totalDevices,
+          summaryTitle: "Total Devices",
+        },
+        {
+          field: "activeDevices",
+          Title: summary.activeDevices,
+          summaryTitle: "Active Devices",
+        },
+        {
+          field: "deactiveDevices",
+          Title: summary.deactiveDevices,
+          summaryTitle: "Deactive Devices",
+        },
+        {
+          field: "upcomingExpiryDevices",
+          Title: summary.upcomingExpiryDevices,
+          summaryTitle: "Expiring Soon",
+        },
+        {
+          field: "enableCount",
+          Title: summary.enableCount,
+          summaryTitle: "Enabled",
+        },
+        {
+          field: "disableCount",
+          Title: summary.disableCount,
+          summaryTitle: "Disabled",
+        },
+      ]
       : selectedFileter === "Employee"
-      ? [
+        ? [
           {
             field: "connectedDevices",
             Title: employeeSummary.connectedDevices,
@@ -356,35 +352,35 @@ export default function SignageDisplayListReport({
             summaryTitle: "Apps",
           },
         ]
-      : selectedFileter === "Device"
-      ? [
-          {
-            field: "activeDevices",
-            Title: deviceSummary.activeDevices,
-            summaryTitle: "Active Devices",
-          },
-          {
-            field: "deactiveDevices",
-            Title: deviceSummary.deactiveDevices,
-            summaryTitle: "Deactive Devices",
-          },
-          {
-            field: "connectedDevices",
-            Title: deviceSummary.connectedDevices,
-            summaryTitle: "Connected Devices",
-          },
-          {
-            field: "timeLeft",
-            Title: deviceSummary.timeLeft,
-            summaryTitle: "Time Left",
-          },
-          {
-            field: "connectedApps",
-            Title: deviceSummary.connectedApps,
-            summaryTitle: "App Names",
-          },
-        ]
-      : [];
+        : selectedFileter === "Device"
+          ? [
+            {
+              field: "activeDevices",
+              Title: deviceSummary.activeDevices,
+              summaryTitle: "Active Devices",
+            },
+            {
+              field: "deactiveDevices",
+              Title: deviceSummary.deactiveDevices,
+              summaryTitle: "Deactive Devices",
+            },
+            {
+              field: "connectedDevices",
+              Title: deviceSummary.connectedDevices,
+              summaryTitle: "Connected Devices",
+            },
+            {
+              field: "timeLeft",
+              Title: deviceSummary.timeLeft,
+              summaryTitle: "Time Left",
+            },
+            {
+              field: "connectedApps",
+              Title: deviceSummary.connectedApps,
+              summaryTitle: "App Names",
+            },
+          ]
+          : [];
 
   React.useEffect(() => {
     if (!allColumData) return;
@@ -525,6 +521,46 @@ export default function SignageDisplayListReport({
     setColumns(columnData);
   }, [allColumData]);
 
+
+  const dashboardDropdown = [
+    {
+      "MasterName": "",
+      "Id": 11,
+      "SetName": "sales analysis report",
+      "Orientation": "Portrait (9:16)"
+    },
+    {
+      "MasterName": "SignageDisplay",
+      "Id": 12,
+      "SetName": "factory floor loss analysis",
+      "Orientation": "Landscape (16:9)"
+    },
+    {
+      "MasterName": "SignageDisplay",
+      "Id": 13,
+      "SetName": "sales dashboard",
+      "Orientation": "Portrait (9:16)"
+    },
+    {
+      "MasterName": "SignageDisplay",
+      "Id": 14,
+      "SetName": "Metal Price",
+      "Orientation": "Landscape (16:9)"
+    },
+    {
+      "MasterName": "SignageDisplay",
+      "Id": 15,
+      "SetName": "Jewellery Stock Dashboard",
+      "Orientation": "Landscape (16:9)"
+    },
+    {
+      "MasterName": "SignageDisplay",
+      "Id": 16,
+      "SetName": "Customer Dashboard",
+      "Orientation": "Landscape (16:9)"
+    }
+  ]
+
   React.useEffect(() => {
     setColumns((prev) =>
       prev.map((col) => {
@@ -544,25 +580,57 @@ export default function SignageDisplayListReport({
             ...col,
             renderCell: (params) => (
               <div>
-                <Select
-                  value={params.row?.TvSet ?? ""}
-                  onChange={(e) =>
-                    handleTvContentChange(e.target.value, params.row)
-                  }
-                  size="small"
-                  fullWidth
-                  className="MenuSelectItem"
-                >
-                  {signageDisplayData?.map((item) => (
-                    <MenuItem
-                      key={item.Id}
-                      value={item.Id}
-                      className="MenuSelectItem_select"
-                    >
-                      {item.SetName}
+                {console.log('params.row: ',)}
+
+                {params.row?.App == "TV Dashboard"
+                  ?
+
+                  <Select
+                    value={params.row?.TvSet ?? ""}
+                    onChange={(e) =>
+                      handleTvContentChange(e.target.value, params.row)
+                    }
+                    size="small"
+                    fullWidth
+                    className="MenuSelectItem"
+                  >
+                    <MenuItem value="0" className="MenuSelectItem_select">
+                      -Select-
                     </MenuItem>
-                  ))}
-                </Select>
+                    {dashboardDropdown?.map((item) => (
+                      <MenuItem
+                        key={item.Id}
+                        value={item.Id}
+                        className="MenuSelectItem_select"
+                      >
+                        {item.SetName}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                  :
+                  <Select
+                    value={params.row?.TvSet ?? ""}
+                    onChange={(e) =>
+                      handleTvContentChange(e.target.value, params.row)
+                    }
+                    size="small"
+                    fullWidth
+                    className="MenuSelectItem"
+                  >
+                    <MenuItem value="0" className="MenuSelectItem_select">
+                      -Select-
+                    </MenuItem>
+                    {signageDisplayData?.map((item) => (
+                      <MenuItem
+                        key={item.Id}
+                        value={item.Id}
+                        className="MenuSelectItem_select"
+                      >
+                        {item.SetName}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                }
               </div>
             ),
           };
@@ -580,6 +648,9 @@ export default function SignageDisplayListReport({
                   fullWidth
                   className="MenuSelectItem"
                 >
+                  <MenuItem value="0" className="MenuSelectItem_select">
+                    -Select-
+                  </MenuItem>
                   {signageLocationData?.map((item) => (
                     <MenuItem
                       key={item.Id}
@@ -600,10 +671,6 @@ export default function SignageDisplayListReport({
   }, [allColumData, allRowData]);
 
   const handleCellClick = (params) => {
-    setSelectedEmployeeName(params?.row?.employeename);
-    setSelectedEmployeeBarCode(params?.row?.barcode);
-    setSelectedDepartmentId(params?.row?.deptid);
-    setSelectedEmployeeCode(params?.row?.employeecode);
     setOpen(true);
   };
 
@@ -703,7 +770,7 @@ export default function SignageDisplayListReport({
     const soketMode = isDeleteModel ? "AccountDeleted" : "ForceLogout";
 
     const body = {
-      con: `{"id":"","mode":"${mode}","appuserid":"amrut@eg.com"}`,
+      con: `{"id":"","mode":"${mode}","appuserid":"${AllData?.uid}", "IPAddress": "${clientIpAddress}"}`,
       p: `{\"AppDevRowId\":${Row?.Id}}`,
       f: "Task Management (taskmaster)",
     };
@@ -733,7 +800,7 @@ export default function SignageDisplayListReport({
   const handleChangeTheLocation = async (newBindId, row) => {
     let AllData = JSON.parse(sessionStorage.getItem("AuthqueryParams"));
     const body = {
-      con: `{"id":"","mode":"DeviceLocationBind","appuserid":"${AllData?.uid}"}`,
+      con: `{"id":"","mode":"DeviceLocationBind","appuserid":"${AllData?.uid}", "IPAddress": "${clientIpAddress}"}`,
       p: `{\"AppDevRowId\":${row?.Id},\"TvLocationId\":${newBindId}}`,
       f: "Task Management (taskmaster)",
     };
@@ -764,15 +831,13 @@ export default function SignageDisplayListReport({
   };
 
   const handleTvContentChange = async (newBindId, row) => {
-    console.log("newBindIdnewBindId", newBindId, row);
     let AllData = JSON.parse(sessionStorage.getItem("AuthqueryParams"));
     const body = {
-      con: `{"id":"","mode":"DeviceDisplayBind","appuserid":"${AllData?.uid}"}`,
+      con: `{"id":"","mode":"DeviceDisplayBind","appuserid":"${AllData?.uid}", "IPAddress": "${clientIpAddress}"}`,
       p: `{\"AppDevRowId\":${row.Id},\"TvSetId\":${newBindId}}`,
       f: "Task Management (taskmaster)",
     };
     const sp = searchParams.get("sp");
-
     try {
       const response = await GetWorkerData(body, sp);
       if (response?.Data?.rd[0]?.msg === "Success") {
@@ -787,11 +852,11 @@ export default function SignageDisplayListReport({
             return r;
           })
         );
-        // setDeviceStatus({
-        //   type: "TvContentChanged",
-        //   timestamp: Date.now(),
-        //   uniqueId: row?.UniqueID,
-        // });
+        setDeviceStatus({
+          type: "contentchanged",
+          timestamp: Date.now(),
+          uniqueId: newBindId,
+        });
       }
     } catch (err) {
       console.error("Error updating tv content bind:", err);
@@ -801,7 +866,7 @@ export default function SignageDisplayListReport({
   const handleAccessChange = async (event, row) => {
     const isChecked = event.target.checked;
     const body = {
-      con: '{"id":"","mode":"DeviceEnbDcb","appuserid":"amrut@eg.com"}',
+      con: `{"id":"","mode":"DeviceEnbDcb","appuserid":"${AllData?.uid}", "IPAddress": "${clientIpAddress}"}`,
       p: `{"AppDevRowId":${row?.Id},"IsEnable":${isChecked ? 1 : 0}}`,
       f: "Task Management (taskmaster)",
     };
@@ -1197,7 +1262,7 @@ export default function SignageDisplayListReport({
       );
   };
 
-  const handlePrint = () => {};
+  const handlePrint = () => { };
 
   const handleImg = () => {
     setShowImageView((prevState) => !prevState);
@@ -1246,7 +1311,7 @@ export default function SignageDisplayListReport({
     console.log("Selected Rd3 Name:", selectedRd3Name);
   };
 
-  const onDragEnd = () => {};
+  const onDragEnd = () => { };
 
   const handleRecalculate = async () => {
     try {
@@ -1259,7 +1324,7 @@ export default function SignageDisplayListReport({
           : "EvoStockCalCulate";
       let AllData = JSON.parse(sessionStorage.getItem("AuthqueryParams"));
       const body = {
-        con: `{"id":"","mode":"${modeSetting}","appuserid":"${AllData?.uid}"}`,
+        con: `{"id":"","mode":"${modeSetting}","appuserid":"${AllData?.uid}", "IPAddress": "${clientIpAddress}"}`,
         p: "",
         f: "Task Management (taskmaster)",
       };
@@ -1278,9 +1343,6 @@ export default function SignageDisplayListReport({
       setLodingRecakulate(false);
     }
   };
-
-  console.log("filteredRowsfilteredRows", filteredRows, columns);
-
   return (
     <DragDropContext onDragEnd={onDragEnd}>
       <LoadingBackdrop isLoading={lodingRecakulate} />
@@ -1624,9 +1686,8 @@ export default function SignageDisplayListReport({
                 </button>
               )}
               <div
-                className={`transition-container ${
-                  openPDate ? "open" : "closed"
-                }`}
+                className={`transition-container ${openPDate ? "open" : "closed"
+                  }`}
                 style={{
                   transition: "0.5s ease",
                   opacity: openPDate ? 1 : 0,
@@ -1749,7 +1810,7 @@ export default function SignageDisplayListReport({
 
         <div
           ref={gridRef}
-          style={{ height: "calc(100vh - 305px)", margin: "5px" }}
+          style={{ height: "calc(100vh - 260px)", margin: "5px" }}
         >
           {showImageView ? (
             <div>

@@ -861,8 +861,70 @@ export default function SingleEmployeeWiseData({
     }
   };
 
+
+  function mapRowsToHeaders(columns, rows) {
+    const isIsoDateTime = (str) =>
+      typeof str === "string" && /^\d{4}-\d{2}-\d{2}T/.test(str);
+    const fieldToHeader = {};
+    columns?.forEach((col) => {
+      let header = "";
+      if (typeof col.headerName === "string") {
+        header = col.headerName;
+      } else if (col.headerNamesingle) {
+        header = col.headerNamesingle;
+      } else if (
+        col.headerName?.props?.children &&
+        Array.isArray(col.headerName.props.children)
+      ) {
+        header = col.headerName.props.children[1];
+      }
+      fieldToHeader[col.field] = header;
+    });
+    return rows?.map((row, idx) => {
+      const ordered = {};
+      columns?.forEach((col) => {
+        const header = fieldToHeader[col.field];
+        let value = row[col.field] ?? "";
+        if (header === "Sr#") {
+          value = idx + 1;
+        }
+        if (col.field === "Venderfgage") {
+          let finalDate = 0;
+          const fgDateStr = row.fgdate;
+          const outsourceDateStr = row.outsourcedate;
+          if (fgDateStr && outsourceDateStr) {
+            const diff =
+              new Date(fgDateStr).getTime() -
+              new Date(outsourceDateStr).getTime();
+            finalDate = Math.floor(diff / (1000 * 60 * 60 * 24));
+          }
+          value = finalDate;
+        } else if (col.field === "Fgage") {
+          let finalDate = 0;
+          const fgDateStr = row.fgdate;
+          const orderDateStr = row.orderdate;
+          if (fgDateStr && orderDateStr) {
+            const diff =
+              new Date(fgDateStr).getTime() - new Date(orderDateStr).getTime();
+            finalDate = Math.floor(diff / (1000 * 60 * 60 * 24));
+          }
+          value = finalDate;
+        }
+        if (isIsoDateTime(value)) {
+          const dateObj = new Date(value);
+          const day = String(dateObj.getDate()).padStart(2, "0");
+          const month = String(dateObj.getMonth() + 1).padStart(2, "0");
+          const year = dateObj.getFullYear();
+          value = `${day}-${month}-${year}`;
+        }
+        ordered[header] = value;
+      });
+      return ordered;
+    });
+  }
+  const converted = mapRowsToHeaders(columns, filteredRows);
   const exportToExcel = () => {
-    const worksheet = XLSX.utils.json_to_sheet(filteredRows);
+    const worksheet = XLSX.utils.json_to_sheet(converted);
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, "Data");
 
@@ -870,8 +932,26 @@ export default function SingleEmployeeWiseData({
       bookType: "xlsx",
       type: "array",
     });
+
     const data = new Blob([excelBuffer], { type: EXCEL_TYPE });
-    saveAs(data, "data.xlsx");
+
+    const now = new Date();
+    const dateString = now
+      .toLocaleString("en-GB", {
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+        hour12: false,
+      })
+      .replace(/[/:]/g, "-")
+      .replace(/, /g, "_"); // Format: dd-MM-yyyy_HH-mm-ss
+
+    const fileName = `Worker Report_${dateString}.xlsx`;
+
+    saveAs(data, fileName);
   };
 
   const handleClearFilter = () => {
@@ -904,7 +984,7 @@ export default function SingleEmployeeWiseData({
       );
   };
 
-  const handlePrint = () => {};
+  const handlePrint = () => { };
 
   const handleImg = () => {
     setShowImageView((prevState) => !prevState);
@@ -965,12 +1045,12 @@ export default function SingleEmployeeWiseData({
   const formatDate = (date) => {
     return date
       ? `${(date.getMonth() + 1).toString().padStart(2, "0")}/${date
-          .getDate()
-          .toString()
-          .padStart(2, "0")}/${date.getFullYear()}`
+        .getDate()
+        .toString()
+        .padStart(2, "0")}/${date.getFullYear()}`
       : "";
   };
-  const onDragEnd = () => {};
+  const onDragEnd = () => { };
 
   return (
     <DragDropContext onDragEnd={onDragEnd}>
@@ -1139,9 +1219,8 @@ export default function SingleEmployeeWiseData({
                 </button>
               )}
               <div
-                className={`transition-container ${
-                  openPDate ? "open" : "closed"
-                }`}
+                className={`transition-container ${openPDate ? "open" : "closed"
+                  }`}
                 style={{
                   transition: "0.5s ease",
                   opacity: openPDate ? 1 : 0,
@@ -1261,20 +1340,18 @@ export default function SingleEmployeeWiseData({
             )}
 
             {masterKeyData?.ExcelExport && (
-              <button onClick={exportToExcel} className="exportButton">
+              <button onClick={exportToExcel} className="All_exportButton">
                 <svg
                   stroke="currentColor"
                   fill="currentColor"
                   stroke-width="0"
                   viewBox="0 0 384 512"
-                  class="mr-2"
-                  height="1em"
-                  width="1em"
+                  height="2em"
+                  width="2em"
                   xmlns="http://www.w3.org/2000/svg"
                 >
                   <path d="M224 136V0H24C10.7 0 0 10.7 0 24v464c0 13.3 10.7 24 24 24h336c13.3 0 24-10.7 24-24V160H248c-13.2 0-24-10.8-24-24zm60.1 106.5L224 336l60.1 93.5c5.1 8-.6 18.5-10.1 18.5h-34.9c-4.4 0-8.5-2.4-10.6-6.3C208.9 405.5 192 373 192 373c-6.4 14.8-10 20-36.6 68.8-2.1 3.9-6.1 6.3-10.5 6.3H110c-9.5 0-15.2-10.5-10.1-18.5l60.3-93.5-60.3-93.5c-5.2-8 .6-18.5 10.1-18.5h34.8c4.4 0 8.5 2.4 10.6 6.3 26.1 48.8 20 33.6 36.6 68.5 0 0 6.1-11.7 36.6-68.5 2.1-3.9 6.2-6.3 10.6-6.3H274c9.5-.1 15.2 10.4 10.1 18.4zM384 121.9v6.1H256V0h6.1c6.4 0 12.5 2.5 17 7l97.9 98c4.5 4.5 7 10.6 7 16.9z"></path>
                 </svg>
-                Export to Excel
               </button>
             )}
 
@@ -1369,21 +1446,21 @@ export default function SingleEmployeeWiseData({
                 marginBottom: 2,
               }}
               loading={isLoading}
-              // components={{
-              //   Toolbar: () => null,
-              //   LoadingOverlay: () => (
-              //     <div
-              //       style={{
-              //         display: "flex",
-              //         justifyContent: "center",
-              //         alignItems: "center",
-              //         height: "100%",
-              //       }}
-              //     >
-              //       {/* Loading... */}
-              //     </div>
-              //   ),
-              // }}
+            // components={{
+            //   Toolbar: () => null,
+            //   LoadingOverlay: () => (
+            //     <div
+            //       style={{
+            //         display: "flex",
+            //         justifyContent: "center",
+            //         alignItems: "center",
+            //         height: "100%",
+            //       }}
+            //     >
+            //       {/* Loading... */}
+            //     </div>
+            //   ),
+            // }}
             />
           )}
         </div>

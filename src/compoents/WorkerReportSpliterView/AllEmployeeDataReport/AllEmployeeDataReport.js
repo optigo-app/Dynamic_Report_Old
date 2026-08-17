@@ -954,8 +954,71 @@ export default function AllEmployeeDataReport({
     }
   };
 
+  function mapRowsToHeaders(columns, rows) {
+    const isIsoDateTime = (str) =>
+      typeof str === "string" && /^\d{4}-\d{2}-\d{2}T/.test(str);
+    const fieldToHeader = {};
+    columns?.forEach((col) => {
+      let header = "";
+      if (typeof col.headerName === "string") {
+        header = col.headerName;
+      } else if (col.headerNamesingle) {
+        header = col.headerNamesingle;
+      } else if (
+        col.headerName?.props?.children &&
+        Array.isArray(col.headerName.props.children)
+      ) {
+        header = col.headerName.props.children[1];
+      }
+      fieldToHeader[col.field] = header;
+    });
+    return rows?.map((row, idx) => {
+      const ordered = {};
+      columns?.forEach((col) => {
+        const header = fieldToHeader[col.field];
+        let value = row[col.field] ?? "";
+        if (header === "Sr#") {
+          value = idx + 1;
+        }
+        if (col.field === "Venderfgage") {
+          let finalDate = 0;
+          const fgDateStr = row.fgdate;
+          const outsourceDateStr = row.outsourcedate;
+          if (fgDateStr && outsourceDateStr) {
+            const diff =
+              new Date(fgDateStr).getTime() -
+              new Date(outsourceDateStr).getTime();
+            finalDate = Math.floor(diff / (1000 * 60 * 60 * 24));
+          }
+          value = finalDate;
+        } else if (col.field === "Fgage") {
+          let finalDate = 0;
+          const fgDateStr = row.fgdate;
+          const orderDateStr = row.orderdate;
+          if (fgDateStr && orderDateStr) {
+            const diff =
+              new Date(fgDateStr).getTime() - new Date(orderDateStr).getTime();
+            finalDate = Math.floor(diff / (1000 * 60 * 60 * 24));
+          }
+          value = finalDate;
+        }
+        if (isIsoDateTime(value)) {
+          const dateObj = new Date(value);
+          const day = String(dateObj.getDate()).padStart(2, "0");
+          const month = String(dateObj.getMonth() + 1).padStart(2, "0");
+          const year = dateObj.getFullYear();
+          value = `${day}-${month}-${year}`;
+        }
+        ordered[header] = value;
+      });
+      return ordered;
+    });
+  }
+  
+  const converted = mapRowsToHeaders(columns, filteredRows);
+
   const exportToExcel = () => {
-    const worksheet = XLSX.utils.json_to_sheet(filteredRows);
+    const worksheet = XLSX.utils.json_to_sheet(converted);
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, "Data");
 
@@ -963,8 +1026,26 @@ export default function AllEmployeeDataReport({
       bookType: "xlsx",
       type: "array",
     });
+
     const data = new Blob([excelBuffer], { type: EXCEL_TYPE });
-    saveAs(data, "data.xlsx");
+
+    const now = new Date();
+    const dateString = now
+      .toLocaleString("en-GB", {
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+        hour12: false,
+      })
+      .replace(/[/:]/g, "-")
+      .replace(/, /g, "_"); // Format: dd-MM-yyyy_HH-mm-ss
+
+    const fileName = `Worker Report_${dateString}.xlsx`;
+
+    saveAs(data, fileName);
   };
 
   const handleClearFilter = () => {

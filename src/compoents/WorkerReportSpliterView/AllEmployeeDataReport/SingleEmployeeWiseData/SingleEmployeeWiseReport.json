@@ -1,6 +1,6 @@
 {
   "rd": {
-    "ExcelExport": false,
+    "ExcelExport": true,
     "PrintButton": false,
     "mailButton": false,
     "fullScreenGridButton": true,
@@ -140,6 +140,36 @@
       "colid": 4,
       "headerName": "Design No.",
       "field": "designno",
+      "Width": 150,
+      "Align": "center",
+      "hrefLink": "",
+      "ColumShow": true,
+      "ColumFilter": true,
+      "NormalFilter": false,
+      "DateRangeFilter": false,
+      "multiSelection": false,
+      "RangeFilter": false,
+      "suggestionFilter": false,
+      "selectDropdownFilter": false,
+      "ColumNumberSetting": 5,
+      "ColumAlign": "center",
+      "ColumTitleCapital": false,
+      "ColumTitleSmall": false,
+      "FontSize": "12px",
+      "borderRadius": "0px",
+      "color": "",
+      "backgroundColor": "",
+      "summary": false,
+      "columAscendion": false,
+      "columDescending": false,
+      "proiorityFilter": false,
+      "copyButton": true,
+      "EditData": false
+    },
+    {
+      "colid": 4,
+      "headerName": "Brand Name",
+      "field": "brandname",
       "Width": 150,
       "Align": "center",
       "hrefLink": "",
@@ -458,7 +488,7 @@
       "summaryTitle": "Gross Loss%",
       "summuryValueKey": 2
     },
-     {
+    {
       "colid": 15,
       "headerName": "Jobs",
       "field": "jobcount",
