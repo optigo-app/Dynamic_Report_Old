@@ -39,6 +39,7 @@ import StockDetailBothTemp from "./compoents/StockDetailBothTemp/StockDetailBoth
 import AdvnaceWipReport from "./compoents/AdvnaceWipReport/AdvnaceWipReport";
 import CrmReport from "./compoents/CrmReport/CrmReport";
 import WebsiteManagementGrid from "./compoents/WebsiteManagementGrid/WebsiteManagementGrid";
+import ProcatalogThemeControl from './compoents/ProcatalogThemeControl'
 
 // Test73  :-    http://nzen/testreport/?sv=/e3tsaXZlLm9wdGlnb2FwcHMuY29tfX17ezIwfX17e3Rlc3Q3M319e3t0ZXN0NzN9fQ==/1&ifid=WorkerReportPro&pid=18223
 // http://localhost:3000/testreport/?sv=/e3tsaXZlLm9wdGlnb2FwcHMuY29tfX17ezIwfX17e3Rlc3Q3M319e3t0ZXN0NzN9fQ==/1&ifid=WorkerReportPro&pid=18223
@@ -69,22 +70,24 @@ const GridMain = () => {
   };
 
   useEffect(() => {
-    // Cookies.set(
-    //   "skey",
-    //   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJpdGFzayIsImF1ZCI6ImMzZGhiV2xBWldjdVkyOXQiLCJleHAiOjE3NjQ1OTc5OTUsInVpZCI6ImMzZGhiV2xBWldjdVkyOXQiLCJ5YyI6ImUzdHVlbVZ1ZlgxN2V6SXdmWDE3ZTI5eVlXbHNNalY5Zlh0N2IzSmhhV3d5TlgxOSIsInN2IjoiMCIsImF0ayI6ImRHOXJaVzVmYzJWamNtVjBYMnRsZVY5dGFXRnZjbUU9IiwiY3V2ZXIiOiJSNTBCMyJ9.lTqmepM3HQJuNQXeArm-gmx9TwL0fFLDzDsoPCqYxcs"
-    // );
+    if(process.env.NODE_ENV  === "development"){
+      Cookies.set(
+        "skey",
+        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJpdGFzayIsImF1ZCI6ImMzZGhiV2xBWldjdVkyOXQiLCJleHAiOjE3NjQ1OTc5OTUsInVpZCI6ImMzZGhiV2xBWldjdVkyOXQiLCJ5YyI6ImUzdHVlbVZ1ZlgxN2V6SXdmWDE3ZTI5eVlXbHNNalY5Zlh0N2IzSmhhV3d5TlgxOSIsInN2IjoiMCIsImF0ayI6ImRHOXJaVzVmYzJWamNtVjBYMnRsZVY5dGFXRnZjbUU9IiwiY3V2ZXIiOiJSNTBCMyJ9.lTqmepM3HQJuNQXeArm-gmx9TwL0fFLDzDsoPCqYxcs"
+      );
 
     //StockValue
     //    Cookies.set(
-    //   "skey",
-    //    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJpdGFzayIsImF1ZCI6ImMzZGhiV2xBWldjdVkyOXQiLCJleHAiOjE3NjI5NDIyNjYsInVpZCI6ImMzZGhiV2xBWldjdVkyOXQiLCJ5YyI6ImUzdHVlbVZ1ZlgxN2V6SXdmWDE3ZTNOMGIyTnJkbUZzZFdWOWZYdDdjM1J2WTJ0MllXeDFaWDE5Iiwic3YiOiIwIn0.AM4wrOzQOItwsf0WP2vKqkNRbLZmkjkJSm_wOlm8R2g"  //stock valu
-    // );
+      //   "skey",
+      //    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJpdGFzayIsImF1ZCI6ImMzZGhiV2xBWldjdVkyOXQiLCJleHAiOjE3NjI5NDIyNjYsInVpZCI6ImMzZGhiV2xBWldjdVkyOXQiLCJ5YyI6ImUzdHVlbVZ1ZlgxN2V6SXdmWDE3ZTNOMGIyTnJkbUZzZFdWOWZYdDdjM1J2WTJ0MllXeDFaWDE5Iiwic3YiOiIwIn0.AM4wrOzQOItwsf0WP2vKqkNRbLZmkjkJSm_wOlm8R2g"  //stock valu
+      // );
 
-    //astore
-    // Cookies.set(
-    //   "skey",
-    //   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJpdGFzayIsImF1ZCI6ImRuTm5RR1ZuTG1OdmJRPT0iLCJleHAiOjE3NjQxMzk2MTEsInVpZCI6ImRuTm5RR1ZuTG1OdmJRPT0iLCJ5YyI6ImUzdHNhWFpsTG05d2RHbG5iMkZ3Y0hNdVkyOXRmWDE3ZXpJd2ZYMTdlMkZ6ZEc5eVpYMTllM3RoYzNSdmNtVjlmUT09Iiwic3YiOiIxIn0.aufiRoPxEZoIbMEccdnvDDs9wvI-L_eQWamm8sPViFM"
+      //astore
+      // Cookies.set(
+        //   "skey",
+        //   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJpdGFzayIsImF1ZCI6ImRuTm5RR1ZuTG1OdmJRPT0iLCJleHAiOjE3NjQxMzk2MTEsInVpZCI6ImRuTm5RR1ZuTG1OdmJRPT0iLCJ5YyI6ImUzdHNhWFpsTG05d2RHbG5iMkZ3Y0hNdVkyOXRmWDE3ZXpJd2ZYMTdlMkZ6ZEc5eVpYMTllM3RoYzNSdmNtVjlmUT09Iiwic3YiOiIxIn0.aufiRoPxEZoIbMEccdnvDDs9wvI-L_eQWamm8sPViFM"
     // );
+    }
     const interval = setInterval(() => {
       const token = Cookies.get("skey");
       if (!token) {
@@ -218,6 +221,8 @@ const GridMain = () => {
       return <CrmReport />;
     } else if (pid == 18573) {
       return <WebsiteManagementGrid />;
+    } else if (pid == 50025) {
+      return <ProcatalogThemeControl />;
     } else {
       return (
         <div style={{ textAlign: "center", marginTop: "20%" }}>Invalid PID</div>
