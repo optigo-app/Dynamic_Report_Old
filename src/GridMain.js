@@ -221,7 +221,7 @@ const GridMain = () => {
       return <CrmReport />;
     } else if (pid == 18573) {
       return <WebsiteManagementGrid />;
-    } else if (pid == 50025) {
+    } else if (pid == 18600) {
       return <ProcatalogThemeControl />;
     } else {
       return (

@@ -1,11 +1,12 @@
 {
   "name": "reportmaindummy",
   "version": "0.1.0",
-   "homepage": ".",
+  "homepage": ".",
   "private": true,
   "dependencies": {
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.0",
+    "@fontsource-variable/figtree": "^5.3.0",
     "@fontsource/poppins": "^5.2.6",
     "@hello-pangea/dnd": "^18.0.1",
     "@mui/material": "^7.0.2",
