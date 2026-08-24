@@ -361,6 +361,7 @@ const mapSideMenu = (rd) => {
       label: item.DisplayName,
       url: item.URL,
       PageName: item.PageName,
+      IsRedirect: item.IsRedirect,
       color: SIDE_MENU_COLORS[i % SIDE_MENU_COLORS.length],
       icon: getSideMenuIcon(item.DisplayName),
     }));
@@ -891,7 +892,8 @@ const CrmReport = () => {
     console.log('item: ', item);
     if (!item?.url) return;
     setActiveMenu(i);
-    if (MODAL_ORDERS.includes(item.order)) {
+    // if (MODAL_ORDERS.includes(item.order)) {
+    if(item?.IsRedirect == 0){
       setModalTitle(item.label);
       setModalUrl(item.url);
       setModalSize(MODAL_SIZE_BY_ORDER[item.order] || DEFAULT_MODAL_SIZE);
