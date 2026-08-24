@@ -1,4 +1,4 @@
-
+// http://localhost:3000/testreport/?sp=9&ifid=AdvanceCRM&pid=18538
 
 import React, { useEffect, useState } from "react";
 import {
@@ -367,16 +367,15 @@ const mapSideMenu = (rd) => {
 };
 
 // DisplayOrder values that open in a new tab vs inside a modal (iframe)
-const NEW_TAB_ORDERS = [1, 3, 5, 6, 7, 8, 10, 11, 12, 13, 15, 16];
-const MODAL_ORDERS = [4, 9, 14, 17, 18];
+const NEW_TAB_ORDERS = [1, 4, 6, 7, 8,9,14, 10, 11, 12, 13, 16];
+const MODAL_ORDERS = [3 ,5,15, 17, 18];
 
 // Static width/height per DisplayOrder for modal-opened menu items.
 // Adjust these numbers (px) to whatever each screen actually needs.
 const MODAL_SIZE_BY_ORDER = {
-  2: { width: 1000, height: 500 },  // Customer Stock
-  4: { width: 900, height: 650 },  // Customer Stock
-  9: { width: 600, height: 500 },   // KYC
-  14: { width: 520, height: 480 },  // Continue to Scheme
+  5: { width: 900, height: 650 },  // Customer Stock
+  3: { width: 600, height: 500 },   // KYC
+  15: { width: 520, height: 480 },  // Continue to Scheme
   17: { width: 800, height: 700 },  // Cash
   18: { width: 800, height: 720 },  // Bank
 };
@@ -889,6 +888,7 @@ const CrmReport = () => {
      whether the link opens in a new tab or a modal
      ══════════════════════════════════════════════ */
   const handleMenuClick = (item, i) => {
+    console.log('item: ', item);
     if (!item?.url) return;
     setActiveMenu(i);
     if (MODAL_ORDERS.includes(item.order)) {
@@ -1169,7 +1169,7 @@ const CrmReport = () => {
               <Box className="crm_stat_ico"><ShoppingBag size={14} /></Box>
               <Box className="crm_stat_txt">
                 <Typography className="crm_overview_val">{customerInfo.totalOrders}</Typography>
-                <Typography className="crm_overview_lbl">Total Orders</Typography>
+                <Typography className="crm_overview_lbl">Total Order Job</Typography>
               </Box>
             </Box>
           </Box>
@@ -1357,7 +1357,6 @@ const CrmReport = () => {
                     </Box>
                     <Box sx={{ textAlign: "right", flexShrink: 0 }}>
                       <Typography className="crm_inv_amt">{formatCurrency(inv.amount)}</Typography>
-                      <Chip label={inv.status} size="small" sx={{ background: sc.bg, color: sc.color, fontSize: 9, fontWeight: 700, height: 18, fontFamily: "Poppins" }} />
                     </Box>
                   </Box>
                 );

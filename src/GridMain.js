@@ -39,6 +39,7 @@ import StockDetailBothTemp from "./compoents/StockDetailBothTemp/StockDetailBoth
 import AdvnaceWipReport from "./compoents/AdvnaceWipReport/AdvnaceWipReport";
 import CrmReport from "./compoents/CrmReport/CrmReport";
 import WebsiteManagementGrid from "./compoents/WebsiteManagementGrid/WebsiteManagementGrid";
+import CombinationMaker from "./compoents/CombinationMaker/CombinationMaker";
 import ProcatalogThemeControl from './compoents/ProcatalogThemeControl'
 
 // Test73  :-    http://nzen/testreport/?sv=/e3tsaXZlLm9wdGlnb2FwcHMuY29tfX17ezIwfX17e3Rlc3Q3M319e3t0ZXN0NzN9fQ==/1&ifid=WorkerReportPro&pid=18223
@@ -222,8 +223,13 @@ const GridMain = () => {
     } else if (pid == 18573) {
       return <WebsiteManagementGrid />;
     } else if (pid == 18600) {
+    }  else if (pid == 18599) {
+      return <CombinationMaker />;
+    } 
+     else if (pid == 50025) {
       return <ProcatalogThemeControl />;
-    } else {
+    } 
+    else {
       return (
         <div style={{ textAlign: "center", marginTop: "20%" }}>Invalid PID</div>
       );

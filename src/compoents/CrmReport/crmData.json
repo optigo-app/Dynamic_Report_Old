@@ -31,12 +31,12 @@
 
   "gradeAfterInventory": [
     { "label": "Edit Customer", "count": 1, "color": "#7367f0" },
-    { "label": "Receive Material", "count": 2, "color": "#28c76f" },
+    { "label": "Add Customer Receive", "count": 2, "color": "#28c76f" },
     { "label": "Customer Stock", "count": 3, "color": "#ea5455" },
-    { "label": "Design Job", "count": 2, "color": "#ff9f43" },
-    { "label": "Album", "count": 2, "color": "#1e9ff2" },
-    { "label": "Quotation", "count": 2, "color": "#7367f0" },
-    { "label": "Order", "count": 0, "color": "#28c76f" },
+    { "label": "Create PD Job", "count": 2, "color": "#ff9f43" },
+    { "label": "Create Album", "count": 2, "color": "#1e9ff2" },
+    { "label": "Create Quotation", "count": 2, "color": "#7367f0" },
+    { "label": "Create Order", "count": 0, "color": "#28c76f" },
     { "label": "KYC", "count": 1, "color": "#ea5455" },
     { "label": "Continue To Memo", "count": 0, "color": "#ff9f43" },
     { "label": "Continue To Bill", "count": 0, "color": "#ff9f43" },
