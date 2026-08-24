@@ -220,6 +220,9 @@ const GridMain = () => {
       return <AdvnaceWipReport />;
     } else if (pid == 18538) {
       return <CrmReport />;
+    } else if (pid == 18573) {
+      return <WebsiteManagementGrid />;
+    } else if (pid == 18600) {
     }  else if (pid == 18599) {
       return <CombinationMaker />;
     } 
