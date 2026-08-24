@@ -589,7 +589,6 @@
 
   /* Scrollable invoice list (now up to 5 rows) */
   .crm_invoices_card {
-    max-height: 300px;
     overflow-y: auto;
     scrollbar-width: thin;
     scrollbar-color: #e0daff transparent;
