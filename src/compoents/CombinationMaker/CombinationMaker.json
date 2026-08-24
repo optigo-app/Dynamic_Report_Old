@@ -1,0 +1,183 @@
+{
+  "meta": {
+    "title": "Combination Maker",
+    "primaryColor": "#7367f0"
+  },
+  "categories": [
+    { "id": "ring", "name": "Ring" },
+    { "id": "chain", "name": "Chain" },
+    { "id": "necklace", "name": "Necklace" },
+    { "id": "bracelet", "name": "Bracelet" },
+    { "id": "earring", "name": "Earring" },
+    { "id": "pendant", "name": "Pendant" }
+  ],
+  "genders": ["Womens", "Mens", "Kids", "Unisex"],
+  "attributeGroups": [
+    {
+      "id": "metalPurity",
+      "label": "Metal Type - Purity",
+      "options": [
+        { "id": "gold14k", "name": "Gold 14K" },
+        { "id": "gold18k", "name": "Gold 18K" },
+        { "id": "gold22k", "name": "Gold 22K" },
+        { "id": "silver925", "name": "Silver 925" }
+      ]
+    },
+    {
+      "id": "metalColor",
+      "label": "Metal Color",
+      "options": [
+        { "id": "yellowGold", "name": "Yellow Gold" },
+        { "id": "whiteGold", "name": "White Gold" },
+        { "id": "roseGold", "name": "Rose Gold" }
+      ]
+    },
+    {
+      "id": "diamondType",
+      "label": "Diamond Type",
+      "options": [
+        { "id": "natural", "name": "Natural" },
+        { "id": "labGrown", "name": "Lab Grown" }
+      ]
+    },
+    {
+      "id": "diamondQuality",
+      "label": "Diamond Quality",
+      "options": [
+        { "id": "vvsVs", "name": "VVS-VS" },
+        { "id": "siGh", "name": "SI-GH" },
+        { "id": "efIf", "name": "EF-IF" }
+      ]
+    },
+    {
+      "id": "ringSize",
+      "label": "Ring Size",
+      "options": [
+        { "id": "size12", "name": "12" },
+        { "id": "size15", "name": "15" },
+        { "id": "size18", "name": "18" },
+        { "id": "size20", "name": "20" }
+      ]
+    },
+    {
+      "id": "colorStone",
+      "label": "Color Stone",
+      "options": [
+        { "id": "blueSapphire", "name": "Blue Sapphire" },
+        { "id": "greenEmerald", "name": "Green Emerald" },
+        { "id": "whiteMop", "name": "White Mother of Pearl" },
+        { "id": "ruby", "name": "Ruby" },
+        { "id": "pearl", "name": "Pearl" }
+      ]
+    }
+  ],
+  "sets": [
+    {
+      "id": "set-1001",
+      "name": "Women's Ring Set",
+      "category": "ring",
+      "gender": "Womens",
+      "description": "Ring set for women with multiple metal, color, diamond and size options.",
+      "status": "Active",
+      "createdDate": "2026-08-06",
+      "combinationCount": 432,
+      "selections": {
+        "metalPurity": ["gold14k", "gold18k"],
+        "metalColor": ["yellowGold", "whiteGold", "roseGold"],
+        "diamondType": ["natural", "labGrown"],
+        "diamondQuality": ["vvsVs", "siGh", "efIf"],
+        "ringSize": ["size12", "size15", "size18", "size20"],
+        "colorStone": ["blueSapphire", "greenEmerald", "whiteMop"]
+      }
+    },
+    {
+      "id": "set-1002",
+      "name": "Men's Ring Set",
+      "category": "ring",
+      "gender": "Mens",
+      "description": "Bold ring collection for men.",
+      "status": "Active",
+      "createdDate": "2026-08-05",
+      "combinationCount": 256,
+      "selections": {
+        "metalPurity": ["gold18k", "gold22k"],
+        "metalColor": ["yellowGold", "whiteGold"],
+        "diamondType": ["natural", "labGrown"],
+        "diamondQuality": ["vvsVs", "siGh"],
+        "ringSize": ["size15", "size18"],
+        "colorStone": ["blueSapphire", "ruby"]
+      }
+    },
+    {
+      "id": "set-1003",
+      "name": "Chain Set",
+      "category": "chain",
+      "gender": "Unisex",
+      "description": "Everyday chain collection.",
+      "status": "Active",
+      "createdDate": "2026-08-04",
+      "combinationCount": 128,
+      "selections": {
+        "metalPurity": ["gold18k", "gold22k"],
+        "metalColor": ["yellowGold", "roseGold"],
+        "diamondType": ["natural"],
+        "diamondQuality": ["vvsVs", "siGh"],
+        "colorStone": ["pearl", "whiteMop"]
+      }
+    },
+    {
+      "id": "set-1004",
+      "name": "Silver Collection",
+      "category": "ring",
+      "gender": "Womens",
+      "description": "Affordable silver ring range.",
+      "status": "Active",
+      "createdDate": "2026-08-03",
+      "combinationCount": 180,
+      "selections": {
+        "metalPurity": ["silver925"],
+        "metalColor": ["whiteGold"],
+        "diamondType": ["labGrown"],
+        "diamondQuality": ["siGh", "efIf"],
+        "ringSize": ["size12", "size15", "size18"],
+        "colorStone": ["blueSapphire", "greenEmerald", "ruby"]
+      }
+    },
+    {
+      "id": "set-1005",
+      "name": "Premium Natural",
+      "category": "ring",
+      "gender": "Womens",
+      "description": "Premium natural diamond rings.",
+      "status": "Active",
+      "createdDate": "2026-08-02",
+      "combinationCount": 360,
+      "selections": {
+        "metalPurity": ["gold14k", "gold18k", "gold22k"],
+        "metalColor": ["yellowGold", "whiteGold", "roseGold"],
+        "diamondType": ["natural"],
+        "diamondQuality": ["vvsVs", "efIf"],
+        "ringSize": ["size12", "size15", "size18", "size20"],
+        "colorStone": ["blueSapphire", "greenEmerald", "whiteMop", "ruby", "pearl"]
+      }
+    },
+    {
+      "id": "set-1006",
+      "name": "Lab Grown Collection",
+      "category": "ring",
+      "gender": "Unisex",
+      "description": "Eco friendly lab grown diamond rings.",
+      "status": "Active",
+      "createdDate": "2026-08-01",
+      "combinationCount": 248,
+      "selections": {
+        "metalPurity": ["gold14k", "gold18k"],
+        "metalColor": ["whiteGold", "roseGold"],
+        "diamondType": ["labGrown"],
+        "diamondQuality": ["vvsVs", "siGh", "efIf"],
+        "ringSize": ["size15", "size18"],
+        "colorStone": ["blueSapphire", "greenEmerald"]
+      }
+    }
+  ]
+}
