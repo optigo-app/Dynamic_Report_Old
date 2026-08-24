@@ -223,13 +223,10 @@ const GridMain = () => {
     } else if (pid == 18573) {
       return <WebsiteManagementGrid />;
     } else if (pid == 18600) {
+      return <ProcatalogThemeControl />;
     }  else if (pid == 18599) {
       return <CombinationMaker />;
-    } 
-     else if (pid == 50025) {
-      return <ProcatalogThemeControl />;
-    } 
-    else {
+    } else {
       return (
         <div style={{ textAlign: "center", marginTop: "20%" }}>Invalid PID</div>
       );
