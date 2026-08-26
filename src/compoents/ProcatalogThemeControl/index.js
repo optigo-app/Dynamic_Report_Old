@@ -10,185 +10,149 @@ import {
   Container,
   Snackbar,
   Alert,
+  createTheme,
+  ThemeProvider,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  CircularProgress,
 } from "@mui/material";
 import CheckRoundedIcon from "@mui/icons-material/CheckRounded";
-import '@fontsource-variable/figtree/wght.css';
+import { GetActiveProcatTheme, GetAllProcatMasterThemes, ApplyProcatTheme } from "../../API/PickThemePlattee";
+// Supports weights 100-900
+import "@fontsource-variable/montserrat/wght.css";
 
-
-const PALETTES = [
-  {
-    id: 1,
-    name: "Apple Intelligence",
-    tag: "Siri & Neural",
-    accent: "#007AFF",
-    swatches: [
-      { hex: "#007AFF", role: "Primary" },
-      { hex: "#AF52DE", role: "Neural" },
-      { hex: "#FF2D55", role: "Accent" },
-      { hex: "#F5EEF8", role: "Surface" },
-    ],
+const theme = createTheme({
+  typography: {
+    fontFamily: '"Montserrat Variable", sans-serif',
   },
-  {
-    id: 2,
-    name: "Cupertino iOS 18",
-    tag: "System Classic",
-    accent: "#007AFF",
-    swatches: [
-      { hex: "#007AFF", role: "System Blue" },
-      { hex: "#5856D6", role: "Indigo" },
-      { hex: "#00C7BE", role: "Mint" },
-      { hex: "#F2F2F7", role: "Canvas" },
-    ],
-  },
-  {
-    id: 3,
-    name: "Desert Titanium",
-    tag: "Pro Hardware",
-    accent: "#876D4E",
-    swatches: [
-      { hex: "#BFA07A", role: "Titanium" },
-      { hex: "#876D4E", role: "Bronze" },
-      { hex: "#ECE4D8", role: "Shell" },
-      { hex: "#F9F7F4", role: "Sand" },
-    ],
-  },
-  {
-    id: 4,
-    name: "Natural Titanium",
-    tag: "Pro Hardware",
-    accent: "#48474A",
-    swatches: [
-      { hex: "#9C988F", role: "Natural" },
-      { hex: "#48474A", role: "Graphite" },
-      { hex: "#D7D4CC", role: "Lustre" },
-      { hex: "#F4F3F0", role: "Ceramic" },
-    ],
-  },
-  {
-    id: 5,
-    name: "visionOS Spatial",
-    tag: "Spatial Glass",
-    accent: "#38BDF8",
-    swatches: [
-      { hex: "#0F172A", role: "Space" },
-      { hex: "#38BDF8", role: "Aqua" },
-      { hex: "#BAE6FD", role: "Frosted" },
-      { hex: "#F8FAFC", role: "Specular" },
-    ],
-  },
-  {
-    id: 6,
-    name: "macOS Sequoia Forest",
-    tag: "Nature Tone",
-    accent: "#248A3D",
-    swatches: [
-      { hex: "#1C3F3A", role: "Deep Pine" },
-      { hex: "#34C759", role: "Green" },
-      { hex: "#D1F2D9", role: "Mint" },
-      { hex: "#F4F8F5", role: "Mist" },
-    ],
-  },
-  {
-    id: 7,
-    name: "Activity Rings",
-    tag: "Fitness",
-    accent: "#FA114F",
-    swatches: [
-      { hex: "#FA114F", role: "Move" },
-      { hex: "#A8FF00", role: "Exercise" },
-      { hex: "#00E3FF", role: "Stand" },
-      { hex: "#1C1C1E", role: "Canvas" },
-    ],
-  },
-  {
-    id: 8,
-    name: "Ultramarine Studio",
-    tag: "Dynamic",
-    accent: "#4765FF",
-    swatches: [
-      { hex: "#4765FF", role: "Ultramarine" },
-      { hex: "#64D2FF", role: "Sky" },
-      { hex: "#E0E7FF", role: "Ice" },
-      { hex: "#F5F7FF", role: "Cloud" },
-    ],
-  },
-  {
-    id: 9,
-    name: "Monterey Coral",
-    tag: "Warm System",
-    accent: "#FF5B37",
-    swatches: [
-      { hex: "#FF5B37", role: "Coral" },
-      { hex: "#FF9F0A", role: "Amber" },
-      { hex: "#FFE5DE", role: "Mist" },
-      { hex: "#FFF9F7", role: "Sand" },
-    ],
-  },
-  {
-    id: 10,
-    name: "Cupertino Dark",
-    tag: "OLED System",
-    accent: "#2997FF",
-    swatches: [
-      { hex: "#000000", role: "True Dark" },
-      { hex: "#1C1C1E", role: "Elevated" },
-      { hex: "#2997FF", role: "Highlight" },
-      { hex: "#8E8E93", role: "Muted" },
-    ],
-  },
-  {
-    id: 11,
-    name: "Highland Lavender",
-    tag: "Pastel Tint",
-    accent: "#7D52DE",
-    swatches: [
-      { hex: "#7D52DE", role: "Purple" },
-      { hex: "#BF5AF2", role: "Lilac" },
-      { hex: "#EBE2FC", role: "Violet" },
-      { hex: "#F8F6FD", role: "Porcelain" },
-    ],
-  },
-  {
-    id: 12,
-    name: "Space Gray Alum",
-    tag: "Minimal Studio",
-    accent: "#1D1D1F",
-    swatches: [
-      { hex: "#1D1D1F", role: "Space Black" },
-      { hex: "#636366", role: "Graphite" },
-      { hex: "#D2D2D7", role: "Silver" },
-      { hex: "#F5F5F7", role: "Light" },
-    ],
-  },
-];
-
-const CATEGORIES = [
-  "All",
-  "System Classic",
-  "Pro Hardware",
-  "Spatial Glass",
-  "Fitness",
-  "Dynamic",
-];
+});
 
 export default function ColorPaletteDashboard() {
   const [loading, setLoading] = useState(true);
-  const [selectedId, setSelectedId] = useState(1);
+  const [themeData, setThemeData] = useState(null);
+  const [masterThemes, setMasterThemes] = useState([]);
+  const [selectedId, setSelectedId] = useState(null);
   const [activeCategory, setActiveCategory] = useState("All");
   const [toastOpen, setToastOpen] = useState(false);
   const [copiedHex, setCopiedHex] = useState("");
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setLoading(false);
-    }, 1500);
-    return () => clearTimeout(timer);
+    const fetchThemeData = async () => {
+      try {
+        setLoading(true);
+        let authData = null;
+        try {
+          const stored = sessionStorage.getItem("AuthqueryParams");
+          if (stored) {
+            authData = JSON.parse(stored);
+          }
+        } catch (e) {
+          console.error(
+            "Error parsing AuthqueryParams from sessionStorage:",
+            e,
+          );
+        }
+
+        const yearCode =
+          authData?.yc || "e3tuemVufX17ezIwfX17e29yYWlsMjV9fXt7b3JhaWwyNX19";
+
+        const [resTheme, resMaster] = await Promise.allSettled([
+          GetActiveProcatTheme({ domainName: "", yearCode }),
+          GetAllProcatMasterThemes({ yearCode }),
+        ]);
+
+        if (resTheme.status === "fulfilled" && resTheme.value) {
+          setThemeData(resTheme.value);
+        }
+
+        if (
+          resMaster.status === "fulfilled" &&
+          Array.isArray(resMaster.value) &&
+          resMaster.value.length > 0
+        ) {
+          const validThemes = resMaster.value.filter(
+            (t) => t && !t.stat_msg && (t.id || t.primary_theme_color || t.theme_name)
+          );
+          if (validThemes.length > 0) {
+            setMasterThemes(validThemes);
+            setSelectedId(validThemes[0].id);
+          }
+        }
+      } catch (error) {
+        console.error("Error fetching theme data:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchThemeData();
   }, []);
+
+  const displayPalettes = masterThemes.map((item) => ({
+    id: item.id,
+    name: item.theme_name || item.name || "Custom Preset",
+    tag: item.theme_tag || item.tag || "Master Theme",
+    accent: item.accent_color || item.primary_theme_color || "#007AFF",
+    swatches: [
+      { hex: item.primary_theme_color || "#007AFF", role: "Primary" },
+      { hex: item.primary_theme_bg || "#FFFFFF", role: "Surface" },
+      { hex: item.btn_main_bg || "#000000", role: "Button" },
+      { hex: item.sticky_header_bg || "#F2F2F7", role: "Header" },
+    ],
+  }));
+
+  const categories = [
+    "All",
+    ...Array.from(new Set(displayPalettes.map((p) => p.tag).filter(Boolean))),
+  ];
 
   const filteredPalettes =
     activeCategory === "All"
-      ? PALETTES
-      : PALETTES.filter((p) => p.tag === activeCategory);
+      ? displayPalettes
+      : displayPalettes.filter((p) => p.tag === activeCategory);
+
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [pendingPalette, setPendingPalette] = useState(null);
+  const [applying, setApplying] = useState(false);
+
+  const handleRequestApply = (palette) => {
+    setPendingPalette(palette);
+    setConfirmOpen(true);
+  };
+
+  const handleConfirmApply = async () => {
+    if (!pendingPalette) return;
+    try {
+      setApplying(true);
+      const themeId = pendingPalette.id;
+      setSelectedId(themeId);
+
+      let authData = null;
+      try {
+        const stored = sessionStorage.getItem("AuthqueryParams");
+        if (stored) authData = JSON.parse(stored);
+      } catch (e) {}
+
+      const yearCode = authData?.yc || "e3tuemVufX17ezIwfX17e29yYWlsMjV9fXt7b3JhaWwyNX19";
+      const domainName = themeData?.domain_name || "procatalog.web";
+
+      await ApplyProcatTheme({ domainName, themeId, yearCode });
+
+      const updated = await GetActiveProcatTheme({ domainName, yearCode });
+      if (updated) setThemeData(updated);
+
+      setCopiedHex(`Theme "${pendingPalette.name}" applied successfully!`);
+      setToastOpen(true);
+    } catch (err) {
+      console.error("Error applying theme:", err);
+    } finally {
+      setApplying(false);
+      setConfirmOpen(false);
+      setPendingPalette(null);
+    }
+  };
 
   const handleCopy = (hex) => {
     if (typeof window !== "undefined" && navigator.clipboard) {
@@ -199,33 +163,33 @@ export default function ColorPaletteDashboard() {
   };
 
   return (
-    <Box
-      sx={{
-        minHeight: "100vh",
-        backgroundColor: "#FAFAFC",
-        color: "#1D1D1F",
-        fontFamily:
-          '"Figtree Variable", sans-serif !important',
-        pb: 12,
-        position: "relative",
-      }}
-    >
-      {/* 0. FULLSCREEN APPLE DESIGN LOADER */}
-      {loading && (
-        <Box
-          sx={{
-            position: "fixed",
-            inset: 0,
-            zIndex: 9999,
-            backgroundColor: "#f6f7fb",
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            justifyContent: "center",
-            gap: 2.5,
-          }}
-        >
-          <style>{`
+    <ThemeProvider theme={theme}>
+      <Box
+        sx={{
+          minHeight: "100vh",
+          backgroundColor: "#FAFAFC",
+          color: "#1D1D1F",
+          fontFamily: "Montserrat Variable, sans-serif !important",
+          pb: 12,
+          position: "relative",
+        }}
+      >
+        {/* 0. FULLSCREEN APPLE DESIGN LOADER */}
+        {loading && (
+          <Box
+            sx={{
+              position: "fixed",
+              inset: 0,
+              zIndex: 9999,
+              backgroundColor: "#f6f7fb",
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: 2.5,
+            }}
+          >
+            <style>{`
             .loader {
               width: 75px;
               height: 75px;
@@ -243,362 +207,469 @@ export default function ColorPaletteDashboard() {
             }
           `}</style>
 
-          <div className="loader" />
+            <div className="loader" />
 
-          <Box sx={{ textAlign: "center" }}>
-            <Typography
-              variant="body1"
-              sx={{
-                fontWeight: 600,
-                color: "#1D1D1F",
-                letterSpacing: "-0.015em",
-                fontSize: "0.95rem",
-                mb: 0.4,
-              }}
-            >
-              procatalog.web
-            </Typography>
-            <Typography
-              variant="caption"
-              sx={{
-                color: "#86868B",
-                fontSize: "0.8125rem",
-                fontWeight: 400,
-                letterSpacing: "-0.01em",
-              }}
-            >
-              Loading Curated visual themes, brand accents, and design
-            tokens...
-            </Typography>
-          </Box>
-        </Box>
-      )}
-
-      <Box
-        sx={{
-          position: "sticky",
-          top: { xs: 12, md: 18 },
-          zIndex: 1100,
-          px: { xs: 2, md: 3 },
-          pointerEvents: "none",
-        }}
-      >
-        <Container maxWidth="lg" sx={{ p: "0 !important" }}>
-          <Box
-            sx={{
-              pointerEvents: "auto",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-            }}
-          >
-            {/* Simple Unboxed Domain + Green Dot */}
-            <Box
-              sx={{
-                display: "flex",
-                alignItems: "center",
-                gap: 1.2,
-                px: 2.4,
-                py: 1,
-                userSelect: "none",
-                borderRadius: "85px", // Continuous smooth pill capsule
-                backgroundColor: "rgba(255, 255, 255, 0.85)",
-                backdropFilter: "blur(20px) saturate(180%)",
-                WebkitBackdropFilter: "blur(20px) saturate(180%)",
-                border: "1px solid rgba(0, 0, 0, 0.07)",
-                boxShadow: "0 2px 14px rgba(0, 0, 0, 0.04)",
-              }}
-            >
-              <Box
-                sx={{
-                  width: 8,
-                  height: 8,
-                  borderRadius: "50%",
-                  backgroundColor: "#34C759",
-                  boxShadow: "0 0 6px rgba(52, 199, 89, 0.5)",
-                }}
-              />
+            <Box sx={{ textAlign: "center" }}>
               <Typography
-                variant="body2"
+                variant="body1"
                 sx={{
-                  fontWeight: 500,
-                  fontSize: "0.85rem",
-                  letterSpacing: "-0.015em",
+                  fontWeight: 600,
                   color: "#1D1D1F",
-                  textTransform: "capitalize",
+                  letterSpacing: "-0.015em",
+                  fontSize: "0.95rem",
+                  mb: 0.4,
                 }}
               >
-                procatalog.web
+                {themeData?.domain_name || "Unknown"}
+              </Typography>
+              <Typography
+                variant="caption"
+                sx={{
+                  color: "#86868B",
+                  fontSize: "0.8125rem",
+                  fontWeight: 400,
+                  letterSpacing: "-0.01em",
+                }}
+              >
+                Loading Curated visual themes, brand accents, and design
+                tokens...
               </Typography>
             </Box>
           </Box>
-        </Container>
-      </Box>
+        )}
 
-      {/* 2. MAIN CONTENT AREA */}
-      <Container maxWidth="lg" sx={{ mt: { xs: 4, md: 5 } }}>
-        {/* Header Typography */}
-        <Box sx={{ mb: 3.5 }}>
-          <Typography
-            variant="h4"
-            sx={{
-              fontWeight: 600,
-              fontSize: { xs: "1.65rem", md: "2rem" },
-              letterSpacing: "-0.025em",
-              color: "#1D1D1F",
-              mb: 0.5,
-            }}
-          >
-            Theme Configuration
-          </Typography>
-          <Typography
-            variant="body2"
-            sx={{
-              color: "#86868B",
-              fontSize: "0.9375rem",
-              fontWeight: 400,
-              letterSpacing: "-0.01em",
-              lineHeight: 1.4,
-            }}
-          >
-            Select and apply curated visual themes, brand accents, and design
-            tokens for procatalog.web.
-          </Typography>
-        </Box>
-
-        {/* Minimal Category Filter Tabs */}
         <Box
           sx={{
-            display: "flex",
-            flexWrap: "wrap",
-            gap: 0.75,
-            mb: 4,
+            position: "sticky",
+            top: { xs: 12, md: 18 },
+            zIndex: 1100,
+            px: { xs: 2, md: 3 },
+            pointerEvents: "none",
           }}
         >
-          {CATEGORIES.map((cat) => {
-            const isActive = activeCategory === cat;
-            return (
+          <Container maxWidth="lg" sx={{ p: "0 !important" }}>
+            <Box
+              sx={{
+                pointerEvents: "auto",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+              }}
+            >
+              {/* Simple Unboxed Domain + Green Dot */}
               <Box
-                key={cat}
-                onClick={() => setActiveCategory(cat)}
                 sx={{
-                  cursor: "pointer",
-                  px: 1.6,
-                  py: 0.5,
-                  borderRadius: "999px",
-                  fontSize: "0.8125rem",
-                  fontWeight: isActive ? 500 : 400,
-                  letterSpacing: "-0.01em",
-                  backgroundColor: isActive ? "#1D1D1F" : "transparent",
-                  color: isActive ? "#FFFFFF" : "#86868B",
-                  border: isActive
-                    ? "1px solid #1D1D1F"
-                    : "1px solid rgba(0, 0, 0, 0.08)",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 1.2,
+                  px: 2.4,
+                  py: 1,
                   userSelect: "none",
+                  borderRadius: "85px", // Continuous smooth pill capsule
+                  backgroundColor: "rgba(255, 255, 255, 0.85)",
+                  backdropFilter: "blur(20px) saturate(180%)",
+                  WebkitBackdropFilter: "blur(20px) saturate(180%)",
+                  border: "1px solid rgba(0, 0, 0, 0.07)",
+                  boxShadow: "0 2px 14px rgba(0, 0, 0, 0.04)",
                 }}
               >
-                {cat}
-              </Box>
-            );
-          })}
-        </Box>
-
-        {/* 3. MUI GRID */}
-        <Grid container spacing={2.5}>
-          {filteredPalettes.map((palette) => {
-            const isApplied = selectedId === palette.id;
-
-            return (
-              <Grid key={palette.id} size={{ xs: 12, sm: 6, md: 4 }}>
-                <Card
-                  elevation={0}
+                <Box
                   sx={{
-                    height: "100%",
-                    display: "flex",
-                    flexDirection: "column",
-                    justifyContent: "space-between",
-                    borderRadius: "14px",
-                    backgroundColor: "#FFFFFF",
-                    border: isApplied
-                      ? "1px solid #1D1D1F"
-                      : "1px solid rgba(0, 0, 0, 0.07)",
-                    boxShadow: "none",
-                    transition: "none",
+                    width: 8,
+                    height: 8,
+                    borderRadius: "50%",
+                    backgroundColor: "#34C759",
+                    boxShadow: "0 0 6px rgba(52, 199, 89, 0.5)",
+                  }}
+                />
+                <Typography
+                  variant="body2"
+                  sx={{
+                    fontWeight: 500,
+                    fontSize: "0.85rem",
+                    letterSpacing: "-0.015em",
+                    color: "#1D1D1F",
+                    textTransform: "capitalize",
                   }}
                 >
-                  <CardContent sx={{ p: 2.2, pb: 1 }}>
-                    {/* Top Row: Name and Tag */}
-                    <Box
-                      sx={{
-                        display: "flex",
-                        justifyContent: "space-between",
-                        alignItems: "baseline",
-                        mb: 1.8,
-                      }}
-                    >
-                      <Typography
-                        variant="subtitle1"
+                  {themeData?.domain_name || "Unknown"}
+                </Typography>
+              </Box>
+            </Box>
+          </Container>
+        </Box>
+
+        {/* 2. MAIN CONTENT AREA */}
+        <Container maxWidth="lg" sx={{ mt: { xs: 4, md: 5 } }}>
+          {/* Header Typography */}
+          <Box sx={{ mb: 3.5 }}>
+            <Typography
+              variant="h4"
+              sx={{
+                fontWeight: 600,
+                fontSize: { xs: "1.65rem", md: "2rem" },
+                letterSpacing: "-0.025em",
+                color: "#1D1D1F",
+                mb: 0.5,
+              }}
+            >
+              Theme Configuration
+            </Typography>
+            <Typography
+              variant="body2"
+              sx={{
+                color: "#86868B",
+                fontSize: "0.9375rem",
+                fontWeight: 400,
+                letterSpacing: "-0.01em",
+                lineHeight: 1.4,
+              }}
+            >
+              Select and apply curated visual themes, brand accents, and design
+              tokens for procatalog.web.
+            </Typography>
+          </Box>
+
+          {/* Minimal Category Filter Tabs */}
+          <Box
+            sx={{
+              display: "flex",
+              flexWrap: "wrap",
+              gap: 0.75,
+              mb: 4,
+            }}
+          >
+            {categories.map((cat) => {
+              const isActive = activeCategory === cat;
+              return (
+                <Box
+                  key={cat}
+                  onClick={() => setActiveCategory(cat)}
+                  sx={{
+                    cursor: "pointer",
+                    px: 1.6,
+                    py: 0.5,
+                    borderRadius: "999px",
+                    fontSize: "0.8125rem",
+                    fontWeight: isActive ? 500 : 400,
+                    letterSpacing: "-0.01em",
+                    backgroundColor: isActive ? "#1D1D1F" : "transparent",
+                    color: isActive ? "#FFFFFF" : "#86868B",
+                    border: isActive
+                      ? "1px solid #1D1D1F"
+                      : "1px solid rgba(0, 0, 0, 0.08)",
+                    userSelect: "none",
+                  }}
+                >
+                  {cat}
+                </Box>
+              );
+            })}
+          </Box>
+
+          {/* 3. MUI GRID */}
+          <Grid container spacing={2.5}>
+            {filteredPalettes.map((palette) => {
+              const isApplied = selectedId === palette.id;
+
+              return (
+                <Grid key={palette.id} size={{ xs: 12, sm: 6, md: 4 }}>
+                  <Card
+                    elevation={0}
+                    sx={{
+                      height: "100%",
+                      display: "flex",
+                      flexDirection: "column",
+                      justifyContent: "space-between",
+                      borderRadius: "14px",
+                      backgroundColor: "#FFFFFF",
+                      border: isApplied
+                        ? "1px solid #1D1D1F"
+                        : "1px solid rgba(0, 0, 0, 0.07)",
+                      boxShadow: "none",
+                      transition: "none",
+                    }}
+                  >
+                    <CardContent sx={{ p: 2.2, pb: 1 }}>
+                      {/* Top Row: Name and Tag */}
+                      <Box
                         sx={{
-                          fontWeight: 600,
-                          fontSize: "0.9375rem",
-                          letterSpacing: "-0.015em",
-                          color: "#1D1D1F",
+                          display: "flex",
+                          justifyContent: "space-between",
+                          alignItems: "baseline",
+                          mb: 1.8,
                         }}
                       >
-                        {palette.name}
-                      </Typography>
-
-                      <Typography
-                        variant="caption"
-                        sx={{
-                          fontSize: "0.75rem",
-                          fontWeight: 400,
-                          color: "#86868B",
-                          letterSpacing: "-0.01em",
-                        }}
-                      >
-                        {palette.tag}
-                      </Typography>
-                    </Box>
-
-                    {/* Continuous Palette Strip */}
-                    <Box
-                      sx={{
-                        display: "flex",
-                        height: 38,
-                        borderRadius: "8px",
-                        overflow: "hidden",
-                        mb: 2,
-                        border: "1px solid rgba(0, 0, 0, 0.06)",
-                      }}
-                    >
-                      {palette.swatches.map((item, idx) => (
-                        <Box
-                          key={idx}
-                          onClick={() => handleCopy(item.hex)}
+                        <Typography
+                          variant="subtitle1"
                           sx={{
-                            flex: 1,
-                            backgroundColor: item.hex,
-                            cursor: "pointer",
-                          }}
-                        />
-                      ))}
-                    </Box>
-
-                    {/* Hex Values & Roles */}
-                    <Box
-                      sx={{
-                        display: "grid",
-                        gridTemplateColumns: "repeat(4, 1fr)",
-                        gap: 0.5,
-                        textAlign: "center",
-                      }}
-                    >
-                      {palette.swatches.map((item, idx) => (
-                        <Box
-                          key={idx}
-                          onClick={() => handleCopy(item.hex)}
-                          sx={{
-                            cursor: "pointer",
-                            py: 0.4,
+                            fontWeight: 600,
+                            fontSize: "0.9375rem",
+                            letterSpacing: "-0.015em",
+                            color: "#1D1D1F",
                           }}
                         >
-                          <Typography
-                            variant="caption"
-                            sx={{
-                              display: "block",
-                              fontSize: "0.72rem",
-                              fontFamily:
-                                "SFMono-Regular, Menlo, Monaco, monospace",
-                              fontWeight: 500,
-                              color: "#1D1D1F",
-                              letterSpacing: "-0.01em",
-                              mb: 0.2,
-                            }}
-                          >
-                            {item.hex}
-                          </Typography>
-                          <Typography
-                            variant="caption"
-                            sx={{
-                              display: "block",
-                              fontSize: "0.65rem",
-                              fontWeight: 400,
-                              color: "#86868B",
-                            }}
-                          >
-                            {item.role}
-                          </Typography>
-                        </Box>
-                      ))}
-                    </Box>
-                  </CardContent>
+                          {palette.name}
+                        </Typography>
 
-                  {/* CARD ACTIONS (APPLY BUTTON) */}
-                  <CardActions sx={{ p: 2.2, pt: 1.5 }}>
-                    <Button
-                      fullWidth
-                      disableElevation
-                      disableRipple
-                      variant="contained"
-                      onClick={() => setSelectedId(palette.id)}
-                      startIcon={
-                        isApplied ? (
-                          <CheckRoundedIcon
-                            sx={{ fontSize: "15px !important" }}
+                        <Typography
+                          variant="caption"
+                          sx={{
+                            fontSize: "0.75rem",
+                            fontWeight: 400,
+                            color: "#86868B",
+                            letterSpacing: "-0.01em",
+                          }}
+                        >
+                          {palette.tag}
+                        </Typography>
+                      </Box>
+
+                      {/* Continuous Palette Strip */}
+                      <Box
+                        sx={{
+                          display: "flex",
+                          height: 38,
+                          borderRadius: "8px",
+                          overflow: "hidden",
+                          mb: 2,
+                          border: "1px solid rgba(0, 0, 0, 0.06)",
+                        }}
+                      >
+                        {palette.swatches.map((item, idx) => (
+                          <Box
+                            key={idx}
+                            onClick={() => handleCopy(item.hex)}
+                            sx={{
+                              flex: 1,
+                              backgroundColor: item.hex,
+                              cursor: "pointer",
+                            }}
                           />
-                        ) : null
-                      }
-                      sx={{
-                        height: 34,
-                        borderRadius: "8px",
-                        textTransform: "none",
-                        fontSize: "0.8125rem",
-                        fontWeight: 500,
-                        letterSpacing: "-0.01em",
-                        boxShadow: "none",
-                        backgroundColor: isApplied ? "#1D1D1F" : "#F2F2F7",
-                        color: isApplied ? "#FFFFFF" : "#1D1D1F",
-                        "&:hover": {
-                          backgroundColor: isApplied ? "#1D1D1F" : "#F2F2F7",
-                          boxShadow: "none",
-                        },
-                      }}
-                    >
-                      {isApplied ? "Applied" : "Apply"}
-                    </Button>
-                  </CardActions>
-                </Card>
-              </Grid>
-            );
-          })}
-        </Grid>
-      </Container>
+                        ))}
+                      </Box>
 
-      {/* Copy Toast Notification */}
-      <Snackbar
-        open={toastOpen}
-        autoHideDuration={1500}
-        onClose={() => setToastOpen(false)}
-        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
-      >
-        <Alert
-          severity="success"
-          icon={false}
-          sx={{
-            py: 0.2,
-            px: 2,
-            borderRadius: "999px",
-            fontWeight: 400,
-            fontSize: "0.8125rem",
-            backgroundColor: "#1D1D1F",
-            color: "#FFFFFF",
-            boxShadow: "none",
+                      {/* Hex Values & Roles */}
+                      <Box
+                        sx={{
+                          display: "grid",
+                          gridTemplateColumns: "repeat(4, 1fr)",
+                          gap: 0.5,
+                          textAlign: "center",
+                        }}
+                      >
+                        {palette.swatches.map((item, idx) => (
+                          <Box
+                            key={idx}
+                            onClick={() => handleCopy(item.hex)}
+                            sx={{
+                              cursor: "pointer",
+                              py: 0.4,
+                            }}
+                          >
+                            <Typography
+                              variant="caption"
+                              sx={{
+                                display: "block",
+                                fontSize: "0.72rem",
+                                fontFamily:
+                                  "SFMono-Regular, Menlo, Monaco, monospace",
+                                fontWeight: 500,
+                                color: "#1D1D1F",
+                                letterSpacing: "-0.01em",
+                                mb: 0.2,
+                              }}
+                            >
+                              {item.hex}
+                            </Typography>
+                            <Typography
+                              variant="caption"
+                              sx={{
+                                display: "block",
+                                fontSize: "0.65rem",
+                                fontWeight: 400,
+                                color: "#86868B",
+                              }}
+                            >
+                              {item.role}
+                            </Typography>
+                          </Box>
+                        ))}
+                      </Box>
+                    </CardContent>
+
+                    {/* CARD ACTIONS (APPLY BUTTON) */}
+                    <CardActions sx={{ p: 2.2, pt: 1.5 }}>
+                      <Button
+                        fullWidth
+                        disableElevation
+                        disableRipple
+                        variant="contained"
+                        onClick={() => handleRequestApply(palette)}
+                        startIcon={
+                          isApplied ? (
+                            <CheckRoundedIcon
+                              sx={{ fontSize: "15px !important" }}
+                            />
+                          ) : null
+                        }
+                        sx={{
+                          height: 34,
+                          borderRadius: "8px",
+                          textTransform: "none",
+                          fontSize: "0.8125rem",
+                          fontWeight: 500,
+                          letterSpacing: "-0.01em",
+                          boxShadow: "none",
+                          backgroundColor: isApplied ? "#1D1D1F" : "#F2F2F7",
+                          color: isApplied ? "#FFFFFF" : "#1D1D1F",
+                          "&:hover": {
+                            backgroundColor: isApplied ? "#1D1D1F" : "#F2F2F7",
+                            boxShadow: "none",
+                          },
+                        }}
+                      >
+                        {isApplied ? "Applied" : "Apply"}
+                      </Button>
+                    </CardActions>
+                  </Card>
+                </Grid>
+              );
+            })}
+          </Grid>
+        </Container>
+
+        {/* Confirmation Modal */}
+        <Dialog
+          open={confirmOpen}
+          onClose={() => !applying && setConfirmOpen(false)}
+          PaperProps={{
+            sx: {
+              borderRadius: "20px",
+              padding: "8px",
+              maxWidth: "420px",
+              width: "100%",
+              boxShadow: "0 24px 48px rgba(0, 0, 0, 0.12)",
+              backgroundColor: "rgba(255, 255, 255, 0.95)",
+              backdropFilter: "blur(20px)",
+            },
           }}
         >
-          Copied {copiedHex}
-        </Alert>
-      </Snackbar>
-    </Box>
+          <DialogTitle
+            sx={{
+              fontWeight: 600,
+              fontSize: "1.15rem",
+              letterSpacing: "-0.02em",
+              color: "#1D1D1F",
+              pb: 0.5,
+            }}
+          >
+            Apply Theme Preset?
+          </DialogTitle>
+          <DialogContent sx={{ pt: 1 }}>
+            <Typography
+              variant="body2"
+              sx={{
+                color: "#6E6E73",
+                fontSize: "0.875rem",
+                lineHeight: 1.5,
+                mb: 2,
+              }}
+            >
+              Are you sure you want to apply <strong>{pendingPalette?.name}</strong> to{" "}
+              <strong>{themeData?.domain_name || "procatalog.web"}</strong>? This will update your active storefront colors and save an automatic backup of your current setup.
+            </Typography>
+
+            {pendingPalette?.swatches && (
+              <Box
+                sx={{
+                  display: "flex",
+                  height: 32,
+                  borderRadius: "8px",
+                  overflow: "hidden",
+                  border: "1px solid rgba(0, 0, 0, 0.08)",
+                }}
+              >
+                {pendingPalette.swatches.map((swatch, i) => (
+                  <Box
+                    key={i}
+                    sx={{
+                      flex: 1,
+                      backgroundColor: swatch.hex,
+                    }}
+                  />
+                ))}
+              </Box>
+            )}
+          </DialogContent>
+          <DialogActions sx={{ p: 2, pt: 1, gap: 1 }}>
+            <Button
+              disableElevation
+              onClick={() => setConfirmOpen(false)}
+              disabled={applying}
+              sx={{
+                borderRadius: "10px",
+                textTransform: "none",
+                fontSize: "0.85rem",
+                fontWeight: 500,
+                color: "#6E6E73",
+                px: 2,
+              }}
+            >
+              Cancel
+            </Button>
+            <Button
+              disableElevation
+              variant="contained"
+              onClick={handleConfirmApply}
+              disabled={applying}
+              sx={{
+                borderRadius: "10px",
+                textTransform: "none",
+                fontSize: "0.85rem",
+                fontWeight: 500,
+                backgroundColor: "#1D1D1F",
+                color: "#FFFFFF",
+                px: 2.5,
+                "&:hover": {
+                  backgroundColor: "#000000",
+                },
+              }}
+            >
+              {applying ? (
+                <CircularProgress size={18} sx={{ color: "#FFFFFF" }} />
+              ) : (
+                "Apply Theme"
+              )}
+            </Button>
+          </DialogActions>
+        </Dialog>
+
+        {/* Copy Toast Notification */}
+        <Snackbar
+          open={toastOpen}
+          autoHideDuration={1500}
+          onClose={() => setToastOpen(false)}
+          anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+        >
+          <Alert
+            severity="success"
+            icon={false}
+            sx={{
+              py: 0.2,
+              px: 2,
+              borderRadius: "999px",
+              fontWeight: 400,
+              fontSize: "0.8125rem",
+              backgroundColor: "#1D1D1F",
+              color: "#FFFFFF",
+              boxShadow: "none",
+            }}
+          >
+            {copiedHex}
+          </Alert>
+        </Snackbar>
+      </Box>
+    </ThemeProvider>
   );
 }
