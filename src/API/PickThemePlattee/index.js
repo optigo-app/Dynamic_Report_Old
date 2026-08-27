@@ -8,6 +8,12 @@ const sv = process.env.NODE_ENV === "production" ? "1" : "0";
 const version = "beta";
 const sp = "230";
 
+// 'e3tuemVufX17ezIwfX17e2RlbW9zdG9yZX19e3tkZW1vc3RvcmV9fQ==' || 
+// 'e3tuemVufX17ezIwfX17e2RlbW9zdG9yZX19e3tkZW1vc3RvcmV9fQ==' || 
+// 'e3tuemVufX17ezIwfX17e2RlbW9zdG9yZX19e3tkZW1vc3RvcmV9fQ==' || 
+// 'e3tuemVufX17ezIwfX17e2RlbW9zdG9yZX19e3tkZW1vc3RvcmV9fQ==' || 
+// 'e3tuemVufX17ezIwfX17e2RlbW9zdG9yZX19e3tkZW1vc3RvcmV9fQ==' || 
+
 export const GetActiveProcatTheme = async ({ domainName, yearCode }) => {
   try {
     const body = {
@@ -26,7 +32,7 @@ export const GetActiveProcatTheme = async ({ domainName, yearCode }) => {
     const { data } = await axios.post(API_URL, body, {
       headers: {
         "Content-Type": "application/json",
-        Yearcode: 'e3tuemVufX17ezIwfX17e2RlbW9zdG9yZX19e3tkZW1vc3RvcmV9fQ==' || yearCode,
+        Yearcode: yearCode,
         sp,
         sv,
         version,
@@ -61,7 +67,7 @@ export const GetAllProcatMasterThemes = async ({ yearCode } = {}) => {
     const { data } = await axios.post(API_URL, body, {
       headers: {
         "Content-Type": "application/json",
-        Yearcode: 'e3tuemVufX17ezIwfX17e2RlbW9zdG9yZX19e3tkZW1vc3RvcmV9fQ==' || yearCode,
+        Yearcode: yearCode,
         sp,
         sv,
         version,
@@ -106,7 +112,7 @@ export const ApplyProcatTheme = async ({ domainName, themeId, backupName, storeI
     const { data } = await axios.post(API_URL, body, {
       headers: {
         "Content-Type": "application/json",
-        Yearcode: 'e3tuemVufX17ezIwfX17e2RlbW9zdG9yZX19e3tkZW1vc3RvcmV9fQ==' || yearCode,
+        Yearcode: yearCode,
         sp,
         sv,
         version,
@@ -138,7 +144,7 @@ export const GetProcatThemeBackups = async ({ domainName, yearCode }) => {
     const { data } = await axios.post(API_URL, body, {
       headers: {
         "Content-Type": "application/json",
-        Yearcode: 'e3tuemVufX17ezIwfX17e2RlbW9zdG9yZX19e3tkZW1vc3RvcmV9fQ==' || yearCode,
+        Yearcode: yearCode,
         sp,
         sv,
         version,
@@ -170,7 +176,7 @@ export const RestoreProcatThemeBackup = async ({ backupId, yearCode }) => {
     const { data } = await axios.post(API_URL, body, {
       headers: {
         "Content-Type": "application/json",
-        Yearcode: 'e3tuemVufX17ezIwfX17e2RlbW9zdG9yZX19e3tkZW1vc3RvcmV9fQ==' || yearCode,
+        Yearcode: yearCode,
         sp,
         sv,
         version,
