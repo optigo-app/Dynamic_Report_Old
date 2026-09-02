@@ -1,0 +1,546 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+$font: "Public Sans", "Poppins", sans-serif;
+
+$purple: #6c5ce7;
+$purple-dark: #5a4bd6;
+$purple-soft: #f2effe;
+$header-bg: #f0eeff75;
+$navy: #1a1f36;
+$border: #e6e8f0;
+$bg-soft: #f6f7fb;
+$text-muted: #8a8fa3;
+$green: #2e7d32;
+$green-bg: #e9f7ec;
+$red: #c62828;
+$red-bg: #fdecea;
+
+* {
+  font-family: $font;
+}
+
+/* -------------------- themed scrollbars (used everywhere) -------------------- */
+@mixin themed-scrollbar($size: 10px) {
+  scrollbar-width: thin !important;
+  scrollbar-color: $purple #eceafb !important;
+
+  &::-webkit-scrollbar {
+    width: $size !important;
+    height: $size !important;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: #eceafb !important;
+    border-radius: $size;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background-color: $purple !important;
+    border-radius: $size;
+    border: 2px solid #eceafb;
+
+    &:hover {
+      background-color: $purple-dark !important;
+    }
+  }
+}
+
+
+
+
+.wip-mis {
+  background: $bg-soft;
+  min-height: 100vh;
+  padding-bottom: 24px;
+  color: $navy;
+
+  &__topbar {
+    height: 5px;
+    width: 100%;
+    background: linear-gradient(90deg, $purple, #a892ff);
+  }
+
+  &__loading,
+  &__error {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 24px;
+  }
+
+  &__body {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    padding: 16px 20px;
+  }
+
+  &__stats {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  &__pivots {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+
+    @media (max-width: 960px) {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .MuiDataGrid-virtualScroller {
+    @include themed-scrollbar(10px);
+  }
+
+  // MUI renders its own scrollbar element on top of the native one above —
+  // that's what was causing the duplicated/double scrollbar look.
+  .MuiDataGrid-scrollbar--vertical,
+  .MuiDataGrid-scrollbar--horizontal {
+    display: none !important;
+  }
+
+
+
+}
+
+.remaining-chip {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+    min-width: 32px;
+    height: 22px;
+    padding: 0 10px;
+    border-radius: 20px;
+    font-weight: 700;
+    font-size: 12px;
+    line-height: 1;
+  
+    &--ok {
+      background: $green-bg;
+      color: $green !important;
+    }
+  
+    &--danger {
+      background: $red-bg;
+      color: $red !important;
+    }
+  }
+
+/* -------------------- toolbar (single row of filters) -------------------- */
+.toolbar {
+  border: 1px solid $border;
+  border-radius: 12px;
+  padding: 10px 16px;
+  background: #fff;
+
+  &__filters-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    padding-bottom: 4px;
+    @include themed-scrollbar(6px);
+  }
+  
+  &__group {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-shrink: 0;
+  
+    &--left {
+      // date controls, natural width
+    }
+  
+    &--right {
+      // gap between filter chips is inherited from &__group
+    }
+  }
+
+  &__range-btn {
+    flex-shrink: 0;
+    text-transform: none;
+    color: $navy;
+    border-color: $border;
+    border-radius: 8px;
+    font-weight: 500;
+    font-size: 13px;
+    background: $bg-soft;
+    white-space: nowrap;
+    height: 36px;
+
+    &:hover {
+      border-color: $purple;
+      background: $purple-soft;
+    }
+  }
+
+  &__all-btn {
+    flex-shrink: 0;
+    background: $purple-soft;
+    color: $purple-dark;
+    font-weight: 700;
+    font-size: 13px;
+    border-radius: 8px;
+    padding: 6px 18px;
+    height: 36px;
+    text-transform: none;
+
+    &--active {
+      background: $purple;
+      color: #fff;
+
+      &:hover {
+        background: $purple-dark;
+      }
+    }
+  }
+}
+
+
+
+.filter-chip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+  background: $bg-soft;
+  border: 1px solid $border;
+  border-radius: 8px;
+  padding: 2px 10px 2px 12px;
+  height: 36px;
+  box-sizing: border-box;
+
+  &:hover {
+    border-color: $purple;
+  }
+
+  &__label {
+    font-size: 12px;
+    font-weight: 600;
+    color: $text-muted;
+    white-space: nowrap;
+  }
+
+  &__select {
+    min-width: 120px;
+    font-size: 13px;
+    color: $navy;
+
+    fieldset {
+      border: none;
+    }
+
+    .MuiSelect-select {
+      padding: 6px 8px;
+    }
+
+    .MuiSelect-icon {
+      color: $purple;
+    }
+  }
+}
+
+.date-range-popover {
+  border-radius: 12px !important;
+  box-shadow: 0 12px 32px rgba(26, 31, 54, 0.18) !important;
+  margin-top: 6px;
+  overflow: hidden;
+}
+
+/* -------------------- stat cards -------------------- */
+.stat-card {
+  flex: 1 1 200px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  border: 1px solid $border;
+  border-radius: 12px;
+  background: #fff;
+
+  &__icon {
+    width: 42px;
+    height: 42px;
+    border-radius: 10px;
+    background: $purple;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  &__value {
+    font-size: 19px;
+    font-weight: 700;
+    color: $navy;
+    line-height: 1.1;
+  }
+
+  &__label {
+    font-size: 12px;
+    color: $text-muted;
+    margin-top: 2px;
+  }
+}
+
+/* -------------------- panel wrapping each DataGrid -------------------- */
+.data-table {
+  border: 1px solid $border;
+  border-radius: 12px;
+  background: #fff;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+
+  &__header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 14px;
+    border-bottom: 1px solid $border;
+    background: $header-bg;
+    color: $purple-dark;
+  }
+
+  &__title {
+    font-weight: 700;
+    font-size: 13.5px;
+    color: $navy;
+  }
+
+  &__grid-wrap {
+    height: 460px;
+  }
+
+  &--dense &__grid-wrap {
+    height: 420px;
+  }
+
+  /* pinned "Total" row, always visible above the pager, never inside the
+     scrollable/paginated row set */
+     &__totals-row {
+        display: flex;
+        align-items: stretch;
+        border-top: 2px solid $purple;
+        background: #f6f4ff;
+        overflow-x: hidden;   // no independent scrollbar — driven by the grid via JS
+        flex-wrap: nowrap;
+      }
+      
+      &__totals-cell {
+        display: flex;
+        align-items: center;
+        padding: 9px 12px;
+        font-size: 13px;
+        font-weight: 700;
+        color: $navy;
+        box-sizing: border-box;
+        border-right: 1px solid $border;
+        flex-shrink: 0;
+      
+        &:last-child {
+          border-right: none;
+        }
+      }
+      
+      &--dense &__totals-cell {
+        padding: 7px 10px;
+        font-size: 12px;
+      }
+}
+
+/* -------------------- MUI DataGrid theming -------------------- */
+.mis-datagrid {
+  border: none !important;
+  font-family: $font;
+  height: 100%;
+
+  &.MuiDataGrid-root {
+    color: $navy;
+  }
+
+  .MuiDataGrid-main {
+    color: $navy;
+  }
+
+  .MuiDataGrid-columnHeaders {
+    background:  #f0eeff !important;
+    border-bottom: 2px solid $border;
+  }
+
+  .MuiDataGrid-columnHeader {
+    // background: #f0eeffb0 !important;
+    background: #f0eeff !important;
+
+    &:focus,
+    &:focus-within {
+      outline: none;
+    }
+  }
+
+  .MuiDataGrid-columnHeaderTitle {
+    font-weight: 700;
+    font-size: 13px;
+    color: $navy !important;
+    white-space: normal !important;
+    line-height: 1.2;
+    text-align: center;
+    overflow: visible;
+  }
+
+  .MuiDataGrid-columnSeparator {
+    display: none;
+  }
+
+  .MuiDataGrid-cell,
+  .MuiDataGrid-cell * {
+    color: $navy !important;
+    text-decoration: none !important;
+  }
+
+  .MuiDataGrid-cell {
+    font-size: 13px;
+    border-bottom: 1px solid $border;
+
+    &:focus,
+    &:focus-within {
+      outline: none;
+    }
+  }
+
+  .MuiDataGrid-row {
+    background: #fff;
+
+    &:hover,
+    &:hover .MuiDataGrid-cell {
+      background: #fafafe;
+    }
+  }
+
+  .MuiDataGrid-virtualScroller {
+    @include themed-scrollbar(10px);
+  }
+
+  .MuiDataGrid-sortIcon {
+    color: $purple !important;
+    opacity: 1 !important;
+  }
+
+  .MuiDataGrid-menuIcon {
+    display: none;
+  }
+}
+
+/* -------------------- pagination bar -------------------- */
+.table-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 8px 14px;
+  border-top: 1px solid $border;
+  background: #fcfcff;
+
+  &__group {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+
+    &--center {
+      flex: 1;
+      justify-content: center;
+    }
+
+    &--right {
+      justify-content: flex-end;
+    }
+  }
+
+  &__label {
+    font-size: 12.5px;
+    color: $text-muted;
+    white-space: nowrap;
+  }
+
+  &__select {
+    min-width: 64px;
+    font-size: 12.5px;
+
+    .MuiSelect-select {
+      padding: 4px 8px;
+    }
+  }
+
+  &__page-input {
+    width: 42px;
+    text-align: center;
+    border: 1px solid $border;
+    border-radius: 6px;
+    font-size: 12.5px;
+    padding: 3px 4px;
+    font-family: $font;
+    color: $navy;
+
+    &:focus {
+      outline: none;
+      border-color: $purple;
+    }
+
+    /* hide number input spinners */
+    &::-webkit-outer-spin-button,
+    &::-webkit-inner-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+    -moz-appearance: textfield;
+  }
+
+  &__display {
+    font-size: 12.5px;
+    color: $text-muted;
+    white-space: nowrap;
+  }
+}
+
+/* -------------------- chips inside order table -------------------- */
+.remaining-chip {
+  display: inline-block;
+  min-width: 34px;
+  padding: 2px 8px;
+  border-radius: 20px;
+  font-weight: 700;
+  font-size: 12px;
+
+  &--ok {
+    background: $green-bg;
+    color: $green !important;
+  }
+
+  &--danger {
+    background: $red-bg;
+    color: $red !important;
+  }
+}
+
+.status-pill {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 20px;
+  background: $purple-soft;
+  color: $purple-dark !important;
+  font-size: 12px;
+  font-weight: 600;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

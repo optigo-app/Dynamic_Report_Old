@@ -9,6 +9,7 @@
     "@fontsource-variable/montserrat": "^5.3.0",
     "@fontsource/poppins": "^5.2.6",
     "@hello-pangea/dnd": "^18.0.1",
+    "@mui/icons-material": "^7.3.11",
     "@mui/material": "^7.0.2",
     "@mui/x-data-grid": "^8.6.0",
     "@mui/x-date-pickers": "^8.8.0",
