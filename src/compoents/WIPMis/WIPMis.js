@@ -234,7 +234,7 @@ const DataGridPanel = ({
   gridHeight,
 }) => {
   const [paginationModel, setPaginationModel] = useState({ page: 0, pageSize: defaultPageSize });
-  const apiRef = useGridApiRef();
+  const gridWrapRef = useRef(null);
   const totalsRowRef = useRef(null);
 
   useEffect(() => {
@@ -244,20 +244,23 @@ const DataGridPanel = ({
     });
   }, [rows.length]);
 
-  // Keep the pinned totals row's horizontal scroll in lockstep with the
-  // grid body's scroll — this removes the second, independent scrollbar
-  // and leaves only the grid's own themed scrollbar as the single control.
+  // Mirror the grid's real horizontal scroll position onto the pinned totals
+  // row. We attach directly to MUI's internal scroller DOM node rather than
+  // relying on the apiRef event system, which doesn't fire consistently for
+  // horizontal scroll across MUI versions.
   useEffect(() => {
-    const unsubscribe = apiRef.current?.subscribeEvent?.(
-      'scrollPositionChange',
-      (params) => {
-        if (totalsRowRef.current) {
-          totalsRowRef.current.scrollLeft = params.left;
-        }
+    const scroller = gridWrapRef.current?.querySelector('.MuiDataGrid-virtualScroller');
+    if (!scroller) return;
+
+    const handleScroll = () => {
+      if (totalsRowRef.current) {
+        totalsRowRef.current.scrollLeft = scroller.scrollLeft;
       }
-    );
-    return () => unsubscribe && unsubscribe();
-  }, [apiRef]);
+    };
+
+    scroller.addEventListener('scroll', handleScroll, { passive: true });
+    return () => scroller.removeEventListener('scroll', handleScroll);
+  }, [rows]);
 
   return (
     <Paper className={`data-table ${dense ? 'data-table--dense' : ''}`} elevation={0}>
@@ -266,13 +269,17 @@ const DataGridPanel = ({
         <Typography className="data-table__title">{title}</Typography>
       </Box>
 
-      <Box className="data-table__grid-wrap" style={gridHeight ? { height: gridHeight } : undefined}>
+      <Box
+        className="data-table__grid-wrap"
+        ref={gridWrapRef}
+        style={gridHeight ? { height: gridHeight } : undefined}
+      >
         <DataGrid
           rows={rows}
           columns={columns}
           getRowId={(row) => row.__key}
           disableColumnMenu
-          disableColumnSorting        // turns off sorting on every column, hides the sort icon
+          disableColumnSorting
           disableRowSelectionOnClick
           hideFooter
           rowHeight={dense ? 34 : 40}
