@@ -18,8 +18,17 @@ $red-bg: #fdecea;
 * {
   font-family: $font;
 }
-
-/* -------------------- themed scrollbars (used everywhere) -------------------- */
+ /* Global overrides for the date range picker elements */
+ .custom-forced-picker {
+  .rdrDaySelected, 
+  .rdrDayStartSelected, 
+  .rdrDayEndSelected {
+    background: #6c5ce7 !important;
+  }
+  .rdrInRange {
+    background: #f2effe !important;
+  }
+}
 @mixin themed-scrollbar($size: 10px) {
   scrollbar-width: thin !important;
   scrollbar-color: $purple #eceafb !important;
@@ -45,20 +54,11 @@ $red-bg: #fdecea;
   }
 }
 
-
-
-
 .wip-mis {
   background: $bg-soft;
   min-height: 100vh;
   padding-bottom: 24px;
   color: $navy;
-
-  &__topbar {
-    height: 5px;
-    width: 100%;
-    background: linear-gradient(90deg, $purple, #a892ff);
-  }
 
   &__loading,
   &__error {
@@ -83,11 +83,35 @@ $red-bg: #fdecea;
 
   &__pivots {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: 1fr;
     gap: 16px;
+  }
 
-    @media (max-width: 960px) {
-      grid-template-columns: 1fr;
+  &__export-btn {
+    color: $purple !important;
+    background: $purple-soft !important;
+    border-radius: 8px !important;
+    width: 36px;
+    height: 36px;
+
+    &:hover {
+      background: #e6e0ff !important;
+    }
+  }
+
+  &__refresh-btn {
+    color: $purple !important;
+    background: $purple-soft !important;
+    border-radius: 8px !important;
+    width: 36px;
+    height: 36px;
+
+    &:hover {
+      background: #e6e0ff !important;
+    }
+
+    &.is-spinning svg {
+      animation: wip-spin 0.8s linear infinite;
     }
   }
 
@@ -95,40 +119,16 @@ $red-bg: #fdecea;
     @include themed-scrollbar(10px);
   }
 
-  // MUI renders its own scrollbar element on top of the native one above —
-  // that's what was causing the duplicated/double scrollbar look.
   .MuiDataGrid-scrollbar--vertical,
   .MuiDataGrid-scrollbar--horizontal {
     display: none !important;
   }
-
-
-
 }
 
-.remaining-chip {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    box-sizing: border-box;
-    min-width: 32px;
-    height: 22px;
-    padding: 0 10px;
-    border-radius: 20px;
-    font-weight: 700;
-    font-size: 12px;
-    line-height: 1;
-  
-    &--ok {
-      background: $green-bg;
-      color: $green !important;
-    }
-  
-    &--danger {
-      background: $red-bg;
-      color: $red !important;
-    }
-  }
+@keyframes wip-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
 
 /* -------------------- toolbar (single row of filters) -------------------- */
 .toolbar {
@@ -147,70 +147,21 @@ $red-bg: #fdecea;
     padding-bottom: 4px;
     @include themed-scrollbar(6px);
   }
-  
+
   &__group {
     display: flex;
     align-items: center;
     gap: 10px;
     flex-shrink: 0;
-  
-    &--left {
-      // date controls, natural width
-    }
-  
-    &--right {
-      // gap between filter chips is inherited from &__group
-    }
-  }
-
-  &__range-btn {
-    flex-shrink: 0;
-    text-transform: none;
-    color: $navy;
-    border-color: $border;
-    border-radius: 8px;
-    font-weight: 500;
-    font-size: 13px;
-    background: $bg-soft;
-    white-space: nowrap;
-    height: 36px;
-
-    &:hover {
-      border-color: $purple;
-      background: $purple-soft;
-    }
-  }
-
-  &__all-btn {
-    flex-shrink: 0;
-    background: $purple-soft;
-    color: $purple-dark;
-    font-weight: 700;
-    font-size: 13px;
-    border-radius: 8px;
-    padding: 6px 18px;
-    height: 36px;
-    text-transform: none;
-
-    &--active {
-      background: $purple;
-      color: #fff;
-
-      &:hover {
-        background: $purple-dark;
-      }
-    }
   }
 }
-
-
 
 .filter-chip {
   display: flex;
   align-items: center;
   gap: 8px;
   flex-shrink: 0;
-  background: $bg-soft;
+  background: #f8f7ff;
   border: 1px solid $border;
   border-radius: 8px;
   padding: 2px 10px 2px 12px;
@@ -256,21 +207,34 @@ $red-bg: #fdecea;
 
 /* -------------------- stat cards -------------------- */
 .stat-card {
-  flex: 1 1 200px;
+  flex: 1 1 220px;
   display: flex;
-  align-items: center;
-  gap: 12px;
+  flex-direction: column;
+  gap: 10px;
   padding: 14px 16px;
   border: 1px solid $border;
   border-radius: 12px;
   background: #fff;
 
+  &__top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+  }
+
+  &__label {
+    font-size: 11px;
+    letter-spacing: 0.4px;
+    text-transform: uppercase;
+    color: $purple-dark;
+  }
+
   &__icon {
-    width: 42px;
-    height: 42px;
-    border-radius: 10px;
-    background: $purple;
-    color: #fff;
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    background: $purple-soft;
+    color: $purple;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -278,16 +242,10 @@ $red-bg: #fdecea;
   }
 
   &__value {
-    font-size: 19px;
+    font-size: 26px;
     font-weight: 700;
     color: $navy;
     line-height: 1.1;
-  }
-
-  &__label {
-    font-size: 12px;
-    color: $text-muted;
-    margin-top: 2px;
   }
 }
 
@@ -299,10 +257,16 @@ $red-bg: #fdecea;
   overflow: hidden;
   display: flex;
   flex-direction: column;
+  width: 100%;
+
+  &--full {
+    width: 100%;
+  }
 
   &__header {
     display: flex;
     align-items: center;
+    justify-content: space-between;
     gap: 8px;
     padding: 10px 14px;
     border-bottom: 1px solid $border;
@@ -310,51 +274,68 @@ $red-bg: #fdecea;
     color: $purple-dark;
   }
 
-  &__title {
+  &__header-left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  &__subtitle {
     font-weight: 700;
     font-size: 13.5px;
-    color: $navy;
   }
 
   &__grid-wrap {
     height: 460px;
+    overflow: hidden;
   }
 
   &--dense &__grid-wrap {
     height: 420px;
   }
 
-  /* pinned "Total" row, always visible above the pager, never inside the
-     scrollable/paginated row set */
-     &__totals-row {
-        display: flex;
-        align-items: stretch;
-        border-top: 2px solid $purple;
-        background: #f6f4ff;
-        overflow-x: hidden;   // no independent scrollbar — driven by the grid via JS
-        flex-wrap: nowrap;
-      }
-      
-      &__totals-cell {
-        display: flex;
-        align-items: center;
-        padding: 9px 12px;
-        font-size: 13px;
-        font-weight: 700;
-        color: $navy;
-        box-sizing: border-box;
-        border-right: 1px solid $border;
-        flex-shrink: 0;
-      
-        &:last-child {
-          border-right: none;
-        }
-      }
-      
-      &--dense &__totals-cell {
-        padding: 7px 10px;
-        font-size: 12px;
-      }
+  &__totals-row {
+    display: flex;
+    align-items: stretch;
+    border-top: 2px solid $purple;
+    background: #f6f4ff;
+    overflow-x: hidden;
+    flex-wrap: nowrap;
+  }
+
+  &__totals-cell {
+    display: flex;
+    align-items: center;
+    padding: 9px 12px;
+    font-size: 13px;
+    font-weight: 700;
+    color: $navy;
+    box-sizing: border-box;
+    border-right: 1px solid $border;
+    flex-shrink: 0;
+
+    &:last-child {
+      border-right: none;
+    }
+  }
+
+  &--dense &__totals-cell {
+    padding: 7px 10px;
+    font-size: 12px;
+  }
+}
+
+.heat-cell {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  font-weight: 700;
+  font-size: 12.5px;
+  padding: 2px 6px;
+  box-sizing: border-box;
 }
 
 /* -------------------- MUI DataGrid theming -------------------- */
@@ -372,12 +353,11 @@ $red-bg: #fdecea;
   }
 
   .MuiDataGrid-columnHeaders {
-    background:  #f0eeff !important;
+    background: #f0eeff !important;
     border-bottom: 2px solid $border;
   }
 
   .MuiDataGrid-columnHeader {
-    // background: #f0eeffb0 !important;
     background: #f0eeff !important;
 
     &:focus,
@@ -404,6 +384,7 @@ $red-bg: #fdecea;
   .MuiDataGrid-cell * {
     color: $navy !important;
     text-decoration: none !important;
+    font-weight: 400 !important;
   }
 
   .MuiDataGrid-cell {
@@ -437,77 +418,11 @@ $red-bg: #fdecea;
   .MuiDataGrid-menuIcon {
     display: none;
   }
-}
 
-/* -------------------- pagination bar -------------------- */
-.table-pagination {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 10px;
-  padding: 8px 14px;
-  border-top: 1px solid $border;
-  background: #fcfcff;
-
-  &__group {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-
-    &--center {
-      flex: 1;
-      justify-content: center;
-    }
-
-    &--right {
-      justify-content: flex-end;
-    }
-  }
-
-  &__label {
-    font-size: 12.5px;
-    color: $text-muted;
-    white-space: nowrap;
-  }
-
-  &__select {
-    min-width: 64px;
-    font-size: 12.5px;
-
-    .MuiSelect-select {
-      padding: 4px 8px;
-    }
-  }
-
-  &__page-input {
-    width: 42px;
-    text-align: center;
-    border: 1px solid $border;
-    border-radius: 6px;
-    font-size: 12.5px;
-    padding: 3px 4px;
-    font-family: $font;
-    color: $navy;
-
-    &:focus {
-      outline: none;
-      border-color: $purple;
-    }
-
-    /* hide number input spinners */
-    &::-webkit-outer-spin-button,
-    &::-webkit-inner-spin-button {
-      -webkit-appearance: none;
-      margin: 0;
-    }
-    -moz-appearance: textfield;
-  }
-
-  &__display {
-    font-size: 12.5px;
-    color: $text-muted;
-    white-space: nowrap;
+  /* Total column stays bold even though all other cells are forced to 400 above */
+  .MuiDataGrid-cell .heat-cell--total,
+  .MuiDataGrid-cell .heat-cell--total * {
+    font-weight: 700 !important;
   }
 }
 
@@ -516,6 +431,9 @@ $red-bg: #fdecea;
   display: inline-block;
   min-width: 34px;
   padding: 2px 8px;
+  height: 20px;
+  align-items: center;
+  justify-content: center;
   border-radius: 20px;
   font-weight: 700;
   font-size: 12px;
@@ -528,6 +446,11 @@ $red-bg: #fdecea;
   &--danger {
     background: $red-bg;
     color: $red !important;
+  }
+
+  &--neutral {
+    background: $bg-soft;
+    color: $text-muted !important;
   }
 }
 

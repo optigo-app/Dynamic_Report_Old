@@ -1,8 +1,7 @@
-// http://localhost:3000/testreport/?sp=9&ifid=AdvanceCRM&pid=100021
+// http://localhost:3000/testreport/?sp=9&ifid=AdvanceCRM&pid=18601
 
-import React, { useEffect, useMemo, useState } from 'react';
-import { useGridApiRef } from '@mui/x-data-grid';
-import { useRef } from 'react';
+import React, { useEffect, useMemo, useState, useRef } from 'react';
+import { ThemeProvider, createTheme } from '@mui/material/styles';
 import {
   Box,
   Paper,
@@ -14,6 +13,7 @@ import {
   Popover,
   CircularProgress,
   Alert,
+  Tooltip,
 } from '@mui/material';
 import { DataGrid } from '@mui/x-data-grid';
 import Inventory2OutlinedIcon from '@mui/icons-material/Inventory2Outlined';
@@ -23,13 +23,13 @@ import DiamondOutlinedIcon from '@mui/icons-material/DiamondOutlined';
 import CalendarMonthOutlinedIcon from '@mui/icons-material/CalendarMonthOutlined';
 import EventNoteOutlinedIcon from '@mui/icons-material/EventNoteOutlined';
 import Inventory2Icon from '@mui/icons-material/Inventory2';
-import FirstPageIcon from '@mui/icons-material/FirstPage';
-import LastPageIcon from '@mui/icons-material/LastPage';
-import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
-import ChevronRightIcon from '@mui/icons-material/ChevronRight';
+import RefreshIcon from '@mui/icons-material/Refresh';
+import FileDownloadOutlinedIcon from '@mui/icons-material/FileDownloadOutlined';
 import { DateRangePicker } from 'mui-daterange-picker';
+import * as XLSX from 'xlsx';
 import { GetWipData } from '../../API/GetWipData/GetWipData';
 import './WIPMis.scss';
+import DescriptionOutlinedIcon from '@mui/icons-material/DescriptionOutlined';
 
 /* ---------------------------------------------------------------- */
 /* Helpers                                                            */
@@ -58,7 +58,7 @@ const sumField = (rows, fieldMap, fieldName) =>
   }, 0);
 
 const formatDateOnly = (iso) => {
-  if (!iso) return 'Unspecified';
+  if (!iso) return '-';
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return String(iso);
   const dd = String(d.getDate()).padStart(2, '0');
@@ -72,6 +72,28 @@ const formatDatePretty = (date) => {
   const d = new Date(date);
   if (Number.isNaN(d.getTime())) return '';
   return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+};
+
+// Returns { startDate, endDate } for the CURRENT calendar month
+const getThisMonthRange = () => {
+  const now = new Date();
+  const startDate = new Date(now.getFullYear(), now.getMonth(), 1);
+  const endDate = new Date(now.getFullYear(), now.getMonth() + 1, 0); // last day of this month
+  return { startDate, endDate };
+};
+
+// Remaining days = jobpromisedate - expstartdate.
+// Returns a number, or null when expstartdate (or a valid promise date) is missing.
+const computeRemainingDays = (row, fieldMap) => {
+  const promiseRaw = getField(row, fieldMap, 'jobpromisedate');
+  const entryRaw = getField(row, fieldMap, 'expstartdate');
+  if (!entryRaw) return null;
+
+  const promiseDate = promiseRaw ? new Date(promiseRaw) : null;
+  const entryDate = new Date(entryRaw);
+  if (!promiseDate || Number.isNaN(promiseDate.getTime()) || Number.isNaN(entryDate.getTime())) return null;
+
+  return Math.round((promiseDate - entryDate) / (1000 * 60 * 60 * 24));
 };
 
 const naturalSort = (a, b) => {
@@ -105,6 +127,7 @@ const buildPivot = (rows, fieldMap, rowField, colField, rowFormatter) => {
   const rowTotals = {};
   const colTotals = {};
   let grandTotal = 0;
+  let maxCell = 0;
 
   rows.forEach((row) => {
     let rVal = getField(row, fieldMap, rowField);
@@ -113,11 +136,16 @@ const buildPivot = (rows, fieldMap, rowField, colField, rowFormatter) => {
     if (rowFormatter) rVal = rowFormatter(rVal);
     rVal = stripHtml(rVal);
     cVal = stripHtml(cVal);
-    if (rVal === undefined || rVal === null || rVal === '') rVal = 'Unspecified';
-    if (cVal === undefined || cVal === null || cVal === '') cVal = 'Unspecified';
+
+    // Skip entries where the row-grouping value or column-grouping value
+    // is missing, instead of bucketing them under "Unspecified" — e.g.
+    // rows with no JobLocation no longer create a phantom column.
+    if (rVal === undefined || rVal === null || rVal === '') return;
+    if (cVal === undefined || cVal === null || cVal === '') return;
 
     matrix[rVal] = matrix[rVal] || {};
     matrix[rVal][cVal] = (matrix[rVal][cVal] || 0) + 1;
+    if (matrix[rVal][cVal] > maxCell) maxCell = matrix[rVal][cVal];
 
     rowTotals[rVal] = (rowTotals[rVal] || 0) + 1;
     colTotals[cVal] = (colTotals[cVal] || 0) + 1;
@@ -125,102 +153,29 @@ const buildPivot = (rows, fieldMap, rowField, colField, rowFormatter) => {
   });
 
   const rowKeys = Object.keys(rowTotals).sort((a, b) => rowTotals[b] - rowTotals[a]);
-  const colKeys = Object.keys(colTotals).sort(naturalSort);
+  const colKeys = Object.keys(colTotals)
+    .filter((c) => colTotals[c] > 0)
+    .sort(naturalSort);
 
-  return { rowKeys, colKeys, matrix, rowTotals, colTotals, grandTotal };
+  return { rowKeys, colKeys, matrix, rowTotals, colTotals, grandTotal, maxCell };
 };
 
-/* ---------------------------------------------------------------- */
-/* Pagination bar (fully controlled — sits below the totals row)      */
-/* ---------------------------------------------------------------- */
-
-const PaginationBar = ({ paginationModel, setPaginationModel, rowCount }) => {
-  const { page, pageSize } = paginationModel;
-  const pageCount = Math.max(1, Math.ceil(rowCount / pageSize));
-
-  const [pageInput, setPageInput] = useState(page + 1);
-  useEffect(() => setPageInput(page + 1), [page]);
-
-  const startItem = rowCount === 0 ? 0 : page * pageSize + 1;
-  const endItem = Math.min((page + 1) * pageSize, rowCount);
-
-  const goToPage = (p) => {
-    const clamped = Math.max(0, Math.min(pageCount - 1, p));
-    setPaginationModel({ page: clamped, pageSize });
-  };
-
-  const commitPage = (val) => {
-    let v = Number(val);
-    if (!Number.isFinite(v) || v < 1) v = 1;
-    if (v > pageCount) v = pageCount;
-    goToPage(v - 1);
-  };
-
-  return (
-    <Box className="table-pagination">
-      <Box className="table-pagination__group">
-        <Typography className="table-pagination__label">Rows per page:</Typography>
-        <Select
-          size="small"
-          value={pageSize}
-          onChange={(e) => setPaginationModel({ page: 0, pageSize: Number(e.target.value) })}
-          className="table-pagination__select"
-        >
-          {[10, 20, 50, 100].map((o) => (
-            <MenuItem key={o} value={o}>
-              {o}
-            </MenuItem>
-          ))}
-        </Select>
-      </Box>
-
-      <Box className="table-pagination__group table-pagination__group--center">
-        <IconButton size="small" disabled={page === 0} onClick={() => goToPage(0)}>
-          <FirstPageIcon fontSize="small" />
-        </IconButton>
-        <IconButton size="small" disabled={page === 0} onClick={() => goToPage(page - 1)}>
-          <ChevronLeftIcon fontSize="small" />
-        </IconButton>
-
-        <Typography className="table-pagination__label">Page</Typography>
-        <input
-          className="table-pagination__page-input"
-          type="number"
-          value={pageInput}
-          min={1}
-          max={pageCount || 1}
-          onChange={(e) => setPageInput(e.target.value)}
-          onBlur={(e) => commitPage(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter') commitPage(e.target.value);
-          }}
-        />
-        <Typography className="table-pagination__label">of {pageCount || 1}</Typography>
-
-        <IconButton size="small" disabled={page >= pageCount - 1} onClick={() => goToPage(page + 1)}>
-          <ChevronRightIcon fontSize="small" />
-        </IconButton>
-        <IconButton
-          size="small"
-          disabled={page >= pageCount - 1}
-          onClick={() => goToPage(pageCount - 1)}
-        >
-          <LastPageIcon fontSize="small" />
-        </IconButton>
-      </Box>
-
-      <Box className="table-pagination__group table-pagination__group--right">
-        <Typography className="table-pagination__display">
-          Displaying {startItem} to {endItem} of {rowCount}
-        </Typography>
-      </Box>
-    </Box>
-  );
-};
+// alwaysKeepFields: field names that should never be stripped even if every
+// row is blank/'-'/0 for that column (e.g. a mandatory "Rem. Days" column).
+const filterEmptyColumns = (columns, rows, alwaysKeepFields = []) =>
+  columns.filter((col) => {
+    if (col.field === 'row' || col.field === 'total' || alwaysKeepFields.includes(col.field)) return true;
+    return rows.some((r) => {
+      const v = r[col.field];
+      if (v === undefined || v === null || v === '') return false;
+      if (v === '-') return false;
+      if (typeof v === 'number' && v === 0) return false;
+      return true;
+    });
+  });
 
 /* ---------------------------------------------------------------- */
-/* Generic panel wrapping a DataGrid, with an optional pinned         */
-/* "Total" summary row that always stays visible above the pager.     */
+/* Generic panel wrapping a DataGrid                                  */
 /* ---------------------------------------------------------------- */
 
 const DataGridPanel = ({
@@ -229,25 +184,13 @@ const DataGridPanel = ({
   columns,
   rows,
   dense = false,
-  defaultPageSize = 20,
+  showTotals = false,
   totalsRow,
   gridHeight,
 }) => {
-  const [paginationModel, setPaginationModel] = useState({ page: 0, pageSize: defaultPageSize });
   const gridWrapRef = useRef(null);
   const totalsRowRef = useRef(null);
 
-  useEffect(() => {
-    setPaginationModel((m) => {
-      const pageCount = Math.max(1, Math.ceil(rows.length / m.pageSize));
-      return m.page > pageCount - 1 ? { ...m, page: 0 } : m;
-    });
-  }, [rows.length]);
-
-  // Mirror the grid's real horizontal scroll position onto the pinned totals
-  // row. We attach directly to MUI's internal scroller DOM node rather than
-  // relying on the apiRef event system, which doesn't fire consistently for
-  // horizontal scroll across MUI versions.
   useEffect(() => {
     const scroller = gridWrapRef.current?.querySelector('.MuiDataGrid-virtualScroller');
     if (!scroller) return;
@@ -262,11 +205,50 @@ const DataGridPanel = ({
     return () => scroller.removeEventListener('scroll', handleScroll);
   }, [rows]);
 
+  // MUI DataGrid wraps the header label in its own <Tooltip> (via
+  // GridColumnHeaderTitle) whenever the text is truncated, which is what
+  // shows a tooltip on hover of the column name. Supplying our own
+  // `renderHeader` bypasses that default wrapper entirely — we render the
+  // plain label ourselves, so there's no tooltip, without touching every
+  // column definition where these columns are built.
+  const columnsNoHeaderTooltip = useMemo(
+    () =>
+      columns.map((col) =>
+        col.renderHeader
+          ? col
+          : {
+              ...col,
+              renderHeader: () => (
+                <span
+                  style={{
+                    whiteSpace: 'normal',
+                    textAlign: 'center',
+                    lineHeight: 1.2,
+                    fontWeight: 700,
+                    fontSize: 13,
+                  }}
+                >
+                  {col.headerName}
+                </span>
+              ),
+            }
+      ),
+    [columns]
+  );
+
   return (
-    <Paper className={`data-table ${dense ? 'data-table--dense' : ''}`} elevation={0}>
+    <Paper className={`data-table data-table--full ${dense ? 'data-table--dense' : ''}`} elevation={0}>
       <Box className="data-table__header">
-        {icon}
-        <Typography className="data-table__title">{title}</Typography>
+        <Box className="data-table__header-left">
+          {icon}
+          <Box>
+            {title && (
+              <Typography className="data-table__subtitle" style={{ color: '#000', fontWeight: 'bold' }}>
+                {title}
+              </Typography>
+            )}
+          </Box>
+        </Box>
       </Box>
 
       <Box
@@ -276,22 +258,20 @@ const DataGridPanel = ({
       >
         <DataGrid
           rows={rows}
-          columns={columns}
+          columns={columnsNoHeaderTooltip}
           getRowId={(row) => row.__key}
           disableColumnMenu
-          disableColumnSorting
           disableRowSelectionOnClick
           hideFooter
+          hideFooterPagination
           rowHeight={dense ? 34 : 40}
           columnHeaderHeight={dense ? 56 : 42}
-          paginationModel={paginationModel}
-          onPaginationModelChange={setPaginationModel}
-          pageSizeOptions={[10, 20, 50, 100]}
+          pagination={false}
           className="mis-datagrid"
         />
       </Box>
 
-      {totalsRow && (
+      {showTotals && totalsRow && (
         <Box className="data-table__totals-row" ref={totalsRowRef}>
           {columns.map((col) => (
             <Box
@@ -310,31 +290,30 @@ const DataGridPanel = ({
           ))}
         </Box>
       )}
-
-      <PaginationBar
-        paginationModel={paginationModel}
-        setPaginationModel={setPaginationModel}
-        rowCount={rows.length}
-      />
     </Paper>
   );
 };
+
 /* ---------------------------------------------------------------- */
 /* Stat card                                                          */
 /* ---------------------------------------------------------------- */
 
-const StatCard = ({ icon, value, label }) => (
+const StatCard = ({ icon, label, value, subLabel, unit }) => (
   <Paper className="stat-card" elevation={0}>
-    <Box className="stat-card__icon">{icon}</Box>
-    <Box>
-      <Typography className="stat-card__value" style={{ fontWeight: 700 }}>{value}</Typography>
-      <Typography className="stat-card__label">{label}</Typography>
+    <Box className="stat-card__top">
+      <Typography className="stat-card__label" sx={{ fontWeight: 'bold' }}>
+        {label}
+      </Typography>
+      <Box className="stat-card__icon">{icon}</Box>
     </Box>
+    <Typography className="stat-card__value">
+      {value} {unit ? ` ${unit}` : ''}
+    </Typography>
   </Paper>
 );
 
 /* ---------------------------------------------------------------- */
-/* Filter chip (uniform themed dropdown)                              */
+/* Filter chip                                                        */
 /* ---------------------------------------------------------------- */
 
 const FilterChip = ({ label, value, onChange, options }) => (
@@ -356,9 +335,6 @@ const FilterChip = ({ label, value, onChange, options }) => (
 
 const DATE_FIELD_OPTIONS = [
   { value: 'jobpromisedate', label: 'Promise Date' },
-  { value: 'jobentrydate', label: 'Order Date' },
-  { value: 'deliveryBatchDate', label: 'Delivery Date' },
-  { value: 'expstartdate', label: 'Exp. Start Date' },
 ];
 
 const WIPMis = () => {
@@ -367,11 +343,9 @@ const WIPMis = () => {
   const [error, setError] = useState(null);
 
   const [dateField, setDateField] = useState('jobpromisedate');
-  const [dateRange, setDateRange] = useState({
-    startDate: new Date('2025-12-04'),
-    endDate: new Date('2026-12-31'),
-  });
-  const [isAllDates, setIsAllDates] = useState(true);
+  // Default to THIS month instead of last month / a fixed hardcoded range
+  const [dateRange, setDateRange] = useState(() => getThisMonthRange());
+  const [isAllDates, setIsAllDates] = useState(false);
   const [pickerAnchor, setPickerAnchor] = useState(null);
 
   const [location, setLocation] = useState('All');
@@ -393,14 +367,13 @@ const WIPMis = () => {
   };
 
   useEffect(() => {
-    handleFetchData('2026-01-01', '2026-01-31');
+    handleFetchData();
   }, []);
 
   const rd2 = data?.Data?.rd2 || [{}];
   const rawRows = data?.Data?.rd3 || [];
   const fieldMap = useMemo(() => buildFieldMap(rd2), [rd2]);
 
-  /* ---------------- filter option lists ---------------- */
   const buildOptions = (fieldName) => {
     const set = new Set();
     rawRows.forEach((r) => {
@@ -413,24 +386,32 @@ const WIPMis = () => {
   const locationOptions = useMemo(() => buildOptions('JobLocation'), [rawRows, fieldMap]);
   const customerOptions = useMemo(() => buildOptions('Customercode'), [rawRows, fieldMap]);
   const orderNoOptions = useMemo(() => buildOptions('SKUNO'), [rawRows, fieldMap]);
-  const deliveryStatusOptions = ['All', 'Scheduled', 'Not Scheduled'];
 
-  /* ---------------- apply filters ---------------- */
+  // Delivery Status now reflects remaining-days health, not isDeliveryBatchJob
+  const deliveryStatusOptions = ['All', 'On Time', 'Delayed'];
+
+  /* ---------------- ALL button handler ---------------- */
+  const handleSelectAllDates = () => {
+    setIsAllDates(true);
+    setPickerAnchor(null);
+  };
+
   const filteredRows = useMemo(() => {
     return rawRows.filter((row) => {
       const loc = getField(row, fieldMap, 'JobLocation');
       const cust = getField(row, fieldMap, 'Customercode');
       const ord = getField(row, fieldMap, 'SKUNO');
-      const isDelivery = getField(row, fieldMap, 'isDeliveryBatchJob');
 
       if (location !== 'All' && loc !== location) return false;
       if (customerCode !== 'All' && cust !== customerCode) return false;
       if (orderNo !== 'All' && ord !== orderNo) return false;
 
       if (deliveryStatus !== 'All') {
-        const scheduled = Number(isDelivery) > 0;
-        if (deliveryStatus === 'Scheduled' && !scheduled) return false;
-        if (deliveryStatus === 'Not Scheduled' && scheduled) return false;
+        const remDays = computeRemainingDays(row, fieldMap);
+        const isOnTime = typeof remDays === 'number' && remDays > 0;
+        const isDeclined = typeof remDays === 'number' && remDays <= 0;
+        if (deliveryStatus === 'On Time' && !isOnTime) return false;
+        if (deliveryStatus === 'Delayed' && !isDeclined) return false;
       }
 
       if (!isAllDates && dateRange.startDate && dateRange.endDate) {
@@ -447,7 +428,6 @@ const WIPMis = () => {
     });
   }, [rawRows, fieldMap, location, customerCode, orderNo, deliveryStatus, isAllDates, dateRange, dateField]);
 
-  /* ---------------- stats ---------------- */
   const stats = useMemo(
     () => ({
       pcs: filteredRows.length,
@@ -458,7 +438,6 @@ const WIPMis = () => {
     [filteredRows, fieldMap]
   );
 
-  /* ---------------- pivots ---------------- */
   const promisePivot = useMemo(
     () => buildPivot(filteredRows, fieldMap, 'jobpromisedate', 'JobLocation', formatDateOnly),
     [filteredRows, fieldMap]
@@ -472,19 +451,47 @@ const WIPMis = () => {
     [filteredRows, fieldMap]
   );
 
+  const pickerTheme = useMemo(
+    () => createTheme({ palette: { primary: { main: '#6c5ce7' } } }),
+    []
+  );
+
   const buildPivotColumns = (rowLabel, colKeys) => [
-    { field: 'row', headerName: rowLabel, flex: 1.4, minWidth: 160, sortable: false },
+    { field: 'row', headerName: rowLabel, flex: 1.4, minWidth: 160 },
     ...colKeys.map((c) => ({
       field: c,
       headerName: c,
       flex: 1,
-      minWidth: Math.max(90, c.length * 9), // enough px per character to fit the full label
+      minWidth: Math.max(90, c.length * 9),
       align: 'center',
       headerAlign: 'center',
-      sortable: false,
+      renderCell: (params) => {
+        const val = params.value;
+        if (val === '' || val === undefined || val === null) return null;
+        return (
+          <Box className="heat-cell" style={{ background: 'transparent', color: '#1a1f36' }}>
+            {val}
+          </Box>
+        );
+      },
     })),
-    { field: 'total', headerName: 'Total', flex: 1, minWidth: 90, align: 'center', headerAlign: 'center', sortable: false },
+    {
+      field: 'total',
+      headerName: 'Total',
+      flex: 1,
+      minWidth: 90,
+      align: 'center',
+      headerAlign: 'center',
+      // Bold the Total column body cells (used by every pivot table — Order
+      // Details has no 'total' field, so it's unaffected automatically)
+      renderCell: (params) => (
+        <Box className="heat-cell heat-cell--total" style={{ background: 'transparent', color: '#1a1f36' }}>
+          {params.value}
+        </Box>
+      ),
+    },
   ];
+
   const buildPivotRows = (pivot) =>
     pivot.rowKeys.map((r) => ({
       __key: r,
@@ -504,25 +511,56 @@ const WIPMis = () => {
     }, {}),
   });
 
-  /* ---------------- order details ---------------- */
+  const promise = useMemo(() => {
+    const allCols = buildPivotColumns('Promise Date', promisePivot.colKeys);
+    const rows = buildPivotRows(promisePivot);
+    const columns = filterEmptyColumns(allCols, rows);
+    const totals = buildPivotTotals(promisePivot);
+    return { columns, rows, totals };
+  }, [promisePivot]);
+
+  const status = useMemo(() => {
+    const allCols = buildPivotColumns('Current Status', statusPivot.colKeys);
+    const rows = buildPivotRows(statusPivot);
+    const columns = filterEmptyColumns(allCols, rows);
+    const totals = buildPivotTotals(statusPivot);
+    return { columns, rows, totals };
+  }, [statusPivot]);
+
+  const department = useMemo(() => {
+    const allCols = buildPivotColumns('Promise Date', departmentPivot.colKeys);
+    const rows = buildPivotRows(departmentPivot);
+    const columns = filterEmptyColumns(allCols, rows);
+    const totals = buildPivotTotals(departmentPivot);
+    return { columns, rows, totals };
+  }, [departmentPivot]);
+
+  /* ---------------- Order Details (uses expstartdate) ---------------- */
   const orderDetails = useMemo(() => {
     return filteredRows
       .map((row, idx) => {
         const promiseRaw = getField(row, fieldMap, 'jobpromisedate');
-        const entryRaw = getField(row, fieldMap, 'jobentrydate');
-        const promiseDate = promiseRaw ? new Date(promiseRaw) : null;
-        const entryDate = entryRaw ? new Date(entryRaw) : null;
-
-        let remainingDays = '-';
-        if (promiseDate && entryDate && !Number.isNaN(promiseDate.getTime()) && !Number.isNaN(entryDate.getTime())) {
-          remainingDays = Math.round((promiseDate - entryDate) / (1000 * 60 * 60 * 24));
+        const entryRaw = getField(row, fieldMap, 'expstartdate');
+        const remDays = computeRemainingDays(row, fieldMap);
+  
+        // Build the tooltip message based on exactly which date(s) are missing
+        let remainingDaysTooltip = '';
+        const missingPromise = !promiseRaw;
+        const missingEntry = !entryRaw;
+        if (missingPromise && missingEntry) {
+          remainingDaysTooltip = 'Date Not Provided';
+        } else if (missingPromise) {
+          remainingDaysTooltip = 'Promise Date Not Provided';
+        } else if (missingEntry) {
+          remainingDaysTooltip = 'Exp. Start Date Not Provided';
         }
-
+  
         return {
           __key: idx,
           promiseDateRaw: promiseRaw,
           promiseDate: formatDateOnly(promiseRaw),
-          remainingDays,
+          remainingDays: remDays === null ? '-' : remDays,
+          remainingDaysTooltip,
           location: getField(row, fieldMap, 'JobLocation') || '-',
           custCode: getField(row, fieldMap, 'Customercode') || '-',
           job: getField(row, fieldMap, 'serialjobno') || '-',
@@ -533,7 +571,7 @@ const WIPMis = () => {
       .sort((a, b) => new Date(b.promiseDateRaw || 0) - new Date(a.promiseDateRaw || 0));
   }, [filteredRows, fieldMap]);
 
-  const orderColumns = useMemo(
+  const orderColumnsAll = useMemo(
     () => [
       { field: 'promiseDate', headerName: 'Promise Date', flex: 1, minWidth: 120, align: 'center', headerAlign: 'center' },
       {
@@ -543,20 +581,31 @@ const WIPMis = () => {
         minWidth: 100,
         align: 'center',
         headerAlign: 'center',
-        renderCell: (params) => (
-          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', height: '100%' }}>
-            <span
-              className={`remaining-chip ${typeof params.value === 'number' && params.value <= 0
-                ? 'remaining-chip--danger'
-                : 'remaining-chip--ok'
-                }`}
+        renderCell: (params) => {
+          const val = params.value;
+          const isNum = typeof val === 'number';
+          const chipClass = isNum
+            ? (val > 0 ? 'remaining-chip--ok' : 'remaining-chip--danger')
+            : 'remaining-chip--neutral';
 
-              style={{ display: 'flex' }}
-            >
-              {params.value}
+          const chip = (
+            <span className={`remaining-chip ${chipClass}`} style={{ display: 'flex' }}>
+              {val}
             </span>
-          </Box>
-        ),
+          );
+
+          return (
+            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', height: '100%' }}>
+              {!isNum && params.row.remainingDaysTooltip ? (
+                <Tooltip title={params.row.remainingDaysTooltip} arrow>
+                  {chip}
+                </Tooltip>
+              ) : (
+                chip
+              )}
+            </Box>
+          );
+        },
       },
       { field: 'location', headerName: 'Location', flex: 1, minWidth: 120 },
       { field: 'custCode', headerName: 'CustCode', flex: 1.1, minWidth: 130 },
@@ -573,12 +622,55 @@ const WIPMis = () => {
     []
   );
 
+  // 'remainingDays' is mandatory — always shown even if every row is '-'
+  const orderColumns = useMemo(
+    () => filterEmptyColumns(orderColumnsAll, orderDetails, ['remainingDays']),
+    [orderColumnsAll, orderDetails]
+  );
+
+  /* ---------------- export to excel (4 sheets) ---------------- */
+  const buildSheetAOA = (columns, rows, totalsRow) => {
+    const header = columns.map((c) => c.headerName || c.field);
+    const dataRows = rows.map((r) => columns.map((c) => (r[c.field] === undefined || r[c.field] === null ? '' : r[c.field])));
+    const aoa = [header, ...dataRows];
+    if (totalsRow) {
+      aoa.push(columns.map((c) => (c.field === 'row' ? 'Total' : totalsRow[c.field] ?? '')));
+    }
+    return aoa;
+  };
+
+  const handleExportExcel = () => {
+    const wb = XLSX.utils.book_new();
+
+    XLSX.utils.book_append_sheet(
+      wb,
+      XLSX.utils.aoa_to_sheet(buildSheetAOA(promise.columns, promise.rows, promise.totals)),
+      'WIP Distribution'
+    );
+    XLSX.utils.book_append_sheet(
+      wb,
+      XLSX.utils.aoa_to_sheet(buildSheetAOA(status.columns, status.rows, status.totals)),
+      'Current Status'
+    );
+    XLSX.utils.book_append_sheet(
+      wb,
+      XLSX.utils.aoa_to_sheet(buildSheetAOA(orderColumns, orderDetails, null)),
+      'Order Details'
+    );
+    XLSX.utils.book_append_sheet(
+      wb,
+      XLSX.utils.aoa_to_sheet(buildSheetAOA(department.columns, department.rows, department.totals)),
+      'Promise Date by Status'
+    );
+
+    const fileName = `WIP_ANALYSIS_${new Date().toISOString().slice(0, 10)}.xlsx`;
+    XLSX.writeFile(wb, fileName);
+  };
+
   return (
     <Box className="wip-mis">
-
-
       {loading && (
-        <Box className="wip-mis__loading" sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100vh' }}>
+        <Box className="wip-mis__loading" sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '80vh' }}>
           <CircularProgress size={26} />
           <Typography>Loading report…</Typography>
         </Box>
@@ -592,24 +684,14 @@ const WIPMis = () => {
 
       {!loading && data && (
         <Box className="wip-mis__body">
-          {/* ---------------- Toolbar: all filters in a single row ---------------- */}
           <Paper className="toolbar" elevation={0}>
             <Box className="toolbar__filters-row">
               <Box className="toolbar__group toolbar__group--left">
                 <Box className="filter-chip">
                   <Typography className="filter-chip__label">Date Field</Typography>
-                  <Select
-                    size="small"
-                    value={dateField}
-                    onChange={(e) => setDateField(e.target.value)}
-                    className="filter-chip__select"
-                  >
-                    {DATE_FIELD_OPTIONS.map((o) => (
-                      <MenuItem key={o.value} value={o.value}>
-                        {o.label}
-                      </MenuItem>
-                    ))}
-                  </Select>
+                  <Typography className="filter-chip__value">
+                    {DATE_FIELD_OPTIONS[0]?.label}
+                  </Typography>
                 </Box>
 
                 <Button
@@ -632,7 +714,9 @@ const WIPMis = () => {
                     '&:hover': { borderColor: '#6c5ce7', background: '#f2effe' },
                   }}
                 >
-                  {formatDatePretty(dateRange.startDate)} — {formatDatePretty(dateRange.endDate)}
+                  {isAllDates
+                    ? 'All Dates'
+                    : `${formatDatePretty(dateRange.startDate)} — ${formatDatePretty(dateRange.endDate)}`}
                 </Button>
 
                 <Popover
@@ -643,21 +727,23 @@ const WIPMis = () => {
                   transformOrigin={{ vertical: 'top', horizontal: 'left' }}
                   PaperProps={{ className: 'date-range-popover' }}
                 >
-                  <DateRangePicker
-                    open
-                    toggle={() => setPickerAnchor(null)}
-                    initialDateRange={dateRange}
-                    onChange={(range) => {
-                      setDateRange(range);
-                      setIsAllDates(false);
-                      setPickerAnchor(null);
-                    }}
-                  />
+                  <ThemeProvider theme={pickerTheme}>
+                    <DateRangePicker
+                      open
+                      toggle={() => setPickerAnchor(null)}
+                      initialDateRange={dateRange}
+                      onChange={(range) => {
+                        setDateRange(range);
+                        setIsAllDates(false);
+                        setPickerAnchor(null);
+                      }}
+                    />
+                  </ThemeProvider>
                 </Popover>
 
                 <Button
                   color="inherit"
-                  onClick={() => setIsAllDates(true)}
+                  onClick={handleSelectAllDates}
                   sx={{
                     flexShrink: 0,
                     textTransform: 'none',
@@ -697,70 +783,97 @@ const WIPMis = () => {
                   onChange={setDeliveryStatus}
                   options={deliveryStatusOptions}
                 />
+                <IconButton
+                  className="wip-mis__export-btn"
+                  onClick={handleExportExcel}
+                  size="small"
+                  title="Export to Excel"
+                >
+                  <DescriptionOutlinedIcon fontSize="small" />
+                </IconButton>
+                <IconButton
+                  className={`wip-mis__refresh-btn ${loading ? 'is-spinning' : ''}`}
+                  onClick={() => handleFetchData()}
+                  disabled={loading}
+                  size="small"
+                  title="Refresh"
+                >
+                  <RefreshIcon fontSize="small" />
+                </IconButton>
               </Box>
             </Box>
           </Paper>
 
-          {/* ---------------- Stats ---------------- */}
           <Box className="wip-mis__stats">
-            <StatCard icon={<Inventory2OutlinedIcon />} value={stats.pcs.toLocaleString()} label="PCs" />
             <StatCard
-              icon={<ScaleOutlinedIcon />}
+              icon={<Inventory2OutlinedIcon fontSize="small" />}
+              label="WIP JOBS"
+              value={stats.pcs.toLocaleString()}
+              subLabel="Active Jobs"
+            />
+            <StatCard
+              icon={<ScaleOutlinedIcon fontSize="small" />}
+              label="NET WEIGHT"
               value={stats.nwt.toLocaleString(undefined, { maximumFractionDigits: 2 })}
-              label="Nwt."
+              subLabel="Net Weight"
+              unit="Gm"
             />
             <StatCard
-              icon={<MonitorWeightOutlinedIcon />}
+              icon={<MonitorWeightOutlinedIcon fontSize="small" />}
+              label="GROSS WEIGHT"
               value={stats.gwt.toLocaleString(undefined, { maximumFractionDigits: 2 })}
-              label="Gwt."
+              subLabel="Gross Weight"
+              unit="Gm"
             />
-            <StatCard icon={<DiamondOutlinedIcon />} value={stats.diaPcs.toLocaleString()} label="Dia. Pcs" />
+            <StatCard
+              icon={<DiamondOutlinedIcon fontSize="small" />}
+              label="DIAMOND PIECES"
+              value={stats.diaPcs.toLocaleString()}
+              subLabel="Total Diamond"
+            />
           </Box>
 
-          {/* ---------------- Pivot tables (side by side, each with a pinned Total row) ---------------- */}
           <Box className="wip-mis__pivots">
-            <DataGridPanel
-              icon={<EventNoteOutlinedIcon fontSize="small" />}
-              title="Promise Date"
-              dense
-              columns={buildPivotColumns('Promise Date', promisePivot.colKeys)}
-              rows={buildPivotRows(promisePivot)}
-              totalsRow={buildPivotTotals(promisePivot)}
-              defaultPageSize={10}
-              gridHeight={360}
-            />
-            <DataGridPanel
-              icon={<Inventory2Icon fontSize="small" />}
-              title="Current Status"
-              dense
-              columns={buildPivotColumns('Current Status', statusPivot.colKeys)}
-              rows={buildPivotRows(statusPivot)}
-              totalsRow={buildPivotTotals(statusPivot)}
-              defaultPageSize={10}
-              gridHeight={360}
-            />
-            <DataGridPanel
+          <DataGridPanel
               icon={<Inventory2Icon fontSize="small" />}
               title="Order Details"
               dense
               columns={orderColumns}
               rows={orderDetails}
-              defaultPageSize={10}
               gridHeight={360}
             />
             <DataGridPanel
               icon={<EventNoteOutlinedIcon fontSize="small" />}
+              title="WIP Distribution by Location"
+              dense
+              showTotals
+              columns={promise.columns}
+              rows={promise.rows}
+              totalsRow={promise.totals}
+              gridHeight={360}
+            />
+            <DataGridPanel
+              icon={<Inventory2Icon fontSize="small" />}
+              title="Current Status by Location"
+              dense
+              showTotals
+              columns={status.columns}
+              rows={status.rows}
+              totalsRow={status.totals}
+              gridHeight={360}
+            />
+           
+            <DataGridPanel
+              icon={<EventNoteOutlinedIcon fontSize="small" />}
               title="Promise Date by Status"
               dense
-              columns={buildPivotColumns('Promise Date', departmentPivot.colKeys)}
-              rows={buildPivotRows(departmentPivot)}
-              totalsRow={buildPivotTotals(departmentPivot)}
-              defaultPageSize={10}
+              showTotals
+              columns={department.columns}
+              rows={department.rows}
+              totalsRow={department.totals}
               gridHeight={360}
             />
           </Box>
-
-
         </Box>
       )}
     </Box>
