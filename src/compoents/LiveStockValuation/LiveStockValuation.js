@@ -4,7 +4,6 @@ import React, { useState, useEffect, useCallback } from 'react'
 import axios from 'axios'
 import './LiveStockValuation.scss'
 
-// ─── Constants ────────────────────────────────────────────────────────────────
 
 const API_URL = 'http://nzen/jo/api-lib/App/CentralApi'
 const TOKEN = '9065471700535651'
@@ -17,8 +16,6 @@ const POLICY_OPTIONS = {
 }
 
 const REPAIR_TABS = ['IN REPAIR / ALTERATION', 'IN MEMO']
-
-// ─── Helpers ──────────────────────────────────────────────────────────────────
 
 const fmt = (n, d = 3) =>
   Number(n || 0).toLocaleString('en-IN', { minimumFractionDigits: d, maximumFractionDigits: d })
