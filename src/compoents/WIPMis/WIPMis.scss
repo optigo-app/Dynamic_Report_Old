@@ -196,6 +196,75 @@ $red-bg: #fdecea;
       color: $purple;
     }
   }
+
+  /* Multi-select (Autocomplete) variant used for Location / Customer Code / Order No. */
+  &--multi {
+    min-width: 190px;
+    max-width: 260px;
+    height: auto;
+    min-height: 36px;
+    padding: 3px 10px 3px 12px;
+    align-items: center;
+  }
+}
+
+.filter-chip__autocomplete {
+  flex: 1;
+  min-width: 110px;
+
+  .MuiAutocomplete-inputRoot {
+    padding: 0 !important;
+    flex-wrap: nowrap;
+    overflow: hidden;
+  }
+
+  .MuiAutocomplete-input {
+    font-size: 13px;
+    min-width: 40px !important;
+    padding: 4px 2px !important;
+  }
+
+  .MuiAutocomplete-tag {
+    height: 20px;
+    font-size: 11px;
+    font-weight: 600;
+    background: $purple-soft;
+    color: $purple-dark;
+    border-radius: 6px;
+    margin: 1px;
+  }
+
+  .MuiAutocomplete-endAdornment {
+    right: 0;
+  }
+
+  .MuiSvgIcon-root {
+    color: $purple;
+    font-size: 18px;
+  }
+}
+
+/* Dropdown listbox options — fixed comfortable width, checkbox aligned to
+   the top of the label so multi-line location names (e.g. "INDIA >
+   Maharashtra") wrap cleanly instead of overlapping the checkbox or the
+   neighbouring filter chip. */
+.filter-option {
+  display: flex !important;
+  align-items: flex-start !important;
+  gap: 4px;
+  padding: 7px 10px !important;
+  font-size: 13px;
+
+  .MuiCheckbox-root {
+    margin-top: -2px;
+  }
+}
+
+.filter-option__label {
+  flex: 1;
+  line-height: 1.35;
+  word-break: break-word;
+  padding-top: 1px;
 }
 
 .date-range-popover {
@@ -286,12 +355,19 @@ $red-bg: #fdecea;
   }
 
   &__grid-wrap {
-    height: 460px;
-    overflow: hidden;
+    /* height is now set inline per-panel based on row count (see
+       computeGridHeight in WIPMis.jsx) instead of a fixed value here */
+    transition: height 0.15s ease;
   }
 
-  &--dense &__grid-wrap {
-    height: 420px;
+  &__no-rows {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    color: $text-muted;
+    font-size: 13px;
+    font-weight: 500;
   }
 
   &__totals-row {

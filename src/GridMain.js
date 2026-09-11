@@ -73,10 +73,10 @@ const GridMain = () => {
 
   useEffect(() => {
     if (process.env.NODE_ENV === "development") {
-      // Cookies.set(
-      //   "skey",
-      //   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJpdGFzayIsImF1ZCI6ImMzZGhiV2xBWldjdVkyOXQiLCJleHAiOjE3NjQ1OTc5OTUsInVpZCI6ImMzZGhiV2xBWldjdVkyOXQiLCJ5YyI6ImUzdHVlbVZ1ZlgxN2V6SXdmWDE3ZTI5eVlXbHNNalY5Zlh0N2IzSmhhV3d5TlgxOSIsInN2IjoiMCIsImF0ayI6ImRHOXJaVzVmYzJWamNtVjBYMnRsZVY5dGFXRnZjbUU9IiwiY3V2ZXIiOiJSNTBCMyJ9.lTqmepM3HQJuNQXeArm-gmx9TwL0fFLDzDsoPCqYxcs"
-      // );
+      Cookies.set(
+        "skey",
+        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJpdGFzayIsImF1ZCI6ImMzZGhiV2xBWldjdVkyOXQiLCJleHAiOjE3NjQ1OTc5OTUsInVpZCI6ImMzZGhiV2xBWldjdVkyOXQiLCJ5YyI6ImUzdHVlbVZ1ZlgxN2V6SXdmWDE3ZTI5eVlXbHNNalY5Zlh0N2IzSmhhV3d5TlgxOSIsInN2IjoiMCIsImF0ayI6ImRHOXJaVzVmYzJWamNtVjBYMnRsZVY5dGFXRnZjbUU9IiwiY3V2ZXIiOiJSNTBCMyJ9.lTqmepM3HQJuNQXeArm-gmx9TwL0fFLDzDsoPCqYxcs"
+      );
 
       //StockValue
       //    Cookies.set(
