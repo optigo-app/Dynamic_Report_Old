@@ -14,6 +14,9 @@ import {
   CircularProgress,
   Alert,
   Tooltip,
+  Autocomplete,
+  TextField,
+  Checkbox,
 } from '@mui/material';
 import { DataGrid } from '@mui/x-data-grid';
 import Inventory2OutlinedIcon from '@mui/icons-material/Inventory2Outlined';
@@ -25,6 +28,8 @@ import EventNoteOutlinedIcon from '@mui/icons-material/EventNoteOutlined';
 import Inventory2Icon from '@mui/icons-material/Inventory2';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import FileDownloadOutlinedIcon from '@mui/icons-material/FileDownloadOutlined';
+import CheckBoxOutlineBlankIcon from '@mui/icons-material/CheckBoxOutlineBlank';
+import CheckBoxIcon from '@mui/icons-material/CheckBox';
 import { DateRangePicker } from 'mui-daterange-picker';
 import * as XLSX from 'xlsx';
 import { GetWipData } from '../../API/GetWipData/GetWipData';
@@ -174,9 +179,43 @@ const filterEmptyColumns = (columns, rows, alwaysKeepFields = []) =>
     });
   });
 
+// Pull a given column key (e.g. "Pending Request") to a fixed position
+// (default: right after the row-label column) regardless of where the
+// natural sort of the pivot would otherwise place it.
+const reorderPriorityColumn = (colKeys, priorityLabel) => {
+  if (!colKeys.includes(priorityLabel)) return colKeys;
+  return [priorityLabel, ...colKeys.filter((c) => c !== priorityLabel)];
+};
+
+/* ---------------------------------------------------------------- */
+/* Dynamic grid height (no dead space when there are few rows,        */
+/* capped + scrollable once row count passes the visible limit)       */
+/* ---------------------------------------------------------------- */
+
+const ROW_HEIGHT_DENSE = 34;
+const ROW_HEIGHT_NORMAL = 40;
+const HEADER_HEIGHT_DENSE = 56;
+const HEADER_HEIGHT_NORMAL = 42;
+const MAX_VISIBLE_ROWS = 9;
+const EMPTY_STATE_HEIGHT = 110;
+
+const computeGridHeight = (rowCount, dense) => {
+  const rowH = dense ? ROW_HEIGHT_DENSE : ROW_HEIGHT_NORMAL;
+  const headerH = dense ? HEADER_HEIGHT_DENSE : HEADER_HEIGHT_NORMAL;
+
+  if (!rowCount) return headerH + EMPTY_STATE_HEIGHT;
+
+  const visibleRows = Math.min(rowCount, MAX_VISIBLE_ROWS);
+  return headerH + visibleRows * rowH + 2; // +2px border buffer
+};
+
 /* ---------------------------------------------------------------- */
 /* Generic panel wrapping a DataGrid                                  */
 /* ---------------------------------------------------------------- */
+
+const NoRowsOverlay = () => (
+  <Box className="data-table__no-rows">No records found</Box>
+);
 
 const DataGridPanel = ({
   icon,
@@ -186,7 +225,7 @@ const DataGridPanel = ({
   dense = false,
   showTotals = false,
   totalsRow,
-  gridHeight,
+  gridHeight, // optional manual override; auto-computed from row count otherwise
 }) => {
   const gridWrapRef = useRef(null);
   const totalsRowRef = useRef(null);
@@ -236,6 +275,9 @@ const DataGridPanel = ({
     [columns]
   );
 
+  const resolvedHeight = gridHeight ?? computeGridHeight(rows.length, dense);
+  const showScroll = rows.length > MAX_VISIBLE_ROWS;
+
   return (
     <Paper className={`data-table data-table--full ${dense ? 'data-table--dense' : ''}`} elevation={0}>
       <Box className="data-table__header">
@@ -254,7 +296,7 @@ const DataGridPanel = ({
       <Box
         className="data-table__grid-wrap"
         ref={gridWrapRef}
-        style={gridHeight ? { height: gridHeight } : undefined}
+        style={{ height: resolvedHeight, overflowY: showScroll ? 'auto' : 'hidden' }}
       >
         <DataGrid
           rows={rows}
@@ -268,10 +310,11 @@ const DataGridPanel = ({
           columnHeaderHeight={dense ? 56 : 42}
           pagination={false}
           className="mis-datagrid"
+          components={{ NoRowsOverlay }}
         />
       </Box>
 
-      {showTotals && totalsRow && (
+      {showTotals && totalsRow && rows.length > 0 && (
         <Box className="data-table__totals-row" ref={totalsRowRef}>
           {columns.map((col) => (
             <Box
@@ -313,7 +356,7 @@ const StatCard = ({ icon, label, value, subLabel, unit }) => (
 );
 
 /* ---------------------------------------------------------------- */
-/* Filter chip                                                        */
+/* Filter chip (single select) — still used for Delivery Status       */
 /* ---------------------------------------------------------------- */
 
 const FilterChip = ({ label, value, onChange, options }) => (
@@ -330,12 +373,105 @@ const FilterChip = ({ label, value, onChange, options }) => (
 );
 
 /* ---------------------------------------------------------------- */
+/* Multi-select + searchable filter chip — Location / Customer Code / */
+/* Order No. Empty selection === "All" (within the active date range). */
+/* Selections are summarised as plain text ("3 selected") instead of  */
+/* individual removable chips, and the single built-in "x" clears the */
+/* whole selection at once.                                           */
+/* ---------------------------------------------------------------- */
+
+const checkboxIcon = <CheckBoxOutlineBlankIcon fontSize="small" />;
+const checkboxCheckedIcon = <CheckBoxIcon fontSize="small" />;
+
+const MultiSelectFilterChip = ({ label, value, onChange, options }) => (
+  <Box className="filter-chip filter-chip--multi">
+    <Typography className="filter-chip__label">{label}</Typography>
+    <Autocomplete
+      multiple
+      disableCloseOnSelect
+      size="small"
+      className="filter-chip__autocomplete"
+      options={options}
+      value={value}
+      onChange={(e, newValue) => onChange(newValue)}
+      isOptionEqualToValue={(opt, val) => opt === val}
+      // No per-item chips — just a short plain-text summary of the
+      // selection. Clearing the whole selection happens through the
+      // single built-in "x" clear button (forced always-visible below).
+      renderTags={(selected) =>
+        selected.length ? (
+          <Typography noWrap style={{ fontSize: 13, color: '#1a1f36' }}>
+            {/* {selected.length === 1 ? selected[0] : `${selected.length} selected`} */}
+            { `${selected.length} selected`}
+          </Typography>
+        ) : null
+      }
+      renderOption={(props, option, { selected }) => (
+        <li
+          {...props}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            padding: '8px 14px',
+            fontSize: 13,
+          }}
+        >
+          <Checkbox
+            icon={checkboxIcon}
+            checkedIcon={checkboxCheckedIcon}
+            checked={selected}
+            size="small"
+            style={{ marginRight: 8, padding: 2 }}
+          />
+          <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{option}</span>
+        </li>
+      )}
+      componentsProps={{
+        paper: {
+          style: {
+            minWidth: 220,
+            borderRadius: 10,
+            marginTop: 4,
+            backgroundColor: '#fff',
+            boxShadow: '0 8px 24px rgba(20, 20, 43, 0.16)',
+          },
+        },
+        popper: {
+          style: { zIndex: 1500 },
+        },
+      }}
+      sx={{
+        // The default MUI clear "x" only fades in on hover — make it
+        // always visible once something is selected, so there's a
+        // constantly-visible single control to clear the filter.
+        '& .MuiAutocomplete-clearIndicator': {
+          visibility: 'visible',
+        },
+      }}
+      renderInput={(params) => (
+        <TextField
+          {...params}
+          variant="standard"
+          placeholder={value.length ? '' : 'All'}
+          InputProps={{ ...params.InputProps, disableUnderline: true }}
+        />
+      )}
+    />
+  </Box>
+);
+
+/* ---------------------------------------------------------------- */
 /* Main component                                                     */
 /* ---------------------------------------------------------------- */
 
 const DATE_FIELD_OPTIONS = [
   { value: 'jobpromisedate', label: 'Promise Date' },
 ];
+
+// NOTE: adjust this to whatever the actual API field name is for diamond
+// weight if it differs — it follows the same naming pattern as
+// "Diamond_actualusedpcs" (used for the Diamond Pieces KPI below).
+const DIAMOND_WEIGHT_FIELD = 'Diamond_actualusedgm';
 
 const WIPMis = () => {
   const [data, setData] = useState(null);
@@ -347,10 +483,15 @@ const WIPMis = () => {
   const [dateRange, setDateRange] = useState(() => getThisMonthRange());
   const [isAllDates, setIsAllDates] = useState(false);
   const [pickerAnchor, setPickerAnchor] = useState(null);
+  // Staged range so the popover only commits on "Apply" — this also fixes
+  // single-day selection, since the picker library fires onChange on the
+  // very first click (before a second click can extend the range) and the
+  // old code closed the popover immediately on that first call.
+  const [stagingRange, setStagingRange] = useState(dateRange);
 
-  const [location, setLocation] = useState('All');
-  const [customerCode, setCustomerCode] = useState('All');
-  const [orderNo, setOrderNo] = useState('All');
+  const [location, setLocation] = useState([]); // [] === All
+  const [customerCode, setCustomerCode] = useState([]); // [] === All
+  const [orderNo, setOrderNo] = useState([]); // [] === All
   const [deliveryStatus, setDeliveryStatus] = useState('All');
 
   const handleFetchData = async (start, end) => {
@@ -374,19 +515,6 @@ const WIPMis = () => {
   const rawRows = data?.Data?.rd3 || [];
   const fieldMap = useMemo(() => buildFieldMap(rd2), [rd2]);
 
-  const buildOptions = (fieldName) => {
-    const set = new Set();
-    rawRows.forEach((r) => {
-      const v = getField(r, fieldMap, fieldName);
-      if (v) set.add(v);
-    });
-    return ['All', ...[...set].sort()];
-  };
-
-  const locationOptions = useMemo(() => buildOptions('JobLocation'), [rawRows, fieldMap]);
-  const customerOptions = useMemo(() => buildOptions('Customercode'), [rawRows, fieldMap]);
-  const orderNoOptions = useMemo(() => buildOptions('SKUNO'), [rawRows, fieldMap]);
-
   // Delivery Status now reflects remaining-days health, not isDeliveryBatchJob
   const deliveryStatusOptions = ['All', 'On Time', 'Delayed'];
 
@@ -396,15 +524,85 @@ const WIPMis = () => {
     setPickerAnchor(null);
   };
 
+  const openDatePicker = (e) => {
+    // Start the popover from a single-day selection (the currently applied
+    // start date) instead of carrying over the previously applied range.
+    // Otherwise a fresh single click on a new day can leave the picker's
+    // internal endDate pointing at the OLD range's end, so Apply would
+    // silently span the old wide range instead of just the clicked day.
+    setStagingRange({ startDate: dateRange.startDate, endDate: dateRange.startDate });
+    setPickerAnchor(e.currentTarget);
+  };
+
+  const applyDateRange = () => {
+    // Expand the picked range to cover the full day(s), so a single-day
+    // pick like "3 Sept — 3 Sept" (or just clicking 3 Sept once, with no
+    // end date chosen) becomes [3rd 00:00:00.000, 3rd 23:59:59.999] — the
+    // whole day's data — instead of a zero-width instant.
+    const start = new Date(stagingRange.startDate);
+    start.setHours(0, 0, 0, 0);
+
+    const end = new Date(stagingRange.endDate || stagingRange.startDate);
+    end.setHours(23, 59, 59, 999);
+
+    setDateRange({ startDate: start, endDate: end });
+    setIsAllDates(false);
+    setPickerAnchor(null);
+  };
+
+  // Rows restricted ONLY by the Promise Date range (ignoring Location /
+  // Customer Code / Order No. / Delivery Status). The Location, Customer
+  // Code and Order No. dropdown OPTIONS are built from this set, so they
+  // only ever list values that actually exist within the selected date
+  // range — since the date picker is the primary filter and the table is
+  // date-driven, there's no point offering options that don't apply to any
+  // row in the current window.
+  const dateFilteredRows = useMemo(() => {
+    if (isAllDates || !dateRange.startDate || !dateRange.endDate) return rawRows;
+    return rawRows.filter((row) => {
+      const raw = getField(row, fieldMap, dateField);
+      if (!raw) return false;
+      const d = new Date(raw);
+      if (Number.isNaN(d.getTime())) return false;
+      return d >= dateRange.startDate && d <= dateRange.endDate;
+    });
+  }, [rawRows, fieldMap, isAllDates, dateRange, dateField]);
+
+  // Build all three dropdown option lists in a single pass over
+  // dateFilteredRows (instead of three separate full scans) so opening any
+  // of the filter dropdowns is fast even on larger datasets.
+  const filterOptionSets = useMemo(() => {
+    const locSet = new Set();
+    const custSet = new Set();
+    const ordSet = new Set();
+    dateFilteredRows.forEach((r) => {
+      const loc = getField(r, fieldMap, 'JobLocation');
+      const cust = getField(r, fieldMap, 'Customercode');
+      const ord = getField(r, fieldMap, 'SKUNO');
+      if (loc) locSet.add(loc);
+      if (cust) custSet.add(cust);
+      if (ord) ordSet.add(ord);
+    });
+    return {
+      location: [...locSet].sort(),
+      customer: [...custSet].sort(),
+      orderNo: [...ordSet].sort(),
+    };
+  }, [dateFilteredRows, fieldMap]);
+
+  const locationOptions = filterOptionSets.location;
+  const customerOptions = filterOptionSets.customer;
+  const orderNoOptions = filterOptionSets.orderNo;
+
   const filteredRows = useMemo(() => {
     return rawRows.filter((row) => {
       const loc = getField(row, fieldMap, 'JobLocation');
       const cust = getField(row, fieldMap, 'Customercode');
       const ord = getField(row, fieldMap, 'SKUNO');
 
-      if (location !== 'All' && loc !== location) return false;
-      if (customerCode !== 'All' && cust !== customerCode) return false;
-      if (orderNo !== 'All' && ord !== orderNo) return false;
+      if (location.length > 0 && !location.includes(loc)) return false;
+      if (customerCode.length > 0 && !customerCode.includes(cust)) return false;
+      if (orderNo.length > 0 && !orderNo.includes(ord)) return false;
 
       if (deliveryStatus !== 'All') {
         const remDays = computeRemainingDays(row, fieldMap);
@@ -416,12 +614,13 @@ const WIPMis = () => {
 
       if (!isAllDates && dateRange.startDate && dateRange.endDate) {
         const raw = getField(row, fieldMap, dateField);
-        if (raw) {
-          const d = new Date(raw);
-          if (!Number.isNaN(d.getTime())) {
-            if (d < dateRange.startDate || d > dateRange.endDate) return false;
-          }
-        }
+        // No date value on this row → it doesn't belong to any specific
+        // date-range selection, so exclude it (previously it slipped
+        // through every date filter because this whole block was skipped).
+        if (!raw) return false;
+        const d = new Date(raw);
+        if (Number.isNaN(d.getTime())) return false;
+        if (d < dateRange.startDate || d > dateRange.endDate) return false;
       }
 
       return true;
@@ -434,6 +633,7 @@ const WIPMis = () => {
       nwt: sumField(filteredRows, fieldMap, 'NetWtgm'),
       gwt: sumField(filteredRows, fieldMap, 'GrossWeightgm'),
       diaPcs: sumField(filteredRows, fieldMap, 'Diamond_actualusedpcs'),
+      diaWt: sumField(filteredRows, fieldMap, DIAMOND_WEIGHT_FIELD),
     }),
     [filteredRows, fieldMap]
   );
@@ -492,20 +692,20 @@ const WIPMis = () => {
     },
   ];
 
-  const buildPivotRows = (pivot) =>
+  const buildPivotRows = (pivot, colKeys = pivot.colKeys) =>
     pivot.rowKeys.map((r) => ({
       __key: r,
       row: r,
       total: pivot.rowTotals[r],
-      ...pivot.colKeys.reduce((acc, c) => {
+      ...colKeys.reduce((acc, c) => {
         acc[c] = pivot.matrix[r]?.[c] || '';
         return acc;
       }, {}),
     }));
 
-  const buildPivotTotals = (pivot) => ({
+  const buildPivotTotals = (pivot, colKeys = pivot.colKeys) => ({
     total: pivot.grandTotal,
-    ...pivot.colKeys.reduce((acc, c) => {
+    ...colKeys.reduce((acc, c) => {
       acc[c] = pivot.colTotals[c] || 0;
       return acc;
     }, {}),
@@ -527,11 +727,15 @@ const WIPMis = () => {
     return { columns, rows, totals };
   }, [statusPivot]);
 
+  // "Pending Request" is pinned as the 2nd column (right after the Promise
+  // Date row label) regardless of natural sort order, and is always kept
+  // even if every value in it is empty.
   const department = useMemo(() => {
-    const allCols = buildPivotColumns('Promise Date', departmentPivot.colKeys);
-    const rows = buildPivotRows(departmentPivot);
-    const columns = filterEmptyColumns(allCols, rows);
-    const totals = buildPivotTotals(departmentPivot);
+    const orderedColKeys = reorderPriorityColumn(departmentPivot.colKeys, 'Pending Request');
+    const allCols = buildPivotColumns('Promise Date', orderedColKeys);
+    const rows = buildPivotRows(departmentPivot, orderedColKeys);
+    const columns = filterEmptyColumns(allCols, rows, ['Pending Request']);
+    const totals = buildPivotTotals(departmentPivot, orderedColKeys);
     return { columns, rows, totals };
   }, [departmentPivot]);
 
@@ -622,9 +826,10 @@ const WIPMis = () => {
     []
   );
 
-  // 'remainingDays' is mandatory — always shown even if every row is '-'
+  // 'remainingDays' and 'promiseDate' are mandatory — always shown even if
+  // every row is '-' for them.
   const orderColumns = useMemo(
-    () => filterEmptyColumns(orderColumnsAll, orderDetails, ['remainingDays']),
+    () => filterEmptyColumns(orderColumnsAll, orderDetails, ['remainingDays', 'promiseDate']),
     [orderColumnsAll, orderDetails]
   );
 
@@ -698,7 +903,7 @@ const WIPMis = () => {
                   variant="outlined"
                   color="inherit"
                   startIcon={<CalendarMonthOutlinedIcon fontSize="small" />}
-                  onClick={(e) => setPickerAnchor(e.currentTarget)}
+                  onClick={openDatePicker}
                   sx={{
                     flexShrink: 0,
                     textTransform: 'none',
@@ -731,14 +936,32 @@ const WIPMis = () => {
                     <DateRangePicker
                       open
                       toggle={() => setPickerAnchor(null)}
-                      initialDateRange={dateRange}
-                      onChange={(range) => {
-                        setDateRange(range);
-                        setIsAllDates(false);
-                        setPickerAnchor(null);
-                      }}
+                      initialDateRange={stagingRange}
+                      onChange={(range) => setStagingRange(range)}
                     />
                   </ThemeProvider>
+                  <Box
+                    sx={{
+                      display: 'flex',
+                      justifyContent: 'flex-end',
+                      gap: 1,
+                      padding: '10px 14px',
+                      borderTop: '1px solid #e6e8f0',
+                      background: '#fff',
+                    }}
+                  >
+                    <Button size="small" color="inherit" onClick={() => setPickerAnchor(null)}>
+                      Cancel
+                    </Button>
+                    <Button
+                      size="small"
+                      variant="contained"
+                      onClick={applyDateRange}
+                      sx={{ background: '#6c5ce7', '&:hover': { background: '#5a4bd6' } }}
+                    >
+                      Apply
+                    </Button>
+                  </Box>
                 </Popover>
 
                 <Button
@@ -769,14 +992,14 @@ const WIPMis = () => {
               </Box>
 
               <Box className="toolbar__group toolbar__group--right">
-                <FilterChip label="Location" value={location} onChange={setLocation} options={locationOptions} />
-                <FilterChip
+                <MultiSelectFilterChip label="Location" value={location} onChange={setLocation} options={locationOptions} />
+                <MultiSelectFilterChip
                   label="Customer Code"
                   value={customerCode}
                   onChange={setCustomerCode}
                   options={customerOptions}
                 />
-                <FilterChip label="Order No." value={orderNo} onChange={setOrderNo} options={orderNoOptions} />
+                <MultiSelectFilterChip label="Order No." value={orderNo} onChange={setOrderNo} options={orderNoOptions} />
                 <FilterChip
                   label="Delivery Status"
                   value={deliveryStatus}
@@ -831,6 +1054,13 @@ const WIPMis = () => {
               value={stats.diaPcs.toLocaleString()}
               subLabel="Total Diamond"
             />
+            <StatCard
+              icon={<DiamondOutlinedIcon fontSize="small" />}
+              label="DIAMOND WEIGHT"
+              value={stats.diaWt.toLocaleString(undefined, { maximumFractionDigits: 2 })}
+              subLabel="Total Diamond Weight"
+              unit="Ct"
+            />
           </Box>
 
           <Box className="wip-mis__pivots">
@@ -840,7 +1070,6 @@ const WIPMis = () => {
               dense
               columns={orderColumns}
               rows={orderDetails}
-              gridHeight={360}
             />
             <DataGridPanel
               icon={<EventNoteOutlinedIcon fontSize="small" />}
@@ -850,7 +1079,6 @@ const WIPMis = () => {
               columns={promise.columns}
               rows={promise.rows}
               totalsRow={promise.totals}
-              gridHeight={360}
             />
             <DataGridPanel
               icon={<Inventory2Icon fontSize="small" />}
@@ -860,7 +1088,6 @@ const WIPMis = () => {
               columns={status.columns}
               rows={status.rows}
               totalsRow={status.totals}
-              gridHeight={360}
             />
            
             <DataGridPanel
@@ -871,7 +1098,6 @@ const WIPMis = () => {
               columns={department.columns}
               rows={department.rows}
               totalsRow={department.totals}
-              gridHeight={360}
             />
           </Box>
         </Box>
