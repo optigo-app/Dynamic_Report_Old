@@ -17,6 +17,10 @@ import {
   Autocomplete,
   TextField,
   Checkbox,
+  Drawer,
+  Divider,
+  Badge,
+  Pagination,
 } from '@mui/material';
 import { DataGrid } from '@mui/x-data-grid';
 import Inventory2OutlinedIcon from '@mui/icons-material/Inventory2Outlined';
@@ -30,11 +34,17 @@ import RefreshIcon from '@mui/icons-material/Refresh';
 import FileDownloadOutlinedIcon from '@mui/icons-material/FileDownloadOutlined';
 import CheckBoxOutlineBlankIcon from '@mui/icons-material/CheckBoxOutlineBlank';
 import CheckBoxIcon from '@mui/icons-material/CheckBox';
+import FilterListIcon from '@mui/icons-material/FilterList';
+import CloseIcon from '@mui/icons-material/Close';
 import { DateRangePicker } from 'mui-daterange-picker';
 import * as XLSX from 'xlsx';
 import { GetWipData } from '../../API/GetWipData/GetWipData';
 import './WIPMis.scss';
 import DescriptionOutlinedIcon from '@mui/icons-material/DescriptionOutlined';
+import KeyboardArrowLeftIcon from '@mui/icons-material/KeyboardArrowLeft';
+import FilterAltOffOutlinedIcon from '@mui/icons-material/FilterAltOffOutlined';
+import FilterAltOutlinedIcon from '@mui/icons-material/FilterAltOutlined';
+// (add these to your existing icon imports; remove the now-unused CloseIcon import if nothing else uses it)
 
 /* ---------------------------------------------------------------- */
 /* Helpers                                                            */
@@ -189,15 +199,17 @@ const reorderPriorityColumn = (colKeys, priorityLabel) => {
 
 /* ---------------------------------------------------------------- */
 /* Dynamic grid height (no dead space when there are few rows,        */
-/* capped + scrollable once row count passes the visible limit)       */
+/* one page of rows is shown at a time once pagination kicks in)      */
 /* ---------------------------------------------------------------- */
 
 const ROW_HEIGHT_DENSE = 34;
 const ROW_HEIGHT_NORMAL = 40;
 const HEADER_HEIGHT_DENSE = 56;
 const HEADER_HEIGHT_NORMAL = 42;
-const MAX_VISIBLE_ROWS = 9;
 const EMPTY_STATE_HEIGHT = 110;
+
+// Any table with more than this many records gets pagination.
+const PAGE_SIZE = 10;
 
 const computeGridHeight = (rowCount, dense) => {
   const rowH = dense ? ROW_HEIGHT_DENSE : ROW_HEIGHT_NORMAL;
@@ -205,7 +217,7 @@ const computeGridHeight = (rowCount, dense) => {
 
   if (!rowCount) return headerH + EMPTY_STATE_HEIGHT;
 
-  const visibleRows = Math.min(rowCount, MAX_VISIBLE_ROWS);
+  const visibleRows = Math.min(rowCount, PAGE_SIZE);
   return headerH + visibleRows * rowH + 2; // +2px border buffer
 };
 
@@ -224,11 +236,57 @@ const DataGridPanel = ({
   rows,
   dense = false,
   showTotals = false,
-  totalsRow,
   gridHeight, // optional manual override; auto-computed from row count otherwise
 }) => {
   const gridWrapRef = useRef(null);
   const totalsRowRef = useRef(null);
+
+  const [page, setPage] = useState(1);
+
+  // Whenever the underlying data set changes (filters change, refresh,
+  // etc.) jump back to page 1 instead of leaving the user stranded on a
+  // page that may no longer exist.
+  useEffect(() => {
+    setPage(1);
+  }, [rows]);
+
+  const showPagination = rows.length > PAGE_SIZE;
+  const pageCount = Math.max(1, Math.ceil(rows.length / PAGE_SIZE));
+  const safePage = Math.min(page, pageCount);
+  const pagedRows = showPagination
+    ? rows.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE)
+    : rows;
+
+  const rangeStart = rows.length === 0 ? 0 : (safePage - 1) * PAGE_SIZE + 1;
+  const rangeEnd = Math.min(safePage * PAGE_SIZE, rows.length);
+
+  // Totals row now reflects ONLY the rows on the current page — so page 1's
+  // total is different from page 2's, and different again from the "all
+  // dates" grand total, instead of always showing the full-dataset sum.
+  const pageTotals = useMemo(() => {
+    if (!showTotals) return null;
+    const totals = {};
+    columns.forEach((col) => {
+      if (col.field === 'row') return;
+      let sum = 0;
+      let hasNumeric = false;
+      pagedRows.forEach((r) => {
+        const raw = r[col.field];
+        const num =
+          typeof raw === 'number'
+            ? raw
+            : raw !== '' && raw !== null && raw !== undefined && !Number.isNaN(Number(raw))
+            ? Number(raw)
+            : null;
+        if (num !== null) {
+          sum += num;
+          hasNumeric = true;
+        }
+      });
+      totals[col.field] = hasNumeric ? sum : '';
+    });
+    return totals;
+  }, [showTotals, columns, pagedRows]);
 
   useEffect(() => {
     const scroller = gridWrapRef.current?.querySelector('.MuiDataGrid-virtualScroller');
@@ -242,7 +300,7 @@ const DataGridPanel = ({
 
     scroller.addEventListener('scroll', handleScroll, { passive: true });
     return () => scroller.removeEventListener('scroll', handleScroll);
-  }, [rows]);
+  }, [pagedRows]);
 
   // MUI DataGrid wraps the header label in its own <Tooltip> (via
   // GridColumnHeaderTitle) whenever the text is truncated, which is what
@@ -275,8 +333,7 @@ const DataGridPanel = ({
     [columns]
   );
 
-  const resolvedHeight = gridHeight ?? computeGridHeight(rows.length, dense);
-  const showScroll = rows.length > MAX_VISIBLE_ROWS;
+  const resolvedHeight = gridHeight ?? computeGridHeight(pagedRows.length, dense);
 
   return (
     <Paper className={`data-table data-table--full ${dense ? 'data-table--dense' : ''}`} elevation={0}>
@@ -296,10 +353,10 @@ const DataGridPanel = ({
       <Box
         className="data-table__grid-wrap"
         ref={gridWrapRef}
-        style={{ height: resolvedHeight, overflowY: showScroll ? 'auto' : 'hidden' }}
+        style={{ height: resolvedHeight, overflowY: 'hidden' }}
       >
         <DataGrid
-          rows={rows}
+          rows={pagedRows}
           columns={columnsNoHeaderTooltip}
           getRowId={(row) => row.__key}
           disableColumnMenu
@@ -314,7 +371,7 @@ const DataGridPanel = ({
         />
       </Box>
 
-      {showTotals && totalsRow && rows.length > 0 && (
+      {showTotals && pageTotals && rows.length > 0 && (
         <Box className="data-table__totals-row" ref={totalsRowRef}>
           {columns.map((col) => (
             <Box
@@ -328,15 +385,32 @@ const DataGridPanel = ({
                   col.align === 'center' ? 'center' : col.align === 'right' ? 'flex-end' : 'flex-start',
               }}
             >
-              {col.field === 'row' ? 'Total' : totalsRow[col.field] ?? ''}
+              {col.field === 'row' ? 'Total' : pageTotals[col.field] ?? ''}
             </Box>
           ))}
+        </Box>
+      )}
+
+      {showPagination && (
+        <Box className="data-table__pagination">
+          <Typography className="data-table__pagination-info">
+            {rangeStart}–{rangeEnd} of {rows.length}
+          </Typography>
+          <Pagination
+            count={pageCount}
+            page={safePage}
+            onChange={(e, val) => setPage(val)}
+            size="small"
+            shape="rounded"
+            color="primary"
+            siblingCount={0}
+            boundaryCount={1}
+          />
         </Box>
       )}
     </Paper>
   );
 };
-
 /* ---------------------------------------------------------------- */
 /* Stat card                                                          */
 /* ---------------------------------------------------------------- */
@@ -489,10 +563,53 @@ const WIPMis = () => {
   // old code closed the popover immediately on that first call.
   const [stagingRange, setStagingRange] = useState(dateRange);
 
+  // ---- Applied filters (actually used to filter the tables) ----
   const [location, setLocation] = useState([]); // [] === All
   const [customerCode, setCustomerCode] = useState([]); // [] === All
   const [orderNo, setOrderNo] = useState([]); // [] === All
   const [deliveryStatus, setDeliveryStatus] = useState('All');
+
+  // ---- Filter drawer ----
+  const [filterDrawerOpen, setFilterDrawerOpen] = useState(false);
+  // Staged copies edited inside the drawer — only committed to the applied
+  // filters above when the user presses "Apply".
+  const [stagingLocation, setStagingLocation] = useState([]);
+  const [stagingCustomerCode, setStagingCustomerCode] = useState([]);
+  const [stagingOrderNo, setStagingOrderNo] = useState([]);
+  const [stagingDeliveryStatus, setStagingDeliveryStatus] = useState('All');
+
+  const openFilterDrawer = () => {
+    setStagingLocation(location);
+    setStagingCustomerCode(customerCode);
+    setStagingOrderNo(orderNo);
+    setStagingDeliveryStatus(deliveryStatus);
+    setFilterDrawerOpen(true);
+  };
+
+  // Closing without "Apply" (backdrop click / X button) discards any
+  // unsaved edits made inside the drawer.
+  const closeFilterDrawer = () => setFilterDrawerOpen(false);
+
+  const handleClearFilters = () => {
+    setStagingLocation([]);
+    setStagingCustomerCode([]);
+    setStagingOrderNo([]);
+    setStagingDeliveryStatus('All');
+  };
+
+  const handleApplyFilters = () => {
+    setLocation(stagingLocation);
+    setCustomerCode(stagingCustomerCode);
+    setOrderNo(stagingOrderNo);
+    setDeliveryStatus(stagingDeliveryStatus);
+    setFilterDrawerOpen(false);
+  };
+
+  const activeFilterCount =
+    (location.length > 0 ? 1 : 0) +
+    (customerCode.length > 0 ? 1 : 0) +
+    (orderNo.length > 0 ? 1 : 0) +
+    (deliveryStatus !== 'All' ? 1 : 0);
 
   const handleFetchData = async (start, end) => {
     setLoading(true);
@@ -892,6 +1009,22 @@ const WIPMis = () => {
           <Paper className="toolbar" elevation={0}>
             <Box className="toolbar__filters-row">
               <Box className="toolbar__group toolbar__group--left">
+              <Tooltip title="Filters">
+                  <IconButton
+                    className="wip-mis__filter-btn"
+                    onClick={openFilterDrawer}
+                    size="small"
+                    title="Filters"
+                  >
+                    <Badge
+                      badgeContent={activeFilterCount}
+                      color="primary"
+                      invisible={activeFilterCount === 0}
+                    >
+                      <FilterListIcon fontSize="small" />
+                    </Badge>
+                  </IconButton>
+                </Tooltip>
                 <Box className="filter-chip">
                   <Typography className="filter-chip__label">Date Field</Typography>
                   <Typography className="filter-chip__value">
@@ -992,20 +1125,7 @@ const WIPMis = () => {
               </Box>
 
               <Box className="toolbar__group toolbar__group--right">
-                <MultiSelectFilterChip label="Location" value={location} onChange={setLocation} options={locationOptions} />
-                <MultiSelectFilterChip
-                  label="Customer Code"
-                  value={customerCode}
-                  onChange={setCustomerCode}
-                  options={customerOptions}
-                />
-                <MultiSelectFilterChip label="Order No." value={orderNo} onChange={setOrderNo} options={orderNoOptions} />
-                <FilterChip
-                  label="Delivery Status"
-                  value={deliveryStatus}
-                  onChange={setDeliveryStatus}
-                  options={deliveryStatusOptions}
-                />
+               
                 <IconButton
                   className="wip-mis__export-btn"
                   onClick={handleExportExcel}
@@ -1102,6 +1222,87 @@ const WIPMis = () => {
           </Box>
         </Box>
       )}
+
+      {/* ---------------- Left-side filter drawer ---------------- */}
+      <Drawer
+        anchor="left"
+        open={filterDrawerOpen}
+        onClose={closeFilterDrawer}
+        PaperProps={{ className: 'filter-drawer' }}
+      >
+        <Box className="filter-drawer__header">
+          <Box className="filter-drawer__header-left">
+            <IconButton size="small" className="filter-drawer__back-btn" onClick={closeFilterDrawer}>
+              <KeyboardArrowLeftIcon fontSize="small" />
+            </IconButton>
+            <Typography className="filter-drawer__title">Filters</Typography>
+          </Box>
+
+          <Box className="filter-drawer__header-actions">
+            <Button
+              size="small"
+              color="inherit"
+              startIcon={<FilterAltOffOutlinedIcon fontSize="small" />}
+              onClick={handleClearFilters}
+              className="filter-drawer__clear-btn"
+              sx={{ textTransform: 'none', fontWeight: 600 }}
+            >
+              Clear
+            </Button>
+            <Button
+              size="small"
+              variant="contained"
+              startIcon={<FilterAltOutlinedIcon fontSize="small" />}
+              onClick={handleApplyFilters}
+              sx={{
+                textTransform: 'none',
+                fontWeight: 600,
+                borderRadius: '20px',
+                background: '#6c5ce7',
+                '&:hover': { background: '#5a4bd6' },
+              }}
+            >
+              Apply
+            </Button>
+          </Box>
+        </Box>
+        <Divider />
+
+        <Box className="filter-drawer__body">
+          <Box className="filter-drawer__field">
+            <MultiSelectFilterChip
+              label="Location"
+              value={stagingLocation}
+              onChange={setStagingLocation}
+              options={locationOptions}
+            />
+          </Box>
+          <Box className="filter-drawer__field">
+            <MultiSelectFilterChip
+              label="Customer Code"
+              value={stagingCustomerCode}
+              onChange={setStagingCustomerCode}
+              options={customerOptions}
+            />
+          </Box>
+          <Box className="filter-drawer__field">
+            <MultiSelectFilterChip
+              label="Order No."
+              value={stagingOrderNo}
+              onChange={setStagingOrderNo}
+              options={orderNoOptions}
+            />
+          </Box>
+          <Box className="filter-drawer__field">
+            <FilterChip
+              label="Delivery Status"
+              value={stagingDeliveryStatus}
+              onChange={setStagingDeliveryStatus}
+              options={deliveryStatusOptions}
+            />
+          </Box>
+        </Box>
+      </Drawer>
     </Box>
   );
 };
