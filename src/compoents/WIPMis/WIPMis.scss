@@ -87,6 +87,26 @@ $red-bg: #fdecea;
     gap: 16px;
   }
 
+  &__filter-btn {
+    color: $purple !important;
+    background: $purple-soft !important;
+    border-radius: 8px !important;
+    width: 36px;
+    height: 36px;
+
+    &:hover {
+      background: #e6e0ff !important;
+    }
+
+    .MuiBadge-badge {
+      font-size: 10px;
+      height: 16px;
+      min-width: 16px;
+      top: 2px;
+      right: 2px;
+    }
+  }
+
   &__export-btn {
     color: $purple !important;
     background: $purple-soft !important;
@@ -175,7 +195,7 @@ $red-bg: #fdecea;
   &__label {
     font-size: 12px;
     font-weight: 600;
-    color: $text-muted;
+    color: #000;
     white-space: nowrap;
   }
 
@@ -272,6 +292,96 @@ $red-bg: #fdecea;
   box-shadow: 0 12px 32px rgba(26, 31, 54, 0.18) !important;
   margin-top: 6px;
   overflow: hidden;
+}
+
+/* -------------------- left-side filter drawer -------------------- */
+.filter-drawer {
+  width: 320px;
+  max-width: 85vw;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: #fff;
+
+  &__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 12px 14px;
+    flex-shrink: 0;
+  }
+
+  &__header-left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  &__back-btn {
+    background: $bg-soft !important;
+    color: $navy !important;
+    width: 30px;
+    height: 30px;
+
+    &:hover {
+      background: #ececf5 !important;
+    }
+  }
+
+  &__title {
+    font-weight: 700;
+    font-size: 16px;
+    color: $navy;
+  }
+
+  &__header-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+  }
+
+  &__clear-btn {
+    border: 1px solid $border;
+    border-radius: 20px;
+    color: $navy;
+    padding: 4px 14px;
+
+    &:hover {
+      border-color: $purple;
+      background: $purple-soft;
+    }
+  }
+
+  &__body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    @include themed-scrollbar(6px);
+  }
+
+  &__field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+
+    .filter-chip {
+      width: 100%;
+      max-width: none;
+      min-width: 0;
+      height: auto;
+      min-height: 44px;
+    }
+
+    .filter-chip__select {
+      min-width: 0;
+      width: 100%;
+    }
+  }
 }
 
 /* -------------------- stat cards -------------------- */
@@ -389,6 +499,7 @@ $red-bg: #fdecea;
     box-sizing: border-box;
     border-right: 1px solid $border;
     flex-shrink: 0;
+    color: $purple-dark;
 
     &:last-child {
       border-right: none;
@@ -398,6 +509,41 @@ $red-bg: #fdecea;
   &--dense &__totals-cell {
     padding: 7px 10px;
     font-size: 12px;
+  }
+
+  /* Simple pagination bar, right-aligned, under the grid (and under the
+     totals row when one is shown). */
+  &__pagination {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 12px;
+    padding: 8px 14px;
+    border-top: 1px solid $border;
+    background: #fff;
+
+    .MuiPagination-ul {
+      flex-wrap: nowrap;
+    }
+
+    .MuiPaginationItem-root {
+      color: $navy;
+      font-size: 12px;
+      min-width: 26px;
+      height: 26px;
+    }
+
+    .MuiPaginationItem-root.Mui-selected {
+      background: $purple !important;
+      color: #fff;
+    }
+  }
+
+  &__pagination-info {
+    font-size: 12px;
+    color: $text-muted;
+    font-weight: 500;
+    white-space: nowrap;
   }
 }
 
@@ -482,8 +628,13 @@ $red-bg: #fdecea;
     }
   }
 
+  // .MuiDataGrid-virtualScroller {
+  //   @include themed-scrollbar(10px);
+  // }
   .MuiDataGrid-virtualScroller {
-    @include themed-scrollbar(10px);
+    overflow-y: hidden !important;
+    // overflow-x: auto !important;
+    @include themed-scrollbar(8px);
   }
 
   .MuiDataGrid-sortIcon {
@@ -499,6 +650,7 @@ $red-bg: #fdecea;
   .MuiDataGrid-cell .heat-cell--total,
   .MuiDataGrid-cell .heat-cell--total * {
     font-weight: 700 !important;
+    color: $purple-dark !important;
   }
 }
 
