@@ -42,6 +42,7 @@ import WebsiteManagementGrid from "./compoents/WebsiteManagementGrid/WebsiteMana
 import CombinationMaker from "./compoents/CombinationMaker/CombinationMaker";
 import ProcatalogThemeControl from './compoents/ProcatalogThemeControl'
 import WIPMis from "./compoents/WIPMis/WIPMis";
+import LiveStockValuation from "./compoents/LiveStockValuation/LiveStockValuation";
 
 // Test73  :-    http://nzen/testreport/?sv=/e3tsaXZlLm9wdGlnb2FwcHMuY29tfX17ezIwfX17e3Rlc3Q3M319e3t0ZXN0NzN9fQ==/1&ifid=WorkerReportPro&pid=18223
 // http://localhost:3000/testreport/?sv=/e3tsaXZlLm9wdGlnb2FwcHMuY29tfX17ezIwfX17e3Rlc3Q3M319e3t0ZXN0NzN9fQ==/1&ifid=WorkerReportPro&pid=18223
@@ -229,6 +230,8 @@ const GridMain = () => {
       return <CombinationMaker />;
     } else if (pid == 18601) {
       return <WIPMis />;
+    } else if (pid == 18604) {
+      return <LiveStockValuation />;
     } else {
       return (
         <div style={{ textAlign: "center", marginTop: "20%" }}>Invalid PID</div>
