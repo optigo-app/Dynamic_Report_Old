@@ -368,8 +368,8 @@ const mapSideMenu = (rd) => {
 };
 
 // DisplayOrder values that open in a new tab vs inside a modal (iframe)
-const NEW_TAB_ORDERS = [1, 4, 6, 7, 8,9,14, 10, 11, 12, 13, 16];
-const MODAL_ORDERS = [3 ,5,15, 17, 18];
+const NEW_TAB_ORDERS = [1, 4, 6, 7, 8, 9, 14, 10, 11, 12, 13, 16];
+const MODAL_ORDERS = [3, 5, 15, 17, 18];
 
 // Static width/height per DisplayOrder for modal-opened menu items.
 // Adjust these numbers (px) to whatever each screen actually needs.
@@ -893,7 +893,7 @@ const CrmReport = () => {
     if (!item?.url) return;
     setActiveMenu(i);
     // if (MODAL_ORDERS.includes(item.order)) {
-    if(item?.IsRedirect == 0){
+    if (item?.IsRedirect == 0) {
       setModalTitle(item.label);
       setModalUrl(item.url);
       setModalSize(MODAL_SIZE_BY_ORDER[item.order] || DEFAULT_MODAL_SIZE);
@@ -1365,16 +1365,17 @@ const CrmReport = () => {
               })}
             </Paper>
 
+            {/* Outstanding Marks card — replace the inner Box with this */}
             <Paper elevation={0} className="crm_right_card" style={{ width: '25%' }}>
               <CardTitle title="Outstanding Marks" icon={<CreditCard size={14} />} />
               <Divider sx={{ mb: 1 }} />
-              <Box style={{ display: 'flex' }}>
-                <Box sx={{ position: "relative", display: "flex", justifyContent: "center" }}>
-                  <PieChart width={160} height={155}>
+              <Box style={{ display: 'flex', alignItems: 'center' }}>
+                <Box sx={{ position: "relative", display: "flex", justifyContent: "center", flexShrink: 0 }}>
+                  <PieChart width={140} height={140}>
                     <Pie
                       data={displayOutstandingMarks?.breakdown || []}
-                      cx={80} cy={75}
-                      innerRadius={45} outerRadius={70}
+                      cx={70} cy={65}
+                      innerRadius={40} outerRadius={62}
                       paddingAngle={3} dataKey="value"
                     >
                       {displayOutstandingMarks?.breakdown?.map((e, i) => <Cell key={i} fill={e.color} />)}
@@ -1382,17 +1383,19 @@ const CrmReport = () => {
                     <Tooltip formatter={(v) => `${v}%`} contentStyle={{ fontSize: 11, borderRadius: 6 }} />
                   </PieChart>
                   <Box className="crm_donut_center_box">
-                    <Typography className="crm_donut_val">{formatShort(displayOutstandingMarks?.total)}</Typography>
+                    <Typography className="crm_donut_val" style={{ fontSize: 10, fontWeight: 700, lineHeight: 1.2, textAlign: 'center', maxWidth: 70, wordBreak: 'break-word' }}>
+                      {formatShort(displayOutstandingMarks?.total)}
+                    </Typography>
                     <Typography className="crm_donut_sub">Total</Typography>
                   </Box>
                 </Box>
-                <Box>
+                <Box sx={{ flex: 1, minWidth: 0, pl: 0.5 }}>
                   {displayOutstandingMarks?.breakdown?.map((item, i) => (
                     <Box key={i} className="crm_out_row">
                       <Box className="crm_out_dot" style={{ background: item.color }} />
                       <Box sx={{ flex: 1, minWidth: 0 }}>
-                        <Typography className="crm_out_lbl">{item.label}</Typography>
-                        <Typography className="crm_out_amt">{formatCurrency(item.amount)}</Typography>
+                        <Typography className="crm_out_lbl" noWrap>{item.label}</Typography>
+                        <Typography className="crm_out_amt">{formatShort(item.amount)}</Typography>
                       </Box>
                       <Typography className="crm_out_pct" style={{ color: item.color }}>{item.value}%</Typography>
                     </Box>
