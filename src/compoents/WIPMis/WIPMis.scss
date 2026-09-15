@@ -17,6 +17,14 @@ $red-bg: #fdecea;
 
 * {
   font-family: $font;
+  // Without this, elements that get a `border` added on top of an
+  // explicit height (e.g. .MuiDataGrid-cell / .MuiDataGrid-columnHeader
+  // below) render TALLER than that height in content-box sizing — which
+  // is exactly what was causing the grid's total content height to creep
+  // a few px past the panel's computed height (see computeGridHeight in
+  // WIPMis.jsx) and trigger an internal scrollbar even at exactly
+  // MAX_VISIBLE_ROWS rows.
+  box-sizing: border-box;
 }
  /* Global overrides for the date range picker elements */
  .custom-forced-picker {
@@ -85,6 +93,26 @@ $red-bg: #fdecea;
     display: grid;
     grid-template-columns: 1fr;
     gap: 16px;
+  }
+
+  &__filter-btn {
+    color: $purple !important;
+    background: $purple-soft !important;
+    border-radius: 8px !important;
+    width: 36px;
+    height: 36px;
+
+    &:hover {
+      background: #e6e0ff !important;
+    }
+
+    .MuiBadge-badge {
+      font-size: 10px;
+      height: 16px;
+      min-width: 16px;
+      top: 2px;
+      right: 2px;
+    }
   }
 
   &__export-btn {
@@ -175,7 +203,7 @@ $red-bg: #fdecea;
   &__label {
     font-size: 12px;
     font-weight: 600;
-    color: $text-muted;
+    color: #000;
     white-space: nowrap;
   }
 
@@ -196,6 +224,75 @@ $red-bg: #fdecea;
       color: $purple;
     }
   }
+
+  /* Multi-select (Autocomplete) variant used for Location / Customer Code / Order No. */
+  &--multi {
+    min-width: 190px;
+    max-width: 260px;
+    height: auto;
+    min-height: 36px;
+    padding: 3px 10px 3px 12px;
+    align-items: center;
+  }
+}
+
+.filter-chip__autocomplete {
+  flex: 1;
+  min-width: 110px;
+
+  .MuiAutocomplete-inputRoot {
+    padding: 0 !important;
+    flex-wrap: nowrap;
+    overflow: hidden;
+  }
+
+  .MuiAutocomplete-input {
+    font-size: 13px;
+    min-width: 40px !important;
+    padding: 4px 2px !important;
+  }
+
+  .MuiAutocomplete-tag {
+    height: 20px;
+    font-size: 11px;
+    font-weight: 600;
+    background: $purple-soft;
+    color: $purple-dark;
+    border-radius: 6px;
+    margin: 1px;
+  }
+
+  .MuiAutocomplete-endAdornment {
+    right: 0;
+  }
+
+  .MuiSvgIcon-root {
+    color: $purple;
+    font-size: 18px;
+  }
+}
+
+/* Dropdown listbox options — fixed comfortable width, checkbox aligned to
+   the top of the label so multi-line location names (e.g. "INDIA >
+   Maharashtra") wrap cleanly instead of overlapping the checkbox or the
+   neighbouring filter chip. */
+.filter-option {
+  display: flex !important;
+  align-items: flex-start !important;
+  gap: 4px;
+  padding: 7px 10px !important;
+  font-size: 13px;
+
+  .MuiCheckbox-root {
+    margin-top: -2px;
+  }
+}
+
+.filter-option__label {
+  flex: 1;
+  line-height: 1.35;
+  word-break: break-word;
+  padding-top: 1px;
 }
 
 .date-range-popover {
@@ -203,6 +300,96 @@ $red-bg: #fdecea;
   box-shadow: 0 12px 32px rgba(26, 31, 54, 0.18) !important;
   margin-top: 6px;
   overflow: hidden;
+}
+
+/* -------------------- left-side filter drawer -------------------- */
+.filter-drawer {
+  width: 320px;
+  max-width: 85vw;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: #fff;
+
+  &__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 12px 14px;
+    flex-shrink: 0;
+  }
+
+  &__header-left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  &__back-btn {
+    background: $bg-soft !important;
+    color: $navy !important;
+    width: 30px;
+    height: 30px;
+
+    &:hover {
+      background: #ececf5 !important;
+    }
+  }
+
+  &__title {
+    font-weight: 700;
+    font-size: 16px;
+    color: $navy;
+  }
+
+  &__header-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+  }
+
+  &__clear-btn {
+    border: 1px solid $border;
+    border-radius: 20px;
+    color: $navy;
+    padding: 4px 14px;
+
+    &:hover {
+      border-color: $purple;
+      background: $purple-soft;
+    }
+  }
+
+  &__body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    @include themed-scrollbar(6px);
+  }
+
+  &__field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+
+    .filter-chip {
+      width: 100%;
+      max-width: none;
+      min-width: 0;
+      height: auto;
+      min-height: 44px;
+    }
+
+    .filter-chip__select {
+      min-width: 0;
+      width: 100%;
+    }
+  }
 }
 
 /* -------------------- stat cards -------------------- */
@@ -286,12 +473,30 @@ $red-bg: #fdecea;
   }
 
   &__grid-wrap {
-    height: 460px;
-    overflow: hidden;
+    /* max-height is set inline per-panel (see computeGridMaxHeight in
+       WIPMis.jsx). DataGrid uses `autoHeight` and sizes itself to its
+       real content — this wrapper only clips + scrolls (natively, via
+       overflow-y: auto) once that real content exceeds the ceiling, so
+       the themed scrollbar now lives on THIS element for the vertical
+       axis (the grid's own virtualScroller only handles horizontal
+       scrolling below). */
+    transition: max-height 0.15s ease;
+    @include themed-scrollbar(10px);
   }
 
-  &--dense &__grid-wrap {
-    height: 420px;
+  &--scrollable {
+    /* optional hook: hint that there's more content below when a panel's
+       current page exceeds MAX_VISIBLE_ROWS and is internally scrolling */
+  }
+
+  &__no-rows {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    color: $text-muted;
+    font-size: 13px;
+    font-weight: 500;
   }
 
   &__totals-row {
@@ -313,6 +518,7 @@ $red-bg: #fdecea;
     box-sizing: border-box;
     border-right: 1px solid $border;
     flex-shrink: 0;
+    color: $purple-dark;
 
     &:last-child {
       border-right: none;
@@ -322,6 +528,41 @@ $red-bg: #fdecea;
   &--dense &__totals-cell {
     padding: 7px 10px;
     font-size: 12px;
+  }
+
+  /* Simple pagination bar, right-aligned, under the grid (and under the
+     totals row when one is shown). */
+  &__pagination {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 12px;
+    padding: 8px 14px;
+    border-top: 1px solid $border;
+    background: #fff;
+
+    .MuiPagination-ul {
+      flex-wrap: nowrap;
+    }
+
+    .MuiPaginationItem-root {
+      color: $navy;
+      font-size: 12px;
+      min-width: 26px;
+      height: 26px;
+    }
+
+    .MuiPaginationItem-root.Mui-selected {
+      background: $purple !important;
+      color: #fff;
+    }
+  }
+
+  &__pagination-info {
+    font-size: 12px;
+    color: $text-muted;
+    font-weight: 500;
+    white-space: nowrap;
   }
 }
 
@@ -355,10 +596,12 @@ $red-bg: #fdecea;
   .MuiDataGrid-columnHeaders {
     background: #f0eeff !important;
     border-bottom: 2px solid $border;
+    box-sizing: border-box;
   }
 
   .MuiDataGrid-columnHeader {
     background: #f0eeff !important;
+    box-sizing: border-box;
 
     &:focus,
     &:focus-within {
@@ -390,6 +633,11 @@ $red-bg: #fdecea;
   .MuiDataGrid-cell {
     font-size: 13px;
     border-bottom: 1px solid $border;
+    // Keep the 1px border INSIDE the row's declared rowHeight instead of
+    // adding to it — this is what was making the grid's total rendered
+    // content a few px taller than the panel's computed height at exactly
+    // 10 rows, which showed a scrollbar that shouldn't have been there.
+    box-sizing: border-box;
 
     &:focus,
     &:focus-within {
@@ -399,6 +647,7 @@ $red-bg: #fdecea;
 
   .MuiDataGrid-row {
     background: #fff;
+    box-sizing: border-box;
 
     &:hover,
     &:hover .MuiDataGrid-cell {
@@ -406,8 +655,13 @@ $red-bg: #fdecea;
     }
   }
 
+  // .MuiDataGrid-virtualScroller {
+  //   @include themed-scrollbar(10px);
+  // }
   .MuiDataGrid-virtualScroller {
-    @include themed-scrollbar(10px);
+    // overflow-y: hidden !important;
+    // overflow-x: auto !important;
+    @include themed-scrollbar(8px);
   }
 
   .MuiDataGrid-sortIcon {
@@ -423,6 +677,7 @@ $red-bg: #fdecea;
   .MuiDataGrid-cell .heat-cell--total,
   .MuiDataGrid-cell .heat-cell--total * {
     font-weight: 700 !important;
+    color: $purple-dark !important;
   }
 }
 
