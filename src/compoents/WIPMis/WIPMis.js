@@ -44,7 +44,6 @@ import DescriptionOutlinedIcon from '@mui/icons-material/DescriptionOutlined';
 import KeyboardArrowLeftIcon from '@mui/icons-material/KeyboardArrowLeft';
 import FilterAltOffOutlinedIcon from '@mui/icons-material/FilterAltOffOutlined';
 import FilterAltOutlinedIcon from '@mui/icons-material/FilterAltOutlined';
-// (add these to your existing icon imports; remove the now-unused CloseIcon import if nothing else uses it)
 
 /* ---------------------------------------------------------------- */
 /* Helpers                                                            */
@@ -72,14 +71,15 @@ const sumField = (rows, fieldMap, fieldName) =>
     return acc + (Number.isFinite(v) ? v : 0);
   }, 0);
 
+// Date format used everywhere in the tables: "25 Sep 2026"
 const formatDateOnly = (iso) => {
   if (!iso) return '-';
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return String(iso);
-  const dd = String(d.getDate()).padStart(2, '0');
-  const mm = String(d.getMonth() + 1).padStart(2, '0');
-  const yyyy = d.getFullYear();
-  return `${dd}-${mm}-${yyyy}`;
+  const day = String(d.getDate()).padStart(2, '0');
+  const month = d.toLocaleDateString('en-GB', { month: 'short' });
+  const year = d.getFullYear();
+  return `${day} ${month} ${year}`;
 };
 
 const formatDatePretty = (date) => {
@@ -197,9 +197,32 @@ const reorderPriorityColumn = (colKeys, priorityLabel) => {
   return [priorityLabel, ...colKeys.filter((c) => c !== priorityLabel)];
 };
 
+// Formats a KPI value as "D:<value>" and appends " S:<value>" only when a
+// solitaire figure is present and non-zero — never shows "S:0".
+// Formats a KPI value as "D:<value> ct" and appends " S:<value> ct" only when
+// a solitaire figure is present and non-zero — never shows "S:0 ct".
+const formatDiamondSolitaire = (dVal, sVal, decimals = 0, unit = '') => {
+  const fmt = (n) => n.toLocaleString(undefined, { maximumFractionDigits: decimals });
+  const suffix = unit ? ` ${unit}` : '';
+  const dStr = `D:${fmt(dVal || 0)}${suffix}`;
+  if (sVal && sVal > 0) {
+    return `${dStr}\u00A0\u00A0\u00A0\u00A0S:${fmt(sVal)}${suffix}`;
+  }
+  return dStr;
+};
 /* ---------------------------------------------------------------- */
-/* Dynamic grid height (no dead space when there are few rows,        */
-/* one page of rows is shown at a time once pagination kicks in)      */
+/* Dynamic grid height                                                */
+/*                                                                    */
+/* Instead of computing a pixel-exact height in JS (rowHeight *       */
+/* rowCount + headerHeight...) — which drifts from MUI's REAL layout  */
+/* the moment a header wraps to 2 lines, a border adds a px, etc, and */
+/* was showing a scrollbar even exactly AT 10 rows — the grid is now  */
+/* given the `autoHeight` prop so it sizes itself to its true content */
+/* height. The wrapping Box only applies a generous `maxHeight`       */
+/* CEILING (not a forced height): pages with ≤10 rows are always      */
+/* shorter than the ceiling, so they're never clipped or scrolled;    */
+/* pages with more (page size 20/50) exceed it and scroll exactly     */
+/* where real content — not our estimate — crosses that line.         */
 /* ---------------------------------------------------------------- */
 
 const ROW_HEIGHT_DENSE = 34;
@@ -208,17 +231,26 @@ const HEADER_HEIGHT_DENSE = 56;
 const HEADER_HEIGHT_NORMAL = 42;
 const EMPTY_STATE_HEIGHT = 110;
 
-// Any table with more than this many records gets pagination.
-const PAGE_SIZE = 10;
+// Selectable "rows per page" options — default is the first entry.
+const PAGE_SIZE_OPTIONS = [10, 20, 50];
 
-const computeGridHeight = (rowCount, dense) => {
+// Hard cap on how many rows' worth of height a panel will ever take up
+// before it starts scrolling internally.
+const MAX_VISIBLE_ROWS = 10;
+
+// A generous ceiling for "MAX_VISIBLE_ROWS rows' worth of height" — err on
+// the taller side on purpose. Because DataGrid sizes itself naturally
+// (autoHeight) and we only clip once real content crosses this ceiling,
+// a generous buffer here can only ever delay the scrollbar showing up a
+// little later than 10 rows on the dot — it can never cause a false
+// scrollbar/clip at exactly 10 rows the way a tight, forced height did.
+const computeGridMaxHeight = (rowCount, dense) => {
   const rowH = dense ? ROW_HEIGHT_DENSE : ROW_HEIGHT_NORMAL;
   const headerH = dense ? HEADER_HEIGHT_DENSE : HEADER_HEIGHT_NORMAL;
 
   if (!rowCount) return headerH + EMPTY_STATE_HEIGHT;
 
-  const visibleRows = Math.min(rowCount, PAGE_SIZE);
-  return headerH + visibleRows * rowH + 2; // +2px border buffer
+  return headerH + MAX_VISIBLE_ROWS * rowH + 24;
 };
 
 /* ---------------------------------------------------------------- */
@@ -242,6 +274,7 @@ const DataGridPanel = ({
   const totalsRowRef = useRef(null);
 
   const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(PAGE_SIZE_OPTIONS[0]);
 
   // Whenever the underlying data set changes (filters change, refresh,
   // etc.) jump back to page 1 instead of leaving the user stranded on a
@@ -250,17 +283,23 @@ const DataGridPanel = ({
     setPage(1);
   }, [rows]);
 
-  const showPagination = rows.length > PAGE_SIZE;
-  const pageCount = Math.max(1, Math.ceil(rows.length / PAGE_SIZE));
+  // Changing the page size also resets to page 1.
+  useEffect(() => {
+    setPage(1);
+  }, [pageSize]);
+
+  // Footer (page-size selector + info + page numbers) shows once there are
+  // more records than the smallest page-size option.
+  const showFooter = rows.length > PAGE_SIZE_OPTIONS[0];
+  const pageCount = Math.max(1, Math.ceil(rows.length / pageSize));
   const safePage = Math.min(page, pageCount);
-  const pagedRows = showPagination
-    ? rows.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE)
-    : rows;
+  const pagedRows =
+    rows.length > pageSize ? rows.slice((safePage - 1) * pageSize, safePage * pageSize) : rows;
 
-  const rangeStart = rows.length === 0 ? 0 : (safePage - 1) * PAGE_SIZE + 1;
-  const rangeEnd = Math.min(safePage * PAGE_SIZE, rows.length);
+  const rangeStart = rows.length === 0 ? 0 : (safePage - 1) * pageSize + 1;
+  const rangeEnd = Math.min(safePage * pageSize, rows.length);
 
-  // Totals row now reflects ONLY the rows on the current page — so page 1's
+  // Totals row reflects ONLY the rows on the current page — so page 1's
   // total is different from page 2's, and different again from the "all
   // dates" grand total, instead of always showing the full-dataset sum.
   const pageTotals = useMemo(() => {
@@ -333,7 +372,13 @@ const DataGridPanel = ({
     [columns]
   );
 
-  const resolvedHeight = gridHeight ?? computeGridHeight(pagedRows.length, dense);
+  // Ceiling only — see computeGridMaxHeight comment above. isOverflowing
+  // is just an approximation for the optional CSS hook; the actual
+  // clip/scroll decision is made by the browser comparing the DataGrid's
+  // real autoHeight content against this maxHeight, not by this flag.
+  const resolvedMaxHeight = gridHeight ?? computeGridMaxHeight(pagedRows.length, dense);
+  const isOverflowing = pagedRows.length > MAX_VISIBLE_ROWS;
+  const hasRows = pagedRows.length > 0;
 
   return (
     <Paper className={`data-table data-table--full ${dense ? 'data-table--dense' : ''}`} elevation={0}>
@@ -351,11 +396,16 @@ const DataGridPanel = ({
       </Box>
 
       <Box
-        className="data-table__grid-wrap"
+        className={`data-table__grid-wrap ${isOverflowing ? 'data-table__grid-wrap--scrollable' : ''}`}
         ref={gridWrapRef}
-        style={{ height: resolvedHeight, overflowY: 'hidden' }}
+        style={
+          hasRows
+            ? { maxHeight: resolvedMaxHeight, overflowY: 'auto' }
+            : { height: resolvedMaxHeight, overflowY: 'hidden' }
+        }
       >
         <DataGrid
+          autoHeight
           rows={pagedRows}
           columns={columnsNoHeaderTooltip}
           getRowId={(row) => row.__key}
@@ -391,26 +441,46 @@ const DataGridPanel = ({
         </Box>
       )}
 
-      {showPagination && (
+      {showFooter && (
         <Box className="data-table__pagination">
+          <Box className="data-table__page-size">
+            
+            <Select
+              size="small"
+              value={pageSize}
+              onChange={(e) => setPageSize(Number(e.target.value))}
+              className="data-table__page-size-select"
+            >
+              {PAGE_SIZE_OPTIONS.map((opt) => (
+                <MenuItem key={opt} value={opt}>
+                  {opt}
+                </MenuItem>
+              ))}
+            </Select>
+          </Box>
+
           <Typography className="data-table__pagination-info">
             {rangeStart}–{rangeEnd} of {rows.length}
           </Typography>
-          <Pagination
-            count={pageCount}
-            page={safePage}
-            onChange={(e, val) => setPage(val)}
-            size="small"
-            shape="rounded"
-            color="primary"
-            siblingCount={0}
-            boundaryCount={1}
-          />
+
+          {pageCount > 1 && (
+            <Pagination
+              count={pageCount}
+              page={safePage}
+              onChange={(e, val) => setPage(val)}
+              size="small"
+              shape="rounded"
+              color="primary"
+              siblingCount={0}
+              boundaryCount={1}
+            />
+          )}
         </Box>
       )}
     </Paper>
   );
 };
+
 /* ---------------------------------------------------------------- */
 /* Stat card                                                          */
 /* ---------------------------------------------------------------- */
@@ -424,7 +494,7 @@ const StatCard = ({ icon, label, value, subLabel, unit }) => (
       <Box className="stat-card__icon">{icon}</Box>
     </Box>
     <Typography className="stat-card__value">
-      {value} {unit ? ` ${unit}` : ''}
+      {value} {unit !="Ct" ? ` ${unit}` : ''}
     </Typography>
   </Paper>
 );
@@ -448,10 +518,10 @@ const FilterChip = ({ label, value, onChange, options }) => (
 
 /* ---------------------------------------------------------------- */
 /* Multi-select + searchable filter chip — Location / Customer Code / */
-/* Order No. Empty selection === "All" (within the active date range). */
-/* Selections are summarised as plain text ("3 selected") instead of  */
-/* individual removable chips, and the single built-in "x" clears the */
-/* whole selection at once.                                           */
+/* Order No. / Current Status / Metal Type. Empty selection === "All" */
+/* (within the active date range). Selections are summarised as plain */
+/* text ("3 selected") instead of individual removable chips, and the */
+/* single built-in "x" clears the whole selection at once.            */
 /* ---------------------------------------------------------------- */
 
 const checkboxIcon = <CheckBoxOutlineBlankIcon fontSize="small" />;
@@ -475,7 +545,6 @@ const MultiSelectFilterChip = ({ label, value, onChange, options }) => (
       renderTags={(selected) =>
         selected.length ? (
           <Typography noWrap style={{ fontSize: 13, color: '#1a1f36' }}>
-            {/* {selected.length === 1 ? selected[0] : `${selected.length} selected`} */}
             { `${selected.length} selected`}
           </Typography>
         ) : null
@@ -542,10 +611,11 @@ const DATE_FIELD_OPTIONS = [
   { value: 'jobpromisedate', label: 'Promise Date' },
 ];
 
-// NOTE: adjust this to whatever the actual API field name is for diamond
-// weight if it differs — it follows the same naming pattern as
-// "Diamond_actualusedpcs" (used for the Diamond Pieces KPI below).
+// NOTE: adjust these to whatever the actual API field names are if they
+// differ — they follow the same naming pattern as "Diamond_actualusedpcs".
 const DIAMOND_WEIGHT_FIELD = 'Diamond_actualusedgm';
+const SOLITAIRE_PCS_FIELD = 'solitairepcs';
+const SOLITAIRE_WEIGHT_FIELD = 'solitairewt';
 
 const WIPMis = () => {
   const [data, setData] = useState(null);
@@ -568,6 +638,8 @@ const WIPMis = () => {
   const [customerCode, setCustomerCode] = useState([]); // [] === All
   const [orderNo, setOrderNo] = useState([]); // [] === All
   const [deliveryStatus, setDeliveryStatus] = useState('All');
+  const [currentStatusFilter, setCurrentStatusFilter] = useState([]); // [] === All — filters by "Current Status" (department)
+  const [metalType, setMetalType] = useState([]); // [] === All — filters by "Metal Type"
 
   // ---- Filter drawer ----
   const [filterDrawerOpen, setFilterDrawerOpen] = useState(false);
@@ -577,16 +649,20 @@ const WIPMis = () => {
   const [stagingCustomerCode, setStagingCustomerCode] = useState([]);
   const [stagingOrderNo, setStagingOrderNo] = useState([]);
   const [stagingDeliveryStatus, setStagingDeliveryStatus] = useState('All');
+  const [stagingCurrentStatus, setStagingCurrentStatus] = useState([]);
+  const [stagingMetalType, setStagingMetalType] = useState([]);
 
   const openFilterDrawer = () => {
     setStagingLocation(location);
     setStagingCustomerCode(customerCode);
     setStagingOrderNo(orderNo);
     setStagingDeliveryStatus(deliveryStatus);
+    setStagingCurrentStatus(currentStatusFilter);
+    setStagingMetalType(metalType);
     setFilterDrawerOpen(true);
   };
 
-  // Closing without "Apply" (backdrop click / X button) discards any
+  // Closing without "Apply" (backdrop click / back arrow) discards any
   // unsaved edits made inside the drawer.
   const closeFilterDrawer = () => setFilterDrawerOpen(false);
 
@@ -595,6 +671,8 @@ const WIPMis = () => {
     setStagingCustomerCode([]);
     setStagingOrderNo([]);
     setStagingDeliveryStatus('All');
+    setStagingCurrentStatus([]);
+    setStagingMetalType([]);
   };
 
   const handleApplyFilters = () => {
@@ -602,6 +680,8 @@ const WIPMis = () => {
     setCustomerCode(stagingCustomerCode);
     setOrderNo(stagingOrderNo);
     setDeliveryStatus(stagingDeliveryStatus);
+    setCurrentStatusFilter(stagingCurrentStatus);
+    setMetalType(stagingMetalType);
     setFilterDrawerOpen(false);
   };
 
@@ -609,7 +689,9 @@ const WIPMis = () => {
     (location.length > 0 ? 1 : 0) +
     (customerCode.length > 0 ? 1 : 0) +
     (orderNo.length > 0 ? 1 : 0) +
-    (deliveryStatus !== 'All' ? 1 : 0);
+    (deliveryStatus !== 'All' ? 1 : 0) +
+    (currentStatusFilter.length > 0 ? 1 : 0) +
+    (metalType.length > 0 ? 1 : 0);
 
   const handleFetchData = async (start, end) => {
     setLoading(true);
@@ -636,9 +718,26 @@ const WIPMis = () => {
   const deliveryStatusOptions = ['All', 'On Time', 'Delayed'];
 
   /* ---------------- ALL button handler ---------------- */
+  // Selecting "All" dates also clears every active filter, so the user
+  // gets a truly unfiltered, all-time view in one click.
   const handleSelectAllDates = () => {
     setIsAllDates(true);
     setPickerAnchor(null);
+
+    setLocation([]);
+    setCustomerCode([]);
+    setOrderNo([]);
+    setDeliveryStatus('All');
+    setCurrentStatusFilter([]);
+    setMetalType([]);
+
+    // Keep the drawer's staged copies in sync too, in case it's opened next.
+    setStagingLocation([]);
+    setStagingCustomerCode([]);
+    setStagingOrderNo([]);
+    setStagingDeliveryStatus('All');
+    setStagingCurrentStatus([]);
+    setStagingMetalType([]);
   };
 
   const openDatePicker = (e) => {
@@ -668,12 +767,12 @@ const WIPMis = () => {
   };
 
   // Rows restricted ONLY by the Promise Date range (ignoring Location /
-  // Customer Code / Order No. / Delivery Status). The Location, Customer
-  // Code and Order No. dropdown OPTIONS are built from this set, so they
-  // only ever list values that actually exist within the selected date
-  // range — since the date picker is the primary filter and the table is
-  // date-driven, there's no point offering options that don't apply to any
-  // row in the current window.
+  // Customer Code / Order No. / Delivery Status / Current Status / Metal
+  // Type). The dropdown OPTIONS are built from this set, so they only ever
+  // list values that actually exist within the selected date range — since
+  // the date picker is the primary filter and the table is date-driven,
+  // there's no point offering options that don't apply to any row in the
+  // current window.
   const dateFilteredRows = useMemo(() => {
     if (isAllDates || !dateRange.startDate || !dateRange.endDate) return rawRows;
     return rawRows.filter((row) => {
@@ -685,31 +784,41 @@ const WIPMis = () => {
     });
   }, [rawRows, fieldMap, isAllDates, dateRange, dateField]);
 
-  // Build all three dropdown option lists in a single pass over
-  // dateFilteredRows (instead of three separate full scans) so opening any
-  // of the filter dropdowns is fast even on larger datasets.
+  // Build all dropdown option lists in a single pass over dateFilteredRows
+  // (instead of separate full scans) so opening any of the filter
+  // dropdowns is fast even on larger datasets.
   const filterOptionSets = useMemo(() => {
     const locSet = new Set();
     const custSet = new Set();
     const ordSet = new Set();
+    const statusSet = new Set();
+    const metalSet = new Set();
     dateFilteredRows.forEach((r) => {
       const loc = getField(r, fieldMap, 'JobLocation');
       const cust = getField(r, fieldMap, 'Customercode');
       const ord = getField(r, fieldMap, 'SKUNO');
+      const dept = stripHtml(getField(r, fieldMap, 'department'));
+      const metal = stripHtml(getField(r, fieldMap, 'metal_type_name'));
       if (loc) locSet.add(loc);
       if (cust) custSet.add(cust);
       if (ord) ordSet.add(ord);
+      if (dept) statusSet.add(dept);
+      if (metal) metalSet.add(metal);
     });
     return {
       location: [...locSet].sort(),
       customer: [...custSet].sort(),
       orderNo: [...ordSet].sort(),
+      currentStatus: [...statusSet].sort(),
+      metalType: [...metalSet].sort(),
     };
   }, [dateFilteredRows, fieldMap]);
 
   const locationOptions = filterOptionSets.location;
   const customerOptions = filterOptionSets.customer;
   const orderNoOptions = filterOptionSets.orderNo;
+  const currentStatusOptions = filterOptionSets.currentStatus;
+  const metalTypeOptions = filterOptionSets.metalType;
 
   const filteredRows = useMemo(() => {
     return rawRows.filter((row) => {
@@ -720,6 +829,16 @@ const WIPMis = () => {
       if (location.length > 0 && !location.includes(loc)) return false;
       if (customerCode.length > 0 && !customerCode.includes(cust)) return false;
       if (orderNo.length > 0 && !orderNo.includes(ord)) return false;
+
+      if (currentStatusFilter.length > 0) {
+        const dept = stripHtml(getField(row, fieldMap, 'department'));
+        if (!currentStatusFilter.includes(dept)) return false;
+      }
+
+      if (metalType.length > 0) {
+        const metal = stripHtml(getField(row, fieldMap, 'metal_type_name'));
+        if (!metalType.includes(metal)) return false;
+      }
 
       if (deliveryStatus !== 'All') {
         const remDays = computeRemainingDays(row, fieldMap);
@@ -742,7 +861,19 @@ const WIPMis = () => {
 
       return true;
     });
-  }, [rawRows, fieldMap, location, customerCode, orderNo, deliveryStatus, isAllDates, dateRange, dateField]);
+  }, [
+    rawRows,
+    fieldMap,
+    location,
+    customerCode,
+    orderNo,
+    currentStatusFilter,
+    metalType,
+    deliveryStatus,
+    isAllDates,
+    dateRange,
+    dateField,
+  ]);
 
   const stats = useMemo(
     () => ({
@@ -750,7 +881,9 @@ const WIPMis = () => {
       nwt: sumField(filteredRows, fieldMap, 'NetWtgm'),
       gwt: sumField(filteredRows, fieldMap, 'GrossWeightgm'),
       diaPcs: sumField(filteredRows, fieldMap, 'Diamond_actualusedpcs'),
+      solPcs: sumField(filteredRows, fieldMap, SOLITAIRE_PCS_FIELD),
       diaWt: sumField(filteredRows, fieldMap, DIAMOND_WEIGHT_FIELD),
+      solWt: sumField(filteredRows, fieldMap, SOLITAIRE_WEIGHT_FIELD),
     }),
     [filteredRows, fieldMap]
   );
@@ -1025,10 +1158,10 @@ const WIPMis = () => {
                     </Badge>
                   </IconButton>
                 </Tooltip>
-                <Box className="filter-chip">
-                  <Typography className="filter-chip__label">Date Field</Typography>
-                  <Typography className="filter-chip__value">
-                    {DATE_FIELD_OPTIONS[0]?.label}
+                <Box className=" ">
+                  {/* <Typography className="filter-chip__label">Date Field</Typography> */}
+                  <Typography className="filter-chip__value" sx={{fontWeight:"bold"}}>
+                    {DATE_FIELD_OPTIONS[0]?.label} :
                   </Typography>
                 </Box>
 
@@ -1153,6 +1286,7 @@ const WIPMis = () => {
               label="WIP JOBS"
               value={stats.pcs.toLocaleString()}
               subLabel="Active Jobs"
+              unit=""
             />
             <StatCard
               icon={<ScaleOutlinedIcon fontSize="small" />}
@@ -1171,13 +1305,14 @@ const WIPMis = () => {
             <StatCard
               icon={<DiamondOutlinedIcon fontSize="small" />}
               label="DIAMOND PIECES"
-              value={stats.diaPcs.toLocaleString()}
+              value={formatDiamondSolitaire(stats.diaPcs, stats.solPcs, 0," ")}
               subLabel="Total Diamond"
+              unit=""
             />
             <StatCard
               icon={<DiamondOutlinedIcon fontSize="small" />}
               label="DIAMOND WEIGHT"
-              value={stats.diaWt.toLocaleString(undefined, { maximumFractionDigits: 2 })}
+              value={formatDiamondSolitaire(stats.diaWt, stats.solWt, 2, 'ct')}
               subLabel="Total Diamond Weight"
               unit="Ct"
             />
@@ -1198,7 +1333,6 @@ const WIPMis = () => {
               showTotals
               columns={promise.columns}
               rows={promise.rows}
-              totalsRow={promise.totals}
             />
             <DataGridPanel
               icon={<Inventory2Icon fontSize="small" />}
@@ -1207,7 +1341,6 @@ const WIPMis = () => {
               showTotals
               columns={status.columns}
               rows={status.rows}
-              totalsRow={status.totals}
             />
            
             <DataGridPanel
@@ -1217,7 +1350,6 @@ const WIPMis = () => {
               showTotals
               columns={department.columns}
               rows={department.rows}
-              totalsRow={department.totals}
             />
           </Box>
         </Box>
@@ -1291,6 +1423,22 @@ const WIPMis = () => {
               value={stagingOrderNo}
               onChange={setStagingOrderNo}
               options={orderNoOptions}
+            />
+          </Box>
+          <Box className="filter-drawer__field">
+            <MultiSelectFilterChip
+              label="Current Status"
+              value={stagingCurrentStatus}
+              onChange={setStagingCurrentStatus}
+              options={currentStatusOptions}
+            />
+          </Box>
+          <Box className="filter-drawer__field">
+            <MultiSelectFilterChip
+              label="Metal Type"
+              value={stagingMetalType}
+              onChange={setStagingMetalType}
+              options={metalTypeOptions}
             />
           </Box>
           <Box className="filter-drawer__field">

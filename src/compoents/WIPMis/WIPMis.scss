@@ -17,6 +17,14 @@ $red-bg: #fdecea;
 
 * {
   font-family: $font;
+  // Without this, elements that get a `border` added on top of an
+  // explicit height (e.g. .MuiDataGrid-cell / .MuiDataGrid-columnHeader
+  // below) render TALLER than that height in content-box sizing — which
+  // is exactly what was causing the grid's total content height to creep
+  // a few px past the panel's computed height (see computeGridHeight in
+  // WIPMis.jsx) and trigger an internal scrollbar even at exactly
+  // MAX_VISIBLE_ROWS rows.
+  box-sizing: border-box;
 }
  /* Global overrides for the date range picker elements */
  .custom-forced-picker {
@@ -465,9 +473,20 @@ $red-bg: #fdecea;
   }
 
   &__grid-wrap {
-    /* height is now set inline per-panel based on row count (see
-       computeGridHeight in WIPMis.jsx) instead of a fixed value here */
-    transition: height 0.15s ease;
+    /* max-height is set inline per-panel (see computeGridMaxHeight in
+       WIPMis.jsx). DataGrid uses `autoHeight` and sizes itself to its
+       real content — this wrapper only clips + scrolls (natively, via
+       overflow-y: auto) once that real content exceeds the ceiling, so
+       the themed scrollbar now lives on THIS element for the vertical
+       axis (the grid's own virtualScroller only handles horizontal
+       scrolling below). */
+    transition: max-height 0.15s ease;
+    @include themed-scrollbar(10px);
+  }
+
+  &--scrollable {
+    /* optional hook: hint that there's more content below when a panel's
+       current page exceeds MAX_VISIBLE_ROWS and is internally scrolling */
   }
 
   &__no-rows {
@@ -577,10 +596,12 @@ $red-bg: #fdecea;
   .MuiDataGrid-columnHeaders {
     background: #f0eeff !important;
     border-bottom: 2px solid $border;
+    box-sizing: border-box;
   }
 
   .MuiDataGrid-columnHeader {
     background: #f0eeff !important;
+    box-sizing: border-box;
 
     &:focus,
     &:focus-within {
@@ -612,6 +633,11 @@ $red-bg: #fdecea;
   .MuiDataGrid-cell {
     font-size: 13px;
     border-bottom: 1px solid $border;
+    // Keep the 1px border INSIDE the row's declared rowHeight instead of
+    // adding to it — this is what was making the grid's total rendered
+    // content a few px taller than the panel's computed height at exactly
+    // 10 rows, which showed a scrollbar that shouldn't have been there.
+    box-sizing: border-box;
 
     &:focus,
     &:focus-within {
@@ -621,6 +647,7 @@ $red-bg: #fdecea;
 
   .MuiDataGrid-row {
     background: #fff;
+    box-sizing: border-box;
 
     &:hover,
     &:hover .MuiDataGrid-cell {
@@ -632,7 +659,7 @@ $red-bg: #fdecea;
   //   @include themed-scrollbar(10px);
   // }
   .MuiDataGrid-virtualScroller {
-    overflow-y: hidden !important;
+    // overflow-y: hidden !important;
     // overflow-x: auto !important;
     @include themed-scrollbar(8px);
   }
