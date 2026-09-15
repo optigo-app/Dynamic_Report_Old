@@ -493,7 +493,7 @@ const StatCard = ({ icon, label, value, subLabel, unit }) => (
       </Typography>
       <Box className="stat-card__icon">{icon}</Box>
     </Box>
-    <Typography className="stat-card__value">
+    <Typography className="stat-card__value" style={{fontWeight: 'bold'}}>
       {value} {unit !="Ct" ? ` ${unit}` : ''}
     </Typography>
   </Paper>
