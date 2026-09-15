@@ -1184,11 +1184,11 @@ export default function SignageDisplayListReport({
 
   const renderSummary = () => {
     return (
-      <div className="summaryBox">
+      <div className="summaryBox" >
         {summaryArray?.map((col) => {
           return (
             <div className="summaryItem" key={col.field}>
-              <div className="AllEmploe_boxViewTotal">
+              <div className="AllEmploe_boxViewTotal"  style={{width: '180px', maxWidth: '150px'}}>
                 <div>
                   <p className="AllEmplo_boxViewTotalValue">{col?.Title}</p>
                   <p className="boxViewTotalTitle">{col.summaryTitle}</p>
@@ -1604,21 +1604,6 @@ export default function SignageDisplayListReport({
 
           <div style={{ display: "flex", justifyContent: "space-between" }}>
             {renderSummary()}
-
-            {masterKeyData?.ColumnSettingPopup && (
-              <div className="topSettingBtnPopup" onClick={handleClickOpenPoup}>
-                <AiFillSetting style={{ height: "25px", width: "25px" }} />
-              </div>
-            )}
-
-            {masterKeyData?.fullScreenGridButton && (
-              <button className="fullScreenButton" onClick={toggleFullScreen}>
-                <RiFullscreenLine
-                  style={{ marginInline: "5px", fontSize: "30px" }}
-                />
-              </button>
-            )}
-
             <Button
               style={{
                 display: "flex",
@@ -1647,144 +1632,10 @@ export default function SignageDisplayListReport({
             padding: "20px",
           }}
         >
-          <div style={{ display: "flex", gap: "10px", alignItems: "end" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: "20px" }}>
-              <Button onClick={toggleDrawer(true)} className="FiletrBtnOpen">
-                <MdOutlineFilterAlt style={{ fontSize: "25px" }} />
-                Filter
-              </Button>
-              <button onClick={handleClearFilter} className="ClearFilterButton">
-                <MdOutlineFilterAltOff style={{ fontSize: "25px" }} />
-                Clear
-              </button>
-
-              {/* <p
-                style={{ fontWeight: 600, color: "#696262", fontSize: "17px" }}
-              >
-                {" "}
-                Last Updated :- {lastUpdated}
-              </p> */}
-            </div>
-            {columns
-              .filter((col) => col.filterable)
-              .map((col) => (
-                <div key={col.field} style={{ display: "flex", gap: "10px" }}>
-                  {renderDateFilter(col)}
-                </div>
-              ))}
-
-            <div
-              className="date-selector"
-              style={{ display: "flex", gap: "10px" }}
-            >
-              {masterKeyData?.progressFilter && (
-                <button
-                  className="FiletrBtnOpen"
-                  onClick={() => setOpenPDate(!openPDate)}
-                >
-                  Set P.Date
-                </button>
-              )}
-              <div
-                className={`transition-container ${openPDate ? "open" : "closed"
-                  }`}
-                style={{
-                  transition: "0.5s ease",
-                  opacity: openPDate ? 1 : 0,
-                  maxHeight: openPDate ? "300px" : "0",
-                  overflow: "hidden",
-                  display: openPDate ? "flex" : "none",
-                  gap: "10px",
-                }}
-              >
-                <DatePicker
-                  selected={selectedDate}
-                  onChange={(date) => setSelectedDate(date)}
-                  dateFormat="dd-MM-yyyy"
-                  customInput={
-                    <CustomTextField
-                      customBorderColor="rgba(47, 43, 61, 0.2)"
-                      borderoutlinedColor="#00CFE8"
-                      customTextColor="#2F2B3DC7"
-                      customFontSize="0.8125rem"
-                      style={{ Width: "100px" }}
-                    />
-                  }
-                  placeholderText="Select Date"
-                />
-
-                <button
-                  onClick={handleSave}
-                  variant="contained"
-                  className="FiletrBtnOpen"
-                  sx={{ marginTop: 2 }}
-                >
-                  Save
-                </button>
-              </div>
-            </div>
-          </div>
           <div style={{ display: "flex", alignItems: "end", gap: "10px" }}>
-            {masterKeyData?.mailButton && (
-              <img
-                src={mainButton}
-                style={{ cursor: "pointer" }}
-                onClick={handleSendEmail}
-              />
-            )}
-
-            {masterKeyData?.PrintButton && (
-              <img
-                src={printButton}
-                style={{ cursor: "pointer", height: "40px", width: "40px" }}
-                onClick={handlePrint}
-              />
-            )}
-
-            {masterKeyData?.imageView && (
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                }}
-              >
-                {showImageView ? (
-                  <img
-                    src={gridView}
-                    className="imageViewImgGrid"
-                    onClick={handleImg}
-                  />
-                ) : (
-                  <img
-                    src={imageView}
-                    className="imageViewImg"
-                    onClick={handleImg}
-                  />
-                )}
-              </div>
-            )}
-
-            {selectedFilterCategory != "ExpressApp" && (
-              <Button
-                className="SetDefault_pin"
-                onClick={handleClickOpenPopupDeafiltPin}
-              >
-                Set Default Pin
-              </Button>
-            )}
-            {selectedFilterCategory != "ExpressApp" && (
-              <Button
-                className="Re_CalculateButton"
-                onClick={handleRecalculate}
-              >
-                Recalculate
-              </Button>
-            )}
-
             <CustomTextField
               type="text"
-              placeholder="Common Search..."
+              placeholder="Search..."
               value={commonSearch}
               customBorderColor="rgba(47, 43, 61, 0.2)"
               onChange={(e) => setCommonSearch(e.target.value)}
