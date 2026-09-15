@@ -595,12 +595,14 @@ $red-bg: #fdecea;
 
   .MuiDataGrid-columnHeaders {
     background: #f0eeff !important;
+    // background: #d1cdefa8!important;
     border-bottom: 2px solid $border;
     box-sizing: border-box;
   }
 
   .MuiDataGrid-columnHeader {
     background: #f0eeff !important;
+    // background: #d1cdefa8 !important;
     box-sizing: border-box;
 
     &:focus,

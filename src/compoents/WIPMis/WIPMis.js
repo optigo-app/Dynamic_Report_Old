@@ -1,4 +1,4 @@
-// http://localhost:3000/testreport/?sp=9&ifid=AdvanceCRM&pid=123456
+// http://localhost:3000/testreport/?sp=9&ifid=AdvanceCRM&pid=18601
 
 import React, { useEffect, useMemo, useState, useRef } from 'react';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
@@ -137,11 +137,18 @@ const stripHtml = (val) => {
   return val.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
 };
 
+// Builds a row-label x column-label pivot. In addition to the plain job
+// COUNT per cell/row/column (matrix / rowTotals / colTotals / grandTotal),
+// this also accumulates the sum of the "Quantity" field (API response)
+// per row-label grouping (rowQtyTotals) and overall (grandQty), which is
+// what feeds the mandatory "Pcs" column on every pivot table.
 const buildPivot = (rows, fieldMap, rowField, colField, rowFormatter) => {
   const matrix = {};
   const rowTotals = {};
   const colTotals = {};
+  const rowQtyTotals = {};
   let grandTotal = 0;
+  let grandQty = 0;
   let maxCell = 0;
 
   rows.forEach((row) => {
@@ -165,6 +172,14 @@ const buildPivot = (rows, fieldMap, rowField, colField, rowFormatter) => {
     rowTotals[rVal] = (rowTotals[rVal] || 0) + 1;
     colTotals[cVal] = (colTotals[cVal] || 0) + 1;
     grandTotal += 1;
+
+    // Pcs = sum of "Quantity" (API response field) for every row grouped
+    // under this row-label value, regardless of which column it falls in.
+    const qtyRaw = getField(row, fieldMap, 'Quantity');
+    const qtyParsed = parseFloat(qtyRaw);
+    const qty = Number.isFinite(qtyParsed) ? qtyParsed : 0;
+    rowQtyTotals[rVal] = (rowQtyTotals[rVal] || 0) + qty;
+    grandQty += qty;
   });
 
   const rowKeys = Object.keys(rowTotals).sort((a, b) => rowTotals[b] - rowTotals[a]);
@@ -172,7 +187,7 @@ const buildPivot = (rows, fieldMap, rowField, colField, rowFormatter) => {
     .filter((c) => colTotals[c] > 0)
     .sort(naturalSort);
 
-  return { rowKeys, colKeys, matrix, rowTotals, colTotals, grandTotal, maxCell };
+  return { rowKeys, colKeys, matrix, rowTotals, colTotals, rowQtyTotals, grandTotal, grandQty, maxCell };
 };
 
 // alwaysKeepFields: field names that should never be stripped even if every
@@ -906,8 +921,19 @@ const WIPMis = () => {
     []
   );
 
+  // "Pcs" (sum of the "Quantity" API field for every row grouped under this
+  // row-label value) is inserted right after the row-label column on every
+  // pivot table, and is kept mandatory via filterEmptyColumns below.
   const buildPivotColumns = (rowLabel, colKeys) => [
     { field: 'row', headerName: rowLabel, flex: 1.4, minWidth: 160 },
+    {
+      field: 'pcs',
+      headerName: 'Pcs',
+      flex: 1,
+      minWidth: 90,
+      align: 'center',
+      headerAlign: 'center',
+    },
     ...colKeys.map((c) => ({
       field: c,
       headerName: c,
@@ -946,6 +972,7 @@ const WIPMis = () => {
     pivot.rowKeys.map((r) => ({
       __key: r,
       row: r,
+      pcs: pivot.rowQtyTotals[r] || 0,
       total: pivot.rowTotals[r],
       ...colKeys.reduce((acc, c) => {
         acc[c] = pivot.matrix[r]?.[c] || '';
@@ -954,6 +981,7 @@ const WIPMis = () => {
     }));
 
   const buildPivotTotals = (pivot, colKeys = pivot.colKeys) => ({
+    pcs: pivot.grandQty || 0,
     total: pivot.grandTotal,
     ...colKeys.reduce((acc, c) => {
       acc[c] = pivot.colTotals[c] || 0;
@@ -964,7 +992,7 @@ const WIPMis = () => {
   const promise = useMemo(() => {
     const allCols = buildPivotColumns('Promise Date', promisePivot.colKeys);
     const rows = buildPivotRows(promisePivot);
-    const columns = filterEmptyColumns(allCols, rows);
+    const columns = filterEmptyColumns(allCols, rows, ['pcs']);
     const totals = buildPivotTotals(promisePivot);
     return { columns, rows, totals };
   }, [promisePivot]);
@@ -972,19 +1000,19 @@ const WIPMis = () => {
   const status = useMemo(() => {
     const allCols = buildPivotColumns('Current Status', statusPivot.colKeys);
     const rows = buildPivotRows(statusPivot);
-    const columns = filterEmptyColumns(allCols, rows);
+    const columns = filterEmptyColumns(allCols, rows, ['pcs']);
     const totals = buildPivotTotals(statusPivot);
     return { columns, rows, totals };
   }, [statusPivot]);
 
   // "Pending Request" is pinned as the 2nd column (right after the Promise
   // Date row label) regardless of natural sort order, and is always kept
-  // even if every value in it is empty.
+  // even if every value in it is empty. "pcs" is also always kept.
   const department = useMemo(() => {
     const orderedColKeys = reorderPriorityColumn(departmentPivot.colKeys, 'Pending Request');
     const allCols = buildPivotColumns('Promise Date', orderedColKeys);
     const rows = buildPivotRows(departmentPivot, orderedColKeys);
-    const columns = filterEmptyColumns(allCols, rows, ['Pending Request']);
+    const columns = filterEmptyColumns(allCols, rows, ['Pending Request', 'pcs']);
     const totals = buildPivotTotals(departmentPivot, orderedColKeys);
     return { columns, rows, totals };
   }, [departmentPivot]);
@@ -1014,6 +1042,7 @@ const WIPMis = () => {
           promiseDateRaw: promiseRaw,
           promiseDate: formatDateOnly(promiseRaw),
           remainingDays: remDays === null ? '-' : remDays,
+          Pcs: getField(row, fieldMap, 'Quantity') || '-',
           remainingDaysTooltip,
           location: getField(row, fieldMap, 'JobLocation') || '-',
           custCode: getField(row, fieldMap, 'Customercode') || '-',
@@ -1028,6 +1057,7 @@ const WIPMis = () => {
   const orderColumnsAll = useMemo(
     () => [
       { field: 'promiseDate', headerName: 'Promise Date', flex: 1, minWidth: 120, align: 'center', headerAlign: 'center' },
+     
       {
         field: 'remainingDays',
         headerName: 'Rem. Days',
@@ -1064,6 +1094,7 @@ const WIPMis = () => {
       { field: 'location', headerName: 'Location', flex: 1, minWidth: 120 },
       { field: 'custCode', headerName: 'CustCode', flex: 1.1, minWidth: 130 },
       { field: 'job', headerName: 'Job', flex: 1, minWidth: 120 },
+      { field: 'Pcs', headerName: 'Pcs', flex: 1, minWidth: 80 },
       { field: 'designNo', headerName: 'Design No.', flex: 1.1, minWidth: 130 },
       {
         field: 'status',
@@ -1077,9 +1108,9 @@ const WIPMis = () => {
   );
 
   // 'remainingDays' and 'promiseDate' are mandatory — always shown even if
-  // every row is '-' for them.
+  // every row is '-' for them. 'Pcs' is mandatory too.
   const orderColumns = useMemo(
-    () => filterEmptyColumns(orderColumnsAll, orderDetails, ['remainingDays', 'promiseDate']),
+    () => filterEmptyColumns(orderColumnsAll, orderDetails, ['Pcs', 'remainingDays', 'promiseDate']),
     [orderColumnsAll, orderDetails]
   );
 
