@@ -862,18 +862,16 @@ const WIPMis = () => {
         if (deliveryStatus === 'On Time' && !isOnTime) return false;
         if (deliveryStatus === 'Delayed' && !isDeclined) return false;
       }
-
-      if (!isAllDates && dateRange.startDate && dateRange.endDate) {
+ 
+      if (orderNo.length === 0 && !isAllDates && dateRange.startDate && dateRange.endDate) {
         const raw = getField(row, fieldMap, dateField);
-        // No date value on this row → it doesn't belong to any specific
-        // date-range selection, so exclude it (previously it slipped
-        // through every date filter because this whole block was skipped).
-        if (!raw) return false;
-        const d = new Date(raw);
-        if (Number.isNaN(d.getTime())) return false;
-        if (d < dateRange.startDate || d > dateRange.endDate) return false;
+        if (raw) {
+          const d = new Date(raw);
+          if (!Number.isNaN(d.getTime()) && (d < dateRange.startDate || d > dateRange.endDate)) {
+            return false;
+          }
+        }
       }
-
       return true;
     });
   }, [
