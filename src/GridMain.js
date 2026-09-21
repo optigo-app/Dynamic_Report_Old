@@ -42,6 +42,7 @@ import WebsiteManagementGrid from "./compoents/WebsiteManagementGrid/WebsiteMana
 import CombinationMaker from "./compoents/CombinationMaker/CombinationMaker";
 import ProcatalogThemeControl from './compoents/ProcatalogThemeControl'
 import WIPMis from "./compoents/WIPMis/WIPMis";
+import MaterialStockReconciliation from "./compoents/MaterialStockReconciliation/MaterialStockReconciliation";
 import LiveStockValuation from "./compoents/LiveStockValuation/LiveStockValuation";
 import SignageDisplayUpload from "./compoents/SignageDisplayUpload/SignageDisplayUpload";
 
@@ -75,10 +76,10 @@ const GridMain = () => {
 
   useEffect(() => {
     if (process.env.NODE_ENV === "development") {
-      Cookies.set(
-        "skey",
-        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJpdGFzayIsImF1ZCI6ImMzZGhiV2xBWldjdVkyOXQiLCJleHAiOjE3NjQ1OTc5OTUsInVpZCI6ImMzZGhiV2xBWldjdVkyOXQiLCJ5YyI6ImUzdHVlbVZ1ZlgxN2V6SXdmWDE3ZTI5eVlXbHNNalY5Zlh0N2IzSmhhV3d5TlgxOSIsInN2IjoiMCIsImF0ayI6ImRHOXJaVzVmYzJWamNtVjBYMnRsZVY5dGFXRnZjbUU9IiwiY3V2ZXIiOiJSNTBCMyJ9.lTqmepM3HQJuNQXeArm-gmx9TwL0fFLDzDsoPCqYxcs"
-      );
+      // Cookies.set(
+      //   "skey",
+      //   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJpdGFzayIsImF1ZCI6ImMzZGhiV2xBWldjdVkyOXQiLCJleHAiOjE3NjQ1OTc5OTUsInVpZCI6ImMzZGhiV2xBWldjdVkyOXQiLCJ5YyI6ImUzdHVlbVZ1ZlgxN2V6SXdmWDE3ZTI5eVlXbHNNalY5Zlh0N2IzSmhhV3d5TlgxOSIsInN2IjoiMCIsImF0ayI6ImRHOXJaVzVmYzJWamNtVjBYMnRsZVY5dGFXRnZjbUU9IiwiY3V2ZXIiOiJSNTBCMyJ9.lTqmepM3HQJuNQXeArm-gmx9TwL0fFLDzDsoPCqYxcs"
+      // );
 
       //StockValue
       //    Cookies.set(
@@ -231,6 +232,8 @@ const GridMain = () => {
       return <CombinationMaker />;
     } else if (pid == 18601) {
       return <WIPMis />;
+    } else if (pid == 186662) {
+      return <MaterialStockReconciliation />;
     } else if (pid == 18604) {
       return <LiveStockValuation />;
     } else if (pid == 18278) {
