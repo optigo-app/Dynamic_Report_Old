@@ -561,6 +561,22 @@ export default function SignageDisplayListReport({
     }
   ]
 
+
+  const terminalDropdown = [
+    {
+      "MasterName": "",
+      "Id": 101,
+      "SetName": "Terminal 1",
+      "Orientation": "Portrait (9:16)"
+    },
+    {
+      "MasterName": "SignageDisplay",
+      "Id": 102,
+      "SetName": "Terminal 2",
+      "Orientation": "Landscape (16:9)"
+    }
+  ]
+
   React.useEffect(() => {
     setColumns((prev) =>
       prev.map((col) => {
@@ -584,7 +600,6 @@ export default function SignageDisplayListReport({
 
                 {params.row?.App == "TV Dashboard"
                   ?
-
                   <Select
                     value={params.row?.TvSet ?? ""}
                     onChange={(e) =>
@@ -607,29 +622,52 @@ export default function SignageDisplayListReport({
                       </MenuItem>
                     ))}
                   </Select>
-                  :
-                  <Select
-                    value={params.row?.TvSet ?? ""}
-                    onChange={(e) =>
-                      handleTvContentChange(e.target.value, params.row)
-                    }
-                    size="small"
-                    fullWidth
-                    className="MenuSelectItem"
-                  >
-                    <MenuItem value="0" className="MenuSelectItem_select">
-                      -Select-
-                    </MenuItem>
-                    {signageDisplayData?.map((item) => (
-                      <MenuItem
-                        key={item.Id}
-                        value={item.Id}
-                        className="MenuSelectItem_select"
-                      >
-                        {item.SetName}
+                  : params.row?.App == "TV Signage" ?
+                    <Select
+                      value={params.row?.TvSet ?? ""}
+                      onChange={(e) =>
+                        handleTvContentChange(e.target.value, params.row)
+                      }
+                      size="small"
+                      fullWidth
+                      className="MenuSelectItem"
+                    >
+                      <MenuItem value="0" className="MenuSelectItem_select">
+                        -Select-
                       </MenuItem>
-                    ))}
-                  </Select>
+                      {signageDisplayData?.map((item) => (
+                        <MenuItem
+                          key={item.Id}
+                          value={item.Id}
+                          className="MenuSelectItem_select"
+                        >
+                          {item.SetName}
+                        </MenuItem>
+                      ))}
+                    </Select>
+                    :
+                    <Select
+                      value={params.row?.TvSet ?? ""}
+                      onChange={(e) =>
+                        handleTvContentChange(e.target.value, params.row)
+                      }
+                      size="small"
+                      fullWidth
+                      className="MenuSelectItem"
+                    >
+                      <MenuItem value="0" className="MenuSelectItem_select">
+                        -Select-
+                      </MenuItem>
+                      {terminalDropdown?.map((item) => (
+                        <MenuItem
+                          key={item.Id}
+                          value={item.Id}
+                          className="MenuSelectItem_select"
+                        >
+                          {item.SetName}
+                        </MenuItem>
+                      ))}
+                    </Select>
                 }
               </div>
             ),
@@ -781,11 +819,11 @@ export default function SignageDisplayListReport({
         setTimeout(() => {
           setShowSuccess(false);
         }, 5000);
-        // setDeviceStatus({
-        //   type: soketMode,
-        //   timestamp: Date.now(),
-        //   uniqueId: Row?.UniqueID,
-        // });
+        setDeviceStatus({
+          type: soketMode,
+          timestamp: Date.now(),
+          uniqueId: Row?.UniqueID,
+        });
         if (isDeleteModel) {
           setFilteredRows((prevRows) =>
             prevRows.filter((r) => r.Id !== Row.Id)
@@ -887,11 +925,11 @@ export default function SignageDisplayListReport({
           });
         });
         let isCheckedVal = isChecked ? "deviceEnabled" : "deviceDisabled";
-        // setDeviceStatus({
-        //   type: isCheckedVal,
-        //   timestamp: Date.now(),
-        //   uniqueId: row?.UniqueID,
-        // });
+        setDeviceStatus({
+          type: isCheckedVal,
+          timestamp: Date.now(),
+          uniqueId: row?.UniqueID,
+        });
       }
     } catch (error) {
       console.error("Failed to update Access:", error);
@@ -1188,7 +1226,7 @@ export default function SignageDisplayListReport({
         {summaryArray?.map((col) => {
           return (
             <div className="summaryItem" key={col.field}>
-              <div className="AllEmploe_boxViewTotal"  style={{width: '180px', maxWidth: '150px'}}>
+              <div className="AllEmploe_boxViewTotal" style={{ width: '180px', maxWidth: '150px' }}>
                 <div>
                   <p className="AllEmplo_boxViewTotalValue">{col?.Title}</p>
                   <p className="boxViewTotalTitle">{col.summaryTitle}</p>
