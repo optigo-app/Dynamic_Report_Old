@@ -213,12 +213,14 @@ export default function AllEmployeeDataReport({
     setPriceBreak(event.target.checked);
   };
 
+  // ✅ Fix 1: Reset priceBreak every time modal opens from settingMasterData
   React.useEffect(() => {
-    if (settingOpen && settingMasterData?.length > 0) {
-      const data = settingMasterData[0];
+    if (settingOpen) {
+      const data = settingMasterData?.[0];
       setPriceBreak(data?.IsPriceBreakUp === 1);
     }
-  }, [settingOpen, settingMasterData]);
+  }, [settingOpen]); // ✅ removed settingMasterData dependency — only sync on open
+
 
   //selecino.... main
   const useDeviceSummary = (AllFinalData) => {
@@ -323,7 +325,7 @@ export default function AllEmployeeDataReport({
           filteredDataColumKey = OtherKeyDataExpress?.rd1;
         } else if (selectedFilterCategory === "Evo") {
           filteredDataColumKey = OtherKeyDataEvoApp?.rd1;
-        }  else if (selectedFilterCategory === "Optigo Scan") {
+        } else if (selectedFilterCategory === "Optigo Scan") {
           filteredDataColumKey = OtherKeyDataOptigoScan?.rd1;
         } else {
           filteredDataColumKey = OtherKeyDataIcate?.rd1;
@@ -2231,6 +2233,11 @@ export default function AllEmployeeDataReport({
       const sp = searchParams.get("sp");
       const response = await GetWorkerData(body, sp);
       if (response?.Data?.rd[0]?.msg === "Success") {
+        // ✅ Fix: update settingMasterData in parent so reopen shows correct value
+        if (settingMasterData?.length > 0) {
+          settingMasterData[0].IsPriceBreakUp = priceBreak ? 1 : 0; // mutate ref
+        }
+
         showToast({
           message: "Updated successfully",
           bgColor: "#3bab3b",
@@ -2238,6 +2245,8 @@ export default function AllEmployeeDataReport({
           duration: 4000,
         });
       } else {
+        // ✅ Fix: revert priceBreak if save failed
+        setPriceBreak(settingMasterData?.[0]?.IsPriceBreakUp === 1);
         showToast({
           message: "Failed to update",
           bgColor: "#d32f2f",
@@ -2246,12 +2255,13 @@ export default function AllEmployeeDataReport({
         });
       }
     } catch (err) {
-      console.error("Error setting default PIN:", err);
+      console.error("Error saving setting:", err);
+      setPriceBreak(settingMasterData?.[0]?.IsPriceBreakUp === 1); 
     } finally {
       setIsLoading(false);
     }
-    setSettingOpen(false)
-  }
+    setSettingOpen(false);
+  };
 
   return (
     <DragDropContext onDragEnd={onDragEnd}>
