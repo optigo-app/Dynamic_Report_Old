@@ -232,7 +232,7 @@ const GridMain = () => {
       return <CombinationMaker />;
     } else if (pid == 18601) {
       return <WIPMis />;
-    } else if (pid == 186662) {
+    } else if (pid == 18618) {
       return <MaterialStockReconciliation />;
     } else if (pid == 18604) {
       return <LiveStockValuation />;
