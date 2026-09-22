@@ -205,7 +205,7 @@ export default function AllEmployeeDataReport({
   const [selectionModel, setSelectionModel] = React.useState([]);
   const [showBulkDeleteModal, setShowBulkDeleteModal] = React.useState(false);
   const [page, setPage] = React.useState(0);
-
+  const deletedIdsRef = React.useRef(new Set());
   const selectionModelRef = React.useRef(selectionModel);
   selectionModelRef.current = selectionModel;
 
@@ -235,6 +235,7 @@ export default function AllEmployeeDataReport({
 
     React.useImperativeHandle(ref, () => ({
       handleClearFilter,
+      clearDeletedIds: () => { deletedIdsRef.current = new Set(); }  // ← add
     }));
 
     React.useEffect(() => {
@@ -351,7 +352,7 @@ export default function AllEmployeeDataReport({
     setMasterKeyData(OtherKeyData?.rd);
     setAllColumData(filteredDataColumKey);
     setAllColumIdWiseName(AllFinalData?.rd);
-    setAllRowData(filteredData);
+    setAllRowData(filteredData.filter(r => !deletedIdsRef.current.has(r["19"])));
     setIsLoading(false);
   };
 
@@ -716,6 +717,7 @@ export default function AllEmployeeDataReport({
       setIsLoading(true);
       const response = await GetWorkerData(body, sp);
       if (response?.Data?.rd[0]?.msg === "Success") {
+        selectedBulkIds.forEach(id => deletedIdsRef.current.add(id));  // ← add this line
         setFilteredRows((prev) =>
           prev.filter((r) => !selectedBulkIds.includes(r.Id))
         );
@@ -1297,6 +1299,7 @@ export default function AllEmployeeDataReport({
           uniqueId: Row?.UniqueID,
         });
         if (isDeleteModel) {
+          deletedIdsRef.current.add(Row.Id);           // ← add this line
           setFilteredRows((prevRows) =>
             prevRows.filter((r) => r.Id !== Row.Id)
           );
@@ -2256,7 +2259,7 @@ export default function AllEmployeeDataReport({
       }
     } catch (err) {
       console.error("Error saving setting:", err);
-      setPriceBreak(settingMasterData?.[0]?.IsPriceBreakUp === 1); 
+      setPriceBreak(settingMasterData?.[0]?.IsPriceBreakUp === 1);
     } finally {
       setIsLoading(false);
     }

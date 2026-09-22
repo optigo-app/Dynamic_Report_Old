@@ -21,6 +21,7 @@ const StockValuation = () => {
   const [jobworkDataTotal, setJobworkDataTotal] = useState([]);
   const [modalLoading, setModalLoading] = useState(false);
   const [metalTypeMaster, setMetalTypeMaster] = useState([]);
+  const [stockValPt, setStockValPt] = useState([]);
   const [openingData, setOpeningData] = useState([]);
   const [redirectData, setRedirectData] = useState();
 
@@ -34,7 +35,7 @@ const StockValuation = () => {
     const sp = new URLSearchParams(window.location.search).get("sp");
 
     try {
-      const [inRes, outRes, masterRes, redirectDataApi] = await Promise.all([
+      const [inRes, outRes, masterRes, redirectDataApi, STOCKVALUATIONPT] = await Promise.all([
         GetWorkerData(
           {
             con: `{"id":"","mode":"STOCK_VALUATION_IN","appuserid":"${AllData?.uid}"}`,
@@ -67,8 +68,18 @@ const StockValuation = () => {
           },
           sp
         ),
+        GetWorkerData(
+          {
+            "con": "{\"id\":\"\",\"mode\":\"STOCK_VALUATION_PT\",\"appuserid\":\"amrut@eg.com\"}",
+            "p": "{\"fdate\":\"09/21/2026\",\"tdate\":\"09/21/2026\"}",
+            "f": "Task Management (taskmaster)"
+          },
+          sp
+        ),
       ]);
 
+
+      setStockValPt(STOCKVALUATIONPT?.Data?.rd);
       setAllInData(inRes?.Data?.rd1 || []);
       setAllOutData(outRes?.Data?.rd1 || []);
       setItemMaster(masterRes?.Data?.rd || []);
