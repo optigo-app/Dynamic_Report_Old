@@ -211,13 +211,11 @@ export default function DeviceSpliter({ isLoadingNew }) {
 
   const subRef = useRef();
   const handleRefresh = () => {
-    // if (!isRefreshEnabled) return;
     fetchData(selectedDepartment);
     if (subRef.current) {
       subRef.current.handleClearFilter();
+      subRef.current.clearDeletedIds();   // ← add
     }
-    // window.location.reload();
-    // startEnableTimer();
   };
 
   const [isPaneCollapsed, setIsPaneCollapsed] = useState(false);
