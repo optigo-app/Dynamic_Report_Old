@@ -151,6 +151,13 @@ const buildPivot = (rows, fieldMap, rowField, colField, rowFormatter) => {
   let grandQty = 0;
   let maxCell = 0;
 
+  // Tracks which base job numbers have already contributed to a given
+  // row-label's Pcs total (per-row-group dedupe) and to the grand Pcs
+  // total (dataset-wide dedupe) — so a job split across S1/S2/... sub-rows
+  // only adds its Quantity ONCE instead of once per sub-row.
+  const rowQtySeenJobs = {};
+  const grandQtySeenJobs = new Set();
+
   rows.forEach((row) => {
     let rVal = getField(row, fieldMap, rowField);
     let cVal = getField(row, fieldMap, colField);
@@ -159,9 +166,6 @@ const buildPivot = (rows, fieldMap, rowField, colField, rowFormatter) => {
     rVal = stripHtml(rVal);
     cVal = stripHtml(cVal);
 
-    // Skip entries where the row-grouping value or column-grouping value
-    // is missing, instead of bucketing them under "Unspecified" — e.g.
-    // rows with no JobLocation no longer create a phantom column.
     if (rVal === undefined || rVal === null || rVal === '') return;
     if (cVal === undefined || cVal === null || cVal === '') return;
 
@@ -173,13 +177,33 @@ const buildPivot = (rows, fieldMap, rowField, colField, rowFormatter) => {
     colTotals[cVal] = (colTotals[cVal] || 0) + 1;
     grandTotal += 1;
 
-    // Pcs = sum of "Quantity" (API response field) for every row grouped
-    // under this row-label value, regardless of which column it falls in.
+    // Pcs = sum of "Quantity" (API response field), counted once per base
+    // job number. "1/13765S1" and "1/13765S2" both belong to job
+    // "1/13765" — strip the trailing S<n> suffix so they collapse into one
+    // contribution instead of adding Quantity twice.
+    const jobNoRaw = getField(row, fieldMap, 'serialjobno');
+    const baseJobNo = jobNoRaw ? String(jobNoRaw).replace(/S\d+$/i, '') : null;
+
     const qtyRaw = getField(row, fieldMap, 'Quantity');
     const qtyParsed = parseFloat(qtyRaw);
     const qty = Number.isFinite(qtyParsed) ? qtyParsed : 0;
-    rowQtyTotals[rVal] = (rowQtyTotals[rVal] || 0) + qty;
-    grandQty += qty;
+
+    rowQtySeenJobs[rVal] = rowQtySeenJobs[rVal] || new Set();
+
+    // No job number on the row? Fall back to old behaviour (always count)
+    // so nothing breaks for rows that don't carry a serialjobno.
+    const alreadyCountedForRow = baseJobNo && rowQtySeenJobs[rVal].has(baseJobNo);
+    const alreadyCountedOverall = baseJobNo && grandQtySeenJobs.has(baseJobNo);
+
+    if (!alreadyCountedForRow) {
+      rowQtyTotals[rVal] = (rowQtyTotals[rVal] || 0) + qty;
+      if (baseJobNo) rowQtySeenJobs[rVal].add(baseJobNo);
+    }
+
+    if (!alreadyCountedOverall) {
+      grandQty += qty;
+      if (baseJobNo) grandQtySeenJobs.add(baseJobNo);
+    }
   });
 
   const rowKeys = Object.keys(rowTotals).sort((a, b) => rowTotals[b] - rowTotals[a]);
@@ -189,7 +213,6 @@ const buildPivot = (rows, fieldMap, rowField, colField, rowFormatter) => {
 
   return { rowKeys, colKeys, matrix, rowTotals, colTotals, rowQtyTotals, grandTotal, grandQty, maxCell };
 };
-
 // alwaysKeepFields: field names that should never be stripped even if every
 // row is blank/'-'/0 for that column (e.g. a mandatory "Rem. Days" column).
 const filterEmptyColumns = (columns, rows, alwaysKeepFields = []) =>
