@@ -313,12 +313,10 @@ const applyRowFilters = (rows, fieldMap, filters, dateCtx) => {
 
     if (orderNo.length === 0 && !isAllDates && dateRange.startDate && dateRange.endDate) {
       const raw = getField(row, fieldMap, dateField);
-      if (raw) {
-        const d = new Date(raw);
-        if (!Number.isNaN(d.getTime()) && (d < dateRange.startDate || d > dateRange.endDate)) {
-          return false;
-        }
-      }
+      if (!raw) return false; // no date at all → excluded, same as before
+      const d = new Date(raw);
+      if (Number.isNaN(d.getTime())) return false; // unparsable date → excluded
+      if (d < dateRange.startDate || d > dateRange.endDate) return false;
     }
     return true;
   });
@@ -891,8 +889,8 @@ const WIPMis = () => {
     setPickerAnchor(null);
   };
 
-  // Rows restricted ONLY by the Promise Date range — feeds both the KPI
-  // cards and the dropdown option lists shared by every tab's filter bar.
+  // Rows restricted ONLY by the Promise Date range — feeds the dropdown
+  // option lists shared by every tab's filter bar.
   const dateFilteredRows = useMemo(() => {
     if (isAllDates || !dateRange.startDate || !dateRange.endDate) return rawRows;
     return rawRows.filter((row) => {
@@ -951,19 +949,38 @@ const WIPMis = () => {
     [rawRows, fieldMap, deptFilters, isAllDates, dateRange, dateField]
   );
 
-  // KPI cards reflect the date range only (not any one tab's filters).
+  // Which per-tab filtered row set is currently "active" (drives the KPI
+  // cards below the Tabs) — matches whichever tab the user is on, so the
+  // KPI cards apply that SAME tab's filters instead of a shared global set.
+  const activeFilteredRows = useMemo(() => {
+    switch (activeTab) {
+      case 1:
+        return promiseFilteredRows;
+      case 2:
+        return statusFilteredRows;
+      case 3:
+        return deptFilteredRows;
+      case 0:
+      default:
+        return orderFilteredRows;
+    }
+  }, [activeTab, orderFilteredRows, promiseFilteredRows, statusFilteredRows, deptFilteredRows]);
+
+  // KPI cards now reflect the ACTIVE TAB's own filters (not a shared
+  // global set) — switching tabs or changing that tab's filters updates
+  // these cards accordingly.
   const stats = useMemo(
     () => ({
-      pcs: dateFilteredRows.length,
-      qty: sumQuantityDeduped(dateFilteredRows, fieldMap),
-      nwt: sumField(dateFilteredRows, fieldMap, 'NetWtgm'),
-      gwt: sumField(dateFilteredRows, fieldMap, 'GrossWeightgm'),
-      diaPcs: sumField(dateFilteredRows, fieldMap, 'Diamond_actualusedpcs'),
-      solPcs: sumField(dateFilteredRows, fieldMap, SOLITAIRE_PCS_FIELD),
-      diaWt: sumField(dateFilteredRows, fieldMap, DIAMOND_WEIGHT_FIELD),
-      solWt: sumField(dateFilteredRows, fieldMap, SOLITAIRE_WEIGHT_FIELD),
+      pcs: activeFilteredRows.length,
+      qty: sumQuantityDeduped(activeFilteredRows, fieldMap),
+      nwt: sumField(activeFilteredRows, fieldMap, 'NetWtgm'),
+      gwt: sumField(activeFilteredRows, fieldMap, 'GrossWeightgm'),
+      diaPcs: sumField(activeFilteredRows, fieldMap, 'Diamond_actualusedpcs'),
+      solPcs: sumField(activeFilteredRows, fieldMap, SOLITAIRE_PCS_FIELD),
+      diaWt: sumField(activeFilteredRows, fieldMap, DIAMOND_WEIGHT_FIELD),
+      solWt: sumField(activeFilteredRows, fieldMap, SOLITAIRE_WEIGHT_FIELD),
     }),
-    [dateFilteredRows, fieldMap]
+    [activeFilteredRows, fieldMap]
   );
 
   const promisePivot = useMemo(
@@ -1178,6 +1195,12 @@ const WIPMis = () => {
 
     XLSX.utils.book_append_sheet(
       wb,
+      XLSX.utils.aoa_to_sheet(buildSheetAOA(orderColumns, orderDetails, null)),
+      'Order Details'
+    );
+
+    XLSX.utils.book_append_sheet(
+      wb,
       XLSX.utils.aoa_to_sheet(buildSheetAOA(promise.columns, promise.rows, promise.totals)),
       'WIP Distribution'
     );
@@ -1186,11 +1209,7 @@ const WIPMis = () => {
       XLSX.utils.aoa_to_sheet(buildSheetAOA(status.columns, status.rows, status.totals)),
       'Current Status'
     );
-    XLSX.utils.book_append_sheet(
-      wb,
-      XLSX.utils.aoa_to_sheet(buildSheetAOA(orderColumns, orderDetails, null)),
-      'Order Details'
-    );
+   
     XLSX.utils.book_append_sheet(
       wb,
       XLSX.utils.aoa_to_sheet(buildSheetAOA(department.columns, department.rows, department.totals)),
@@ -1341,6 +1360,18 @@ const WIPMis = () => {
             </Box>
           </Paper>
 
+          <Tabs
+            value={activeTab}
+            onChange={(e, val) => setActiveTab(val)}
+            variant="scrollable"
+            scrollButtons="auto"
+            className="wip-tabs"
+          >
+            {TAB_LABELS.map((label) => (
+              <Tab key={label} label={label} />
+            ))}
+          </Tabs>
+
           <Box className="wip-mis__stats">
             <StatCard
               icon={<Inventory2OutlinedIcon fontSize="small" />}
@@ -1385,18 +1416,6 @@ const WIPMis = () => {
               unit="Ct"
             />
           </Box>
-
-          <Tabs
-            value={activeTab}
-            onChange={(e, val) => setActiveTab(val)}
-            variant="scrollable"
-            scrollButtons="auto"
-            className="wip-tabs"
-          >
-            {TAB_LABELS.map((label) => (
-              <Tab key={label} label={label} />
-            ))}
-          </Tabs>
 
           <Box className="wip-mis__pivots">
             {activeTab === 0 && (
