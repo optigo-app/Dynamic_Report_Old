@@ -549,6 +549,7 @@ const CrmReport = () => {
   // API call resolves, so the UI can fall back to the sample data meanwhile.
   const [reportLoading, setReportLoading] = useState(false);
   const [apiCustomerInfo, setApiCustomerInfo] = useState(null);
+  const [topinfoNavigation, setTopinfoNavigation] = useState(null);
   const [apiQuickCounts, setApiQuickCounts] = useState(null);
   const [apiTopCategories, setApiTopCategories] = useState(null);
   const [apiRecentActivity, setApiRecentActivity] = useState(null);
@@ -786,6 +787,7 @@ const CrmReport = () => {
 
       if (overviewRes.status === "fulfilled") {
         setApiCustomerInfo(mapCustomerOverview(overviewRes.value?.Data?.rd?.[0]));
+        setTopinfoNavigation(overviewRes.value?.Data?.rd1?.[0])
       } else {
         console.error("CustomerOverview API error:", overviewRes.reason);
       }
@@ -1114,21 +1116,72 @@ const CrmReport = () => {
 
           {/* Right: at-a-glance stat chips */}
           <Box className="crm_topbar_stats">
-            <Box className="crm_stat_chip crm_stat_info">
+            <Box className="crm_stat_chip crm_stat_info"
+              // style={{ cursor: 'pointer' }}
+              // onClick={() => {
+              //   if (window?.parent?.postMessage) {
+              //     window.parent.postMessage(
+              //       {
+              //         type: "ADD_TAB",
+              //         evt: "DynamicReport",
+              //         payload: {
+              //           TabName: topinfoNavigation?.PageName,
+              //           TabUrl: topinfoNavigation?.URL,
+              //         },
+              //       },
+              //       "*"
+              //     );
+              //   }
+              // }}
+            >
               <Box className="crm_stat_ico"><IndianRupee size={14} /></Box>
               <Box className="crm_stat_txt">
                 <Typography className="crm_overview_val">{formatCurrency(customerInfo.outstanding)}</Typography>
                 <Typography className="crm_overview_lbl">Outstanding</Typography>
               </Box>
             </Box>
-            <Box className="crm_stat_chip crm_stat_info">
+            <Box className="crm_stat_chip crm_stat_info"
+              // style={{ cursor: 'pointer' }}
+              // onClick={() => {
+              //   if (window?.parent?.postMessage) {
+              //     window.parent.postMessage(
+              //       {
+              //         type: "ADD_TAB",
+              //         evt: "DynamicReport",
+              //         payload: {
+              //           TabName: topinfoNavigation?.PageName,
+              //           TabUrl: topinfoNavigation?.URL,
+              //         },
+              //       },
+              //       "*"
+              //     );
+              //   }
+              // }}
+            >
               <Box className="crm_stat_ico"><GiMetalBar size={14} /></Box>
               <Box className="crm_stat_txt">
                 <Typography className="crm_overview_val">{customerInfo?.Metal} gm</Typography>
                 <Typography className="crm_overview_lbl">Metal Balance</Typography>
               </Box>
             </Box>
-            <Box className="crm_stat_chip crm_stat_info">
+            <Box className="crm_stat_chip crm_stat_info"
+              // style={{ cursor: 'pointer' }}
+              // onClick={() => {
+              //   if (window?.parent?.postMessage) {
+              //     window.parent.postMessage(
+              //       {
+              //         type: "ADD_TAB",
+              //         evt: "DynamicReport",
+              //         payload: {
+              //           TabName: topinfoNavigation?.PageName,
+              //           TabUrl: topinfoNavigation?.URL,
+              //         },
+              //       },
+              //       "*"
+              //     );
+              //   }
+              // }}
+            >
               <Box className="crm_stat_ico"><Gem size={14} /></Box>
               <Box className="crm_stat_txt">
                 <Typography className="crm_overview_val">{customerInfo?.Diamond} ctw</Typography>
@@ -1284,7 +1337,7 @@ const CrmReport = () => {
             </Paper>
 
             <Paper elevation={0} className="crm_card crm_card_flex">
-              <CardTitle title="Payment Behaviour" icon={<TrendingUp size={14} />} />
+              <CardTitle title="Monthly Payment Trend" icon={<TrendingUp size={14} />} />
               <Divider sx={{ mb: 1 }} />
               <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, mb: 0.5 }}>
                 <Chip
@@ -1382,11 +1435,33 @@ const CrmReport = () => {
                     </Pie>
                     <Tooltip formatter={(v) => `${v}%`} contentStyle={{ fontSize: 11, borderRadius: 6 }} />
                   </PieChart>
-                  <Box className="crm_donut_center_box">
-                    <Typography className="crm_donut_val" style={{ fontSize: 10, fontWeight: 700, lineHeight: 1.2, textAlign: 'center', maxWidth: 70, wordBreak: 'break-word' }}>
+                  <Box className="crm_donut_center_box" sx={{
+                    position: 'absolute',
+                    top: '50%',
+                    left: '50%',
+                    transform: 'translate(-50%, -50%)',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    width: 72,        // match innerRadius * 2 = 80, keep slightly less
+                    textAlign: 'center',
+                    pointerEvents: 'none',   // ← prevents tooltip trigger from center box
+                  }}>
+                    <Typography sx={{
+                      fontSize: 9,
+                      fontWeight: 700,
+                      lineHeight: 1.2,
+                      wordBreak: 'break-word',
+                      whiteSpace: 'normal',
+                      maxWidth: 68,
+                      color: 'inherit'
+                    }}>
                       {formatShort(displayOutstandingMarks?.total)}
                     </Typography>
-                    <Typography className="crm_donut_sub">Total</Typography>
+                    <Typography className="crm_donut_sub" sx={{ fontSize: 9 }}>
+                      Total
+                    </Typography>
                   </Box>
                 </Box>
                 <Box sx={{ flex: 1, minWidth: 0, pl: 0.5 }}>
