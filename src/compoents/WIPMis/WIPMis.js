@@ -65,6 +65,31 @@ const sumField = (rows, fieldMap, fieldName) =>
     return acc + (Number.isFinite(v) ? v : 0);
   }, 0);
 
+// Same dedupe rule as the "Pcs" column in buildPivot below: "Quantity" is
+// summed once per BASE job number (S1/S2/... sub-rows of the same job are
+// not double-counted). Used for the "Quantity" KPI card.
+const sumQuantityDeduped = (rows, fieldMap) => {
+  const seenJobs = new Set();
+  let total = 0;
+
+  rows.forEach((row) => {
+    const jobNoRaw = getField(row, fieldMap, 'serialjobno');
+    const baseJobNo = jobNoRaw ? String(jobNoRaw).replace(/S\d+$/i, '') : null;
+
+    const qtyRaw = getField(row, fieldMap, 'Quantity');
+    const qtyParsed = parseFloat(qtyRaw);
+    const qty = Number.isFinite(qtyParsed) ? qtyParsed : 0;
+
+    const alreadyCounted = baseJobNo && seenJobs.has(baseJobNo);
+    if (!alreadyCounted) {
+      total += qty;
+      if (baseJobNo) seenJobs.add(baseJobNo);
+    }
+  });
+
+  return total;
+};
+
 // Date format used everywhere in the tables: "25 Sep 2026"
 const formatDateOnly = (iso) => {
   if (!iso) return '-';
@@ -341,7 +366,7 @@ const DataGridPanel = ({
   dense = false,
   showTotals = false,
   gridHeight, // optional manual override; auto-computed from row count otherwise
-  headerFilters, // NEW: optional filter controls rendered on the right of the header
+  headerFilters, // optional filter controls rendered on the right of the header
 }) => {
   const gridWrapRef = useRef(null);
   const totalsRowRef = useRef(null);
@@ -557,46 +582,64 @@ const StatCard = ({ icon, label, value, subLabel, unit }) => (
 );
 
 /* ---------------------------------------------------------------- */
-/* Filter chip (single select) — used for Delivery Status             */
-/* ---------------------------------------------------------------- */
-
-/* ---------------------------------------------------------------- */
-/* Filter chip (single select) — used for Delivery Status. Clicking   */
-/* ANYWHERE on the chip (not just the select) opens the dropdown.     */
+/* Filter chip (single select) — used for Delivery Status.            */
+/* Rebuilt on top of Popover (same mechanism as CheckboxFilterChip)   */
+/* instead of a nested native <Select>, so outside-click reliably     */
+/* closes it — the old version could get stuck open because clicks    */
+/* on the wrapping Box re-opened it right after the Select's own      */
+/* onClose fired.                                                     */
 /* ---------------------------------------------------------------- */
 
 const FilterChip = ({ label, value, onChange, options }) => {
-  const [open, setOpen] = useState(false);
+  const [anchorEl, setAnchorEl] = useState(null);
+  const open = Boolean(anchorEl);
+
+  const handleOpen = (e) => setAnchorEl(e.currentTarget);
+  const handleClose = () => setAnchorEl(null);
+
+  const handleSelect = (opt) => {
+    onChange(opt);
+    handleClose();
+  };
 
   return (
-    <Box className="filter-chip" onClick={() => setOpen(true)}>
-      <Typography className="filter-chip__label">{label}</Typography>
-      <Select
+    <>
+      <Button
         size="small"
-        value={value}
-        open={open}
-        onOpen={() => setOpen(true)}
-        onClose={() => setOpen(false)}
-        onChange={(e) => {
-          onChange(e.target.value);
-          setOpen(false);
-        }}
-        className="filter-chip__select"
+        variant="outlined"
+        onClick={handleOpen}
+        className="tab-filter-chip tab-filter-chip--select"
       >
-        {options.map((opt) => (
-          <MenuItem key={opt} value={opt}>
-            {opt}
-          </MenuItem>
-        ))}
-      </Select>
-    </Box>
+        <span className="tab-filter-chip__label-text">{label}</span>
+        <span className="tab-filter-chip__value">{value}</span>
+        <span className="tab-filter-chip__caret">▾</span>
+      </Button>
+
+      <Popover
+        open={open}
+        anchorEl={anchorEl}
+        onClose={handleClose}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
+        transformOrigin={{ vertical: 'top', horizontal: 'left' }}
+        PaperProps={{ className: 'tab-filter-popover' }}
+      >
+        <Box className="tab-filter-popover__list">
+          {options.map((opt) => (
+            <Box
+              key={opt}
+              className={`tab-filter-popover__item tab-filter-popover__item--select ${
+                value === opt ? 'is-selected' : ''
+              }`}
+              onClick={() => handleSelect(opt)}
+            >
+              <span>{opt}</span>
+            </Box>
+          ))}
+        </Box>
+      </Popover>
+    </>
   );
 };
-
-/* ---------------------------------------------------------------- */
-/* Checkbox-style multi-select filter — click the chip, a popover     */
-/* with checkboxes opens. Used inline in each tab's header.           */
-/* ---------------------------------------------------------------- */
 
 /* ---------------------------------------------------------------- */
 /* Checkbox-style multi-select filter — click the chip, a popover     */
@@ -694,6 +737,7 @@ const CheckboxFilterChip = ({ label, value, onChange, options }) => {
     </>
   );
 };
+
 /* ---------------------------------------------------------------- */
 /* Full filter bar for one tab — holds Location / Customer Code /     */
 /* Order No. / Current Status / Metal Type (checkbox chips) plus      */
@@ -911,6 +955,7 @@ const WIPMis = () => {
   const stats = useMemo(
     () => ({
       pcs: dateFilteredRows.length,
+      qty: sumQuantityDeduped(dateFilteredRows, fieldMap),
       nwt: sumField(dateFilteredRows, fieldMap, 'NetWtgm'),
       gwt: sumField(dateFilteredRows, fieldMap, 'GrossWeightgm'),
       diaPcs: sumField(dateFilteredRows, fieldMap, 'Diamond_actualusedpcs'),
@@ -1302,6 +1347,13 @@ const WIPMis = () => {
               label="WIP JOBS"
               value={stats.pcs.toLocaleString()}
               subLabel="Active Jobs"
+              unit=""
+            />
+            <StatCard
+              icon={<Inventory2Icon fontSize="small" />}
+              label="QUANTITY"
+              value={stats.qty.toLocaleString(undefined, { maximumFractionDigits: 2 })}
+              subLabel="Total Quantity"
               unit=""
             />
             <StatCard
