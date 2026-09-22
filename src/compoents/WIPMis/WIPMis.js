@@ -14,13 +14,10 @@ import {
   CircularProgress,
   Alert,
   Tooltip,
-  Autocomplete,
-  TextField,
   Checkbox,
-  Drawer,
-  Divider,
-  Badge,
   Pagination,
+  Tabs,
+  Tab,
 } from '@mui/material';
 import { DataGrid } from '@mui/x-data-grid';
 import Inventory2OutlinedIcon from '@mui/icons-material/Inventory2Outlined';
@@ -31,22 +28,19 @@ import CalendarMonthOutlinedIcon from '@mui/icons-material/CalendarMonthOutlined
 import EventNoteOutlinedIcon from '@mui/icons-material/EventNoteOutlined';
 import Inventory2Icon from '@mui/icons-material/Inventory2';
 import RefreshIcon from '@mui/icons-material/Refresh';
-import FileDownloadOutlinedIcon from '@mui/icons-material/FileDownloadOutlined';
 import CheckBoxOutlineBlankIcon from '@mui/icons-material/CheckBoxOutlineBlank';
 import CheckBoxIcon from '@mui/icons-material/CheckBox';
-import FilterListIcon from '@mui/icons-material/FilterList';
 import CloseIcon from '@mui/icons-material/Close';
 import { DateRangePicker } from 'mui-daterange-picker';
 import * as XLSX from 'xlsx';
 import { GetWipData } from '../../API/GetWipData/GetWipData';
 import './WIPMis.scss';
 import DescriptionOutlinedIcon from '@mui/icons-material/DescriptionOutlined';
-import KeyboardArrowLeftIcon from '@mui/icons-material/KeyboardArrowLeft';
-import FilterAltOffOutlinedIcon from '@mui/icons-material/FilterAltOffOutlined';
-import FilterAltOutlinedIcon from '@mui/icons-material/FilterAltOutlined';
+import TextField from '@mui/material/TextField';
+import SearchIcon from '@mui/icons-material/Search';
 
 /* ---------------------------------------------------------------- */
-/* Helpers                                                            */
+/* Helpers (DATA LOGIC — UNCHANGED)                                   */
 /* ---------------------------------------------------------------- */
 
 const buildFieldMap = (rd2) => {
@@ -190,8 +184,6 @@ const buildPivot = (rows, fieldMap, rowField, colField, rowFormatter) => {
 
     rowQtySeenJobs[rVal] = rowQtySeenJobs[rVal] || new Set();
 
-    // No job number on the row? Fall back to old behaviour (always count)
-    // so nothing breaks for rows that don't carry a serialjobno.
     const alreadyCountedForRow = baseJobNo && rowQtySeenJobs[rVal].has(baseJobNo);
     const alreadyCountedOverall = baseJobNo && grandQtySeenJobs.has(baseJobNo);
 
@@ -213,6 +205,7 @@ const buildPivot = (rows, fieldMap, rowField, colField, rowFormatter) => {
 
   return { rowKeys, colKeys, matrix, rowTotals, colTotals, rowQtyTotals, grandTotal, grandQty, maxCell };
 };
+
 // alwaysKeepFields: field names that should never be stripped even if every
 // row is blank/'-'/0 for that column (e.g. a mandatory "Rem. Days" column).
 const filterEmptyColumns = (columns, rows, alwaysKeepFields = []) =>
@@ -235,8 +228,6 @@ const reorderPriorityColumn = (colKeys, priorityLabel) => {
   return [priorityLabel, ...colKeys.filter((c) => c !== priorityLabel)];
 };
 
-// Formats a KPI value as "D:<value>" and appends " S:<value>" only when a
-// solitaire figure is present and non-zero — never shows "S:0".
 // Formats a KPI value as "D:<value> ct" and appends " S:<value> ct" only when
 // a solitaire figure is present and non-zero — never shows "S:0 ct".
 const formatDiamondSolitaire = (dVal, sVal, decimals = 0, unit = '') => {
@@ -248,19 +239,68 @@ const formatDiamondSolitaire = (dVal, sVal, decimals = 0, unit = '') => {
   }
   return dStr;
 };
+
+/* ---------------------------------------------------------------- */
+/* Row filtering — extracted into a pure helper so each TAB can hold */
+/* its own independent filter state and pass it through here, while  */
+/* the actual filtering predicate is identical for every tab.        */
+/* ---------------------------------------------------------------- */
+
+const createEmptyFilters = () => ({
+  location: [],
+  customerCode: [],
+  orderNo: [],
+  currentStatus: [],
+  metalType: [],
+  deliveryStatus: 'All',
+});
+
+const applyRowFilters = (rows, fieldMap, filters, dateCtx) => {
+  const { location, customerCode, orderNo, currentStatus, metalType, deliveryStatus } = filters;
+  const { isAllDates, dateRange, dateField } = dateCtx;
+
+  return rows.filter((row) => {
+    const loc = getField(row, fieldMap, 'JobLocation');
+    const cust = getField(row, fieldMap, 'Customercode');
+    const ord = getField(row, fieldMap, 'SKUNO');
+
+    if (location.length > 0 && !location.includes(loc)) return false;
+    if (customerCode.length > 0 && !customerCode.includes(cust)) return false;
+    if (orderNo.length > 0 && !orderNo.includes(ord)) return false;
+
+    if (currentStatus.length > 0) {
+      const dept = stripHtml(getField(row, fieldMap, 'department'));
+      if (!currentStatus.includes(dept)) return false;
+    }
+
+    if (metalType.length > 0) {
+      const metal = stripHtml(getField(row, fieldMap, 'metal_type_name'));
+      if (!metalType.includes(metal)) return false;
+    }
+
+    if (deliveryStatus !== 'All') {
+      const remDays = computeRemainingDays(row, fieldMap);
+      const isOnTime = typeof remDays === 'number' && remDays > 0;
+      const isDeclined = typeof remDays === 'number' && remDays <= 0;
+      if (deliveryStatus === 'On Time' && !isOnTime) return false;
+      if (deliveryStatus === 'Delayed' && !isDeclined) return false;
+    }
+
+    if (orderNo.length === 0 && !isAllDates && dateRange.startDate && dateRange.endDate) {
+      const raw = getField(row, fieldMap, dateField);
+      if (raw) {
+        const d = new Date(raw);
+        if (!Number.isNaN(d.getTime()) && (d < dateRange.startDate || d > dateRange.endDate)) {
+          return false;
+        }
+      }
+    }
+    return true;
+  });
+};
+
 /* ---------------------------------------------------------------- */
 /* Dynamic grid height                                                */
-/*                                                                    */
-/* Instead of computing a pixel-exact height in JS (rowHeight *       */
-/* rowCount + headerHeight...) — which drifts from MUI's REAL layout  */
-/* the moment a header wraps to 2 lines, a border adds a px, etc, and */
-/* was showing a scrollbar even exactly AT 10 rows — the grid is now  */
-/* given the `autoHeight` prop so it sizes itself to its true content */
-/* height. The wrapping Box only applies a generous `maxHeight`       */
-/* CEILING (not a forced height): pages with ≤10 rows are always      */
-/* shorter than the ceiling, so they're never clipped or scrolled;    */
-/* pages with more (page size 20/50) exceed it and scroll exactly     */
-/* where real content — not our estimate — crosses that line.         */
 /* ---------------------------------------------------------------- */
 
 const ROW_HEIGHT_DENSE = 34;
@@ -276,12 +316,6 @@ const PAGE_SIZE_OPTIONS = [10, 20, 50];
 // before it starts scrolling internally.
 const MAX_VISIBLE_ROWS = 10;
 
-// A generous ceiling for "MAX_VISIBLE_ROWS rows' worth of height" — err on
-// the taller side on purpose. Because DataGrid sizes itself naturally
-// (autoHeight) and we only clip once real content crosses this ceiling,
-// a generous buffer here can only ever delay the scrollbar showing up a
-// little later than 10 rows on the dot — it can never cause a false
-// scrollbar/clip at exactly 10 rows the way a tight, forced height did.
 const computeGridMaxHeight = (rowCount, dense) => {
   const rowH = dense ? ROW_HEIGHT_DENSE : ROW_HEIGHT_NORMAL;
   const headerH = dense ? HEADER_HEIGHT_DENSE : HEADER_HEIGHT_NORMAL;
@@ -307,6 +341,7 @@ const DataGridPanel = ({
   dense = false,
   showTotals = false,
   gridHeight, // optional manual override; auto-computed from row count otherwise
+  headerFilters, // NEW: optional filter controls rendered on the right of the header
 }) => {
   const gridWrapRef = useRef(null);
   const totalsRowRef = useRef(null);
@@ -314,20 +349,14 @@ const DataGridPanel = ({
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(PAGE_SIZE_OPTIONS[0]);
 
-  // Whenever the underlying data set changes (filters change, refresh,
-  // etc.) jump back to page 1 instead of leaving the user stranded on a
-  // page that may no longer exist.
   useEffect(() => {
     setPage(1);
   }, [rows]);
 
-  // Changing the page size also resets to page 1.
   useEffect(() => {
     setPage(1);
   }, [pageSize]);
 
-  // Footer (page-size selector + info + page numbers) shows once there are
-  // more records than the smallest page-size option.
   const showFooter = rows.length > PAGE_SIZE_OPTIONS[0];
   const pageCount = Math.max(1, Math.ceil(rows.length / pageSize));
   const safePage = Math.min(page, pageCount);
@@ -337,9 +366,6 @@ const DataGridPanel = ({
   const rangeStart = rows.length === 0 ? 0 : (safePage - 1) * pageSize + 1;
   const rangeEnd = Math.min(safePage * pageSize, rows.length);
 
-  // Totals row reflects ONLY the rows on the current page — so page 1's
-  // total is different from page 2's, and different again from the "all
-  // dates" grand total, instead of always showing the full-dataset sum.
   const pageTotals = useMemo(() => {
     if (!showTotals) return null;
     const totals = {};
@@ -379,12 +405,6 @@ const DataGridPanel = ({
     return () => scroller.removeEventListener('scroll', handleScroll);
   }, [pagedRows]);
 
-  // MUI DataGrid wraps the header label in its own <Tooltip> (via
-  // GridColumnHeaderTitle) whenever the text is truncated, which is what
-  // shows a tooltip on hover of the column name. Supplying our own
-  // `renderHeader` bypasses that default wrapper entirely — we render the
-  // plain label ourselves, so there's no tooltip, without touching every
-  // column definition where these columns are built.
   const columnsNoHeaderTooltip = useMemo(
     () =>
       columns.map((col) =>
@@ -410,10 +430,6 @@ const DataGridPanel = ({
     [columns]
   );
 
-  // Ceiling only — see computeGridMaxHeight comment above. isOverflowing
-  // is just an approximation for the optional CSS hook; the actual
-  // clip/scroll decision is made by the browser comparing the DataGrid's
-  // real autoHeight content against this maxHeight, not by this flag.
   const resolvedMaxHeight = gridHeight ?? computeGridMaxHeight(pagedRows.length, dense);
   const isOverflowing = pagedRows.length > MAX_VISIBLE_ROWS;
   const hasRows = pagedRows.length > 0;
@@ -431,6 +447,10 @@ const DataGridPanel = ({
             )}
           </Box>
         </Box>
+
+        {headerFilters && (
+          <Box className="data-table__header-filters">{headerFilters}</Box>
+        )}
       </Box>
 
       <Box
@@ -482,7 +502,6 @@ const DataGridPanel = ({
       {showFooter && (
         <Box className="data-table__pagination">
           <Box className="data-table__page-size">
-            
             <Select
               size="small"
               value={pageSize}
@@ -531,129 +550,239 @@ const StatCard = ({ icon, label, value, subLabel, unit }) => (
       </Typography>
       <Box className="stat-card__icon">{icon}</Box>
     </Box>
-    <Typography className="stat-card__value" style={{fontWeight: 'bold'}}>
-      {value} {unit !="Ct" ? ` ${unit}` : ''}
+    <Typography className="stat-card__value" style={{ fontWeight: 'bold' }}>
+      {value} {unit != 'Ct' ? ` ${unit}` : ''}
     </Typography>
   </Paper>
 );
 
 /* ---------------------------------------------------------------- */
-/* Filter chip (single select) — still used for Delivery Status       */
+/* Filter chip (single select) — used for Delivery Status             */
 /* ---------------------------------------------------------------- */
 
-const FilterChip = ({ label, value, onChange, options }) => (
-  <Box className="filter-chip">
-    <Typography className="filter-chip__label">{label}</Typography>
-    <Select size="small" value={value} onChange={(e) => onChange(e.target.value)} className="filter-chip__select">
-      {options.map((opt) => (
-        <MenuItem key={opt} value={opt}>
-          {opt}
-        </MenuItem>
-      ))}
-    </Select>
-  </Box>
-);
+/* ---------------------------------------------------------------- */
+/* Filter chip (single select) — used for Delivery Status. Clicking   */
+/* ANYWHERE on the chip (not just the select) opens the dropdown.     */
+/* ---------------------------------------------------------------- */
+
+const FilterChip = ({ label, value, onChange, options }) => {
+  const [open, setOpen] = useState(false);
+
+  return (
+    <Box className="filter-chip" onClick={() => setOpen(true)}>
+      <Typography className="filter-chip__label">{label}</Typography>
+      <Select
+        size="small"
+        value={value}
+        open={open}
+        onOpen={() => setOpen(true)}
+        onClose={() => setOpen(false)}
+        onChange={(e) => {
+          onChange(e.target.value);
+          setOpen(false);
+        }}
+        className="filter-chip__select"
+      >
+        {options.map((opt) => (
+          <MenuItem key={opt} value={opt}>
+            {opt}
+          </MenuItem>
+        ))}
+      </Select>
+    </Box>
+  );
+};
 
 /* ---------------------------------------------------------------- */
-/* Multi-select + searchable filter chip — Location / Customer Code / */
-/* Order No. / Current Status / Metal Type. Empty selection === "All" */
-/* (within the active date range). Selections are summarised as plain */
-/* text ("3 selected") instead of individual removable chips, and the */
-/* single built-in "x" clears the whole selection at once.            */
+/* Checkbox-style multi-select filter — click the chip, a popover     */
+/* with checkboxes opens. Used inline in each tab's header.           */
+/* ---------------------------------------------------------------- */
+
+/* ---------------------------------------------------------------- */
+/* Checkbox-style multi-select filter — click the chip, a popover     */
+/* with a search box + checkboxes opens. Used inline in each tab's    */
+/* header for Location / Customer / Order No. / Status / Metal.       */
 /* ---------------------------------------------------------------- */
 
 const checkboxIcon = <CheckBoxOutlineBlankIcon fontSize="small" />;
 const checkboxCheckedIcon = <CheckBoxIcon fontSize="small" />;
 
-const MultiSelectFilterChip = ({ label, value, onChange, options }) => (
-  <Box className="filter-chip filter-chip--multi">
-    <Typography className="filter-chip__label">{label}</Typography>
-    <Autocomplete
-      multiple
-      disableCloseOnSelect
-      size="small"
-      className="filter-chip__autocomplete"
-      options={options}
-      value={value}
-      onChange={(e, newValue) => onChange(newValue)}
-      isOptionEqualToValue={(opt, val) => opt === val}
-      // No per-item chips — just a short plain-text summary of the
-      // selection. Clearing the whole selection happens through the
-      // single built-in "x" clear button (forced always-visible below).
-      renderTags={(selected) =>
-        selected.length ? (
-          <Typography noWrap style={{ fontSize: 13, color: '#1a1f36' }}>
-            { `${selected.length} selected`}
-          </Typography>
-        ) : null
-      }
-      renderOption={(props, option, { selected }) => (
-        <li
-          {...props}
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            padding: '8px 14px',
-            fontSize: 13,
-          }}
-        >
-          <Checkbox
-            icon={checkboxIcon}
-            checkedIcon={checkboxCheckedIcon}
-            checked={selected}
+const CheckboxFilterChip = ({ label, value, onChange, options }) => {
+  const [anchorEl, setAnchorEl] = useState(null);
+  const [search, setSearch] = useState('');
+  const open = Boolean(anchorEl);
+
+  const toggleOption = (opt) => {
+    if (value.includes(opt)) {
+      onChange(value.filter((v) => v !== opt));
+    } else {
+      onChange([...value, opt]);
+    }
+  };
+
+  const filteredOptions = useMemo(
+    () => options.filter((opt) => String(opt).toLowerCase().includes(search.trim().toLowerCase())),
+    [options, search]
+  );
+
+  const handleOpen = (e) => setAnchorEl(e.currentTarget);
+  const handleClose = () => {
+    setAnchorEl(null);
+    setSearch('');
+  };
+
+  return (
+    <>
+      <Button
+        size="small"
+        variant="outlined"
+        onClick={handleOpen}
+        className="tab-filter-chip"
+      >
+        {label}
+        {value.length > 0 && <Box className="tab-filter-chip__count">{value.length}</Box>}
+      </Button>
+
+      <Popover
+        open={open}
+        anchorEl={anchorEl}
+        onClose={handleClose}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
+        transformOrigin={{ vertical: 'top', horizontal: 'left' }}
+        PaperProps={{ className: 'tab-filter-popover' }}
+      >
+        <Box className="tab-filter-popover__search">
+          <SearchIcon fontSize="small" className="tab-filter-popover__search-icon" />
+          <TextField
             size="small"
-            style={{ marginRight: 8, padding: 2 }}
+            variant="standard"
+            placeholder={`Search ${label}`}
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            fullWidth
+            autoFocus
+            InputProps={{ disableUnderline: true }}
           />
-          <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{option}</span>
-        </li>
+        </Box>
+
+        <Box className="tab-filter-popover__list">
+          {filteredOptions.length === 0 && (
+            <Typography className="tab-filter-popover__empty">No options</Typography>
+          )}
+          {filteredOptions.map((opt) => (
+            <Box key={opt} className="tab-filter-popover__item" onClick={() => toggleOption(opt)}>
+              <Checkbox
+                size="small"
+                checked={value.includes(opt)}
+                icon={checkboxIcon}
+                checkedIcon={checkboxCheckedIcon}
+                style={{ padding: 2, marginRight: 4 }}
+              />
+              <span>{opt}</span>
+            </Box>
+          ))}
+        </Box>
+
+        {value.length > 0 && (
+          <Box className="tab-filter-popover__footer">
+            <Button size="small" onClick={() => onChange([])}>
+              Clear
+            </Button>
+          </Box>
+        )}
+      </Popover>
+    </>
+  );
+};
+/* ---------------------------------------------------------------- */
+/* Full filter bar for one tab — holds Location / Customer Code /     */
+/* Order No. / Current Status / Metal Type (checkbox chips) plus      */
+/* Delivery Status (single select). Independent per tab: each         */
+/* instance gets its own `filters` state + `onChange` from the parent.*/
+/* ---------------------------------------------------------------- */
+
+const TabFilterBar = ({ filters, onChange, options }) => {
+  const setField = (field, value) => onChange({ ...filters, [field]: value });
+
+  const activeCount =
+    (filters.location.length > 0 ? 1 : 0) +
+    (filters.customerCode.length > 0 ? 1 : 0) +
+    (filters.orderNo.length > 0 ? 1 : 0) +
+    (filters.currentStatus.length > 0 ? 1 : 0) +
+    (filters.metalType.length > 0 ? 1 : 0) +
+    (filters.deliveryStatus !== 'All' ? 1 : 0);
+
+  const handleClearAll = () => onChange(createEmptyFilters());
+
+  return (
+    <Box className="tab-filter-bar">
+      <CheckboxFilterChip
+        label="Location"
+        value={filters.location}
+        onChange={(v) => setField('location', v)}
+        options={options.location}
+      />
+      <CheckboxFilterChip
+        label="Customer"
+        value={filters.customerCode}
+        onChange={(v) => setField('customerCode', v)}
+        options={options.customer}
+      />
+      <CheckboxFilterChip
+        label="Order No."
+        value={filters.orderNo}
+        onChange={(v) => setField('orderNo', v)}
+        options={options.orderNo}
+      />
+      <CheckboxFilterChip
+        label="Status"
+        value={filters.currentStatus}
+        onChange={(v) => setField('currentStatus', v)}
+        options={options.currentStatus}
+      />
+      <CheckboxFilterChip
+        label="Metal"
+        value={filters.metalType}
+        onChange={(v) => setField('metalType', v)}
+        options={options.metalType}
+      />
+      <FilterChip
+        label="Delivery"
+        value={filters.deliveryStatus}
+        onChange={(v) => setField('deliveryStatus', v)}
+        options={['All', 'On Time', 'Delayed']}
+      />
+
+      {activeCount > 0 && (
+        <IconButton
+          size="small"
+          onClick={handleClearAll}
+          className="tab-filter-bar__clear"
+          title="Clear filters"
+        >
+          <CloseIcon fontSize="small" />
+        </IconButton>
       )}
-      componentsProps={{
-        paper: {
-          style: {
-            minWidth: 220,
-            borderRadius: 10,
-            marginTop: 4,
-            backgroundColor: '#fff',
-            boxShadow: '0 8px 24px rgba(20, 20, 43, 0.16)',
-          },
-        },
-        popper: {
-          style: { zIndex: 1500 },
-        },
-      }}
-      sx={{
-        // The default MUI clear "x" only fades in on hover — make it
-        // always visible once something is selected, so there's a
-        // constantly-visible single control to clear the filter.
-        '& .MuiAutocomplete-clearIndicator': {
-          visibility: 'visible',
-        },
-      }}
-      renderInput={(params) => (
-        <TextField
-          {...params}
-          variant="standard"
-          placeholder={value.length ? '' : 'All'}
-          InputProps={{ ...params.InputProps, disableUnderline: true }}
-        />
-      )}
-    />
-  </Box>
-);
+    </Box>
+  );
+};
 
 /* ---------------------------------------------------------------- */
 /* Main component                                                     */
 /* ---------------------------------------------------------------- */
 
-const DATE_FIELD_OPTIONS = [
-  { value: 'jobpromisedate', label: 'Promise Date' },
-];
+const DATE_FIELD_OPTIONS = [{ value: 'jobpromisedate', label: 'Promise Date' }];
 
-// NOTE: adjust these to whatever the actual API field names are if they
-// differ — they follow the same naming pattern as "Diamond_actualusedpcs".
 const DIAMOND_WEIGHT_FIELD = 'Diamond_actualusedgm';
 const SOLITAIRE_PCS_FIELD = 'solitairepcs';
 const SOLITAIRE_WEIGHT_FIELD = 'solitairewt';
+
+const TAB_LABELS = [
+  'Order Details',
+  'WIP Distribution by Location',
+  'Current Status by Location',
+  'Promise Date by Status',
+];
 
 const WIPMis = () => {
   const [data, setData] = useState(null);
@@ -661,75 +790,19 @@ const WIPMis = () => {
   const [error, setError] = useState(null);
 
   const [dateField, setDateField] = useState('jobpromisedate');
-  // Default to THIS month instead of last month / a fixed hardcoded range
   const [dateRange, setDateRange] = useState(() => getThisMonthRange());
   const [isAllDates, setIsAllDates] = useState(false);
   const [pickerAnchor, setPickerAnchor] = useState(null);
-  // Staged range so the popover only commits on "Apply" — this also fixes
-  // single-day selection, since the picker library fires onChange on the
-  // very first click (before a second click can extend the range) and the
-  // old code closed the popover immediately on that first call.
   const [stagingRange, setStagingRange] = useState(dateRange);
 
-  // ---- Applied filters (actually used to filter the tables) ----
-  const [location, setLocation] = useState([]); // [] === All
-  const [customerCode, setCustomerCode] = useState([]); // [] === All
-  const [orderNo, setOrderNo] = useState([]); // [] === All
-  const [deliveryStatus, setDeliveryStatus] = useState('All');
-  const [currentStatusFilter, setCurrentStatusFilter] = useState([]); // [] === All — filters by "Current Status" (department)
-  const [metalType, setMetalType] = useState([]); // [] === All — filters by "Metal Type"
+  // ---- Active tab ----
+  const [activeTab, setActiveTab] = useState(0);
 
-  // ---- Filter drawer ----
-  const [filterDrawerOpen, setFilterDrawerOpen] = useState(false);
-  // Staged copies edited inside the drawer — only committed to the applied
-  // filters above when the user presses "Apply".
-  const [stagingLocation, setStagingLocation] = useState([]);
-  const [stagingCustomerCode, setStagingCustomerCode] = useState([]);
-  const [stagingOrderNo, setStagingOrderNo] = useState([]);
-  const [stagingDeliveryStatus, setStagingDeliveryStatus] = useState('All');
-  const [stagingCurrentStatus, setStagingCurrentStatus] = useState([]);
-  const [stagingMetalType, setStagingMetalType] = useState([]);
-
-  const openFilterDrawer = () => {
-    setStagingLocation(location);
-    setStagingCustomerCode(customerCode);
-    setStagingOrderNo(orderNo);
-    setStagingDeliveryStatus(deliveryStatus);
-    setStagingCurrentStatus(currentStatusFilter);
-    setStagingMetalType(metalType);
-    setFilterDrawerOpen(true);
-  };
-
-  // Closing without "Apply" (backdrop click / back arrow) discards any
-  // unsaved edits made inside the drawer.
-  const closeFilterDrawer = () => setFilterDrawerOpen(false);
-
-  const handleClearFilters = () => {
-    setStagingLocation([]);
-    setStagingCustomerCode([]);
-    setStagingOrderNo([]);
-    setStagingDeliveryStatus('All');
-    setStagingCurrentStatus([]);
-    setStagingMetalType([]);
-  };
-
-  const handleApplyFilters = () => {
-    setLocation(stagingLocation);
-    setCustomerCode(stagingCustomerCode);
-    setOrderNo(stagingOrderNo);
-    setDeliveryStatus(stagingDeliveryStatus);
-    setCurrentStatusFilter(stagingCurrentStatus);
-    setMetalType(stagingMetalType);
-    setFilterDrawerOpen(false);
-  };
-
-  const activeFilterCount =
-    (location.length > 0 ? 1 : 0) +
-    (customerCode.length > 0 ? 1 : 0) +
-    (orderNo.length > 0 ? 1 : 0) +
-    (deliveryStatus !== 'All' ? 1 : 0) +
-    (currentStatusFilter.length > 0 ? 1 : 0) +
-    (metalType.length > 0 ? 1 : 0);
+  // ---- Per-tab, INDEPENDENT filter state (one object per tab) ----
+  const [orderFilters, setOrderFilters] = useState(createEmptyFilters);
+  const [promiseFilters, setPromiseFilters] = useState(createEmptyFilters);
+  const [statusFilters, setStatusFilters] = useState(createEmptyFilters);
+  const [deptFilters, setDeptFilters] = useState(createEmptyFilters);
 
   const handleFetchData = async (start, end) => {
     setLoading(true);
@@ -752,47 +825,17 @@ const WIPMis = () => {
   const rawRows = data?.Data?.rd3 || [];
   const fieldMap = useMemo(() => buildFieldMap(rd2), [rd2]);
 
-  // Delivery Status now reflects remaining-days health, not isDeliveryBatchJob
-  const deliveryStatusOptions = ['All', 'On Time', 'Delayed'];
-
-  /* ---------------- ALL button handler ---------------- */
-  // Selecting "All" dates also clears every active filter, so the user
-  // gets a truly unfiltered, all-time view in one click.
   const handleSelectAllDates = () => {
     setIsAllDates(true);
     setPickerAnchor(null);
-
-    setLocation([]);
-    setCustomerCode([]);
-    setOrderNo([]);
-    setDeliveryStatus('All');
-    setCurrentStatusFilter([]);
-    setMetalType([]);
-
-    // Keep the drawer's staged copies in sync too, in case it's opened next.
-    setStagingLocation([]);
-    setStagingCustomerCode([]);
-    setStagingOrderNo([]);
-    setStagingDeliveryStatus('All');
-    setStagingCurrentStatus([]);
-    setStagingMetalType([]);
   };
 
   const openDatePicker = (e) => {
-    // Start the popover from a single-day selection (the currently applied
-    // start date) instead of carrying over the previously applied range.
-    // Otherwise a fresh single click on a new day can leave the picker's
-    // internal endDate pointing at the OLD range's end, so Apply would
-    // silently span the old wide range instead of just the clicked day.
     setStagingRange({ startDate: dateRange.startDate, endDate: dateRange.startDate });
     setPickerAnchor(e.currentTarget);
   };
 
   const applyDateRange = () => {
-    // Expand the picked range to cover the full day(s), so a single-day
-    // pick like "3 Sept — 3 Sept" (or just clicking 3 Sept once, with no
-    // end date chosen) becomes [3rd 00:00:00.000, 3rd 23:59:59.999] — the
-    // whole day's data — instead of a zero-width instant.
     const start = new Date(stagingRange.startDate);
     start.setHours(0, 0, 0, 0);
 
@@ -804,13 +847,8 @@ const WIPMis = () => {
     setPickerAnchor(null);
   };
 
-  // Rows restricted ONLY by the Promise Date range (ignoring Location /
-  // Customer Code / Order No. / Delivery Status / Current Status / Metal
-  // Type). The dropdown OPTIONS are built from this set, so they only ever
-  // list values that actually exist within the selected date range — since
-  // the date picker is the primary filter and the table is date-driven,
-  // there's no point offering options that don't apply to any row in the
-  // current window.
+  // Rows restricted ONLY by the Promise Date range — feeds both the KPI
+  // cards and the dropdown option lists shared by every tab's filter bar.
   const dateFilteredRows = useMemo(() => {
     if (isAllDates || !dateRange.startDate || !dateRange.endDate) return rawRows;
     return rawRows.filter((row) => {
@@ -822,9 +860,6 @@ const WIPMis = () => {
     });
   }, [rawRows, fieldMap, isAllDates, dateRange, dateField]);
 
-  // Build all dropdown option lists in a single pass over dateFilteredRows
-  // (instead of separate full scans) so opening any of the filter
-  // dropdowns is fast even on larger datasets.
   const filterOptionSets = useMemo(() => {
     const locSet = new Set();
     const custSet = new Set();
@@ -852,99 +887,55 @@ const WIPMis = () => {
     };
   }, [dateFilteredRows, fieldMap]);
 
-  const locationOptions = filterOptionSets.location;
-  const customerOptions = filterOptionSets.customer;
-  const orderNoOptions = filterOptionSets.orderNo;
-  const currentStatusOptions = filterOptionSets.currentStatus;
-  const metalTypeOptions = filterOptionSets.metalType;
+  // ---- Per-tab filtered rows (each independent of the others) ----
+  const dateCtx = { isAllDates, dateRange, dateField };
 
-  const filteredRows = useMemo(() => {
-    return rawRows.filter((row) => {
-      const loc = getField(row, fieldMap, 'JobLocation');
-      const cust = getField(row, fieldMap, 'Customercode');
-      const ord = getField(row, fieldMap, 'SKUNO');
+  const orderFilteredRows = useMemo(
+    () => applyRowFilters(rawRows, fieldMap, orderFilters, dateCtx),
+    [rawRows, fieldMap, orderFilters, isAllDates, dateRange, dateField]
+  );
+  const promiseFilteredRows = useMemo(
+    () => applyRowFilters(rawRows, fieldMap, promiseFilters, dateCtx),
+    [rawRows, fieldMap, promiseFilters, isAllDates, dateRange, dateField]
+  );
+  const statusFilteredRows = useMemo(
+    () => applyRowFilters(rawRows, fieldMap, statusFilters, dateCtx),
+    [rawRows, fieldMap, statusFilters, isAllDates, dateRange, dateField]
+  );
+  const deptFilteredRows = useMemo(
+    () => applyRowFilters(rawRows, fieldMap, deptFilters, dateCtx),
+    [rawRows, fieldMap, deptFilters, isAllDates, dateRange, dateField]
+  );
 
-      if (location.length > 0 && !location.includes(loc)) return false;
-      if (customerCode.length > 0 && !customerCode.includes(cust)) return false;
-      if (orderNo.length > 0 && !orderNo.includes(ord)) return false;
-
-      if (currentStatusFilter.length > 0) {
-        const dept = stripHtml(getField(row, fieldMap, 'department'));
-        if (!currentStatusFilter.includes(dept)) return false;
-      }
-
-      if (metalType.length > 0) {
-        const metal = stripHtml(getField(row, fieldMap, 'metal_type_name'));
-        if (!metalType.includes(metal)) return false;
-      }
-
-      if (deliveryStatus !== 'All') {
-        const remDays = computeRemainingDays(row, fieldMap);
-        const isOnTime = typeof remDays === 'number' && remDays > 0;
-        const isDeclined = typeof remDays === 'number' && remDays <= 0;
-        if (deliveryStatus === 'On Time' && !isOnTime) return false;
-        if (deliveryStatus === 'Delayed' && !isDeclined) return false;
-      }
- 
-      if (orderNo.length === 0 && !isAllDates && dateRange.startDate && dateRange.endDate) {
-        const raw = getField(row, fieldMap, dateField);
-        if (raw) {
-          const d = new Date(raw);
-          if (!Number.isNaN(d.getTime()) && (d < dateRange.startDate || d > dateRange.endDate)) {
-            return false;
-          }
-        }
-      }
-      return true;
-    });
-  }, [
-    rawRows,
-    fieldMap,
-    location,
-    customerCode,
-    orderNo,
-    currentStatusFilter,
-    metalType,
-    deliveryStatus,
-    isAllDates,
-    dateRange,
-    dateField,
-  ]);
-
+  // KPI cards reflect the date range only (not any one tab's filters).
   const stats = useMemo(
     () => ({
-      pcs: filteredRows.length,
-      nwt: sumField(filteredRows, fieldMap, 'NetWtgm'),
-      gwt: sumField(filteredRows, fieldMap, 'GrossWeightgm'),
-      diaPcs: sumField(filteredRows, fieldMap, 'Diamond_actualusedpcs'),
-      solPcs: sumField(filteredRows, fieldMap, SOLITAIRE_PCS_FIELD),
-      diaWt: sumField(filteredRows, fieldMap, DIAMOND_WEIGHT_FIELD),
-      solWt: sumField(filteredRows, fieldMap, SOLITAIRE_WEIGHT_FIELD),
+      pcs: dateFilteredRows.length,
+      nwt: sumField(dateFilteredRows, fieldMap, 'NetWtgm'),
+      gwt: sumField(dateFilteredRows, fieldMap, 'GrossWeightgm'),
+      diaPcs: sumField(dateFilteredRows, fieldMap, 'Diamond_actualusedpcs'),
+      solPcs: sumField(dateFilteredRows, fieldMap, SOLITAIRE_PCS_FIELD),
+      diaWt: sumField(dateFilteredRows, fieldMap, DIAMOND_WEIGHT_FIELD),
+      solWt: sumField(dateFilteredRows, fieldMap, SOLITAIRE_WEIGHT_FIELD),
     }),
-    [filteredRows, fieldMap]
+    [dateFilteredRows, fieldMap]
   );
 
   const promisePivot = useMemo(
-    () => buildPivot(filteredRows, fieldMap, 'jobpromisedate', 'JobLocation', formatDateOnly),
-    [filteredRows, fieldMap]
+    () => buildPivot(promiseFilteredRows, fieldMap, 'jobpromisedate', 'JobLocation', formatDateOnly),
+    [promiseFilteredRows, fieldMap]
   );
   const statusPivot = useMemo(
-    () => buildPivot(filteredRows, fieldMap, 'department', 'JobLocation'),
-    [filteredRows, fieldMap]
+    () => buildPivot(statusFilteredRows, fieldMap, 'department', 'JobLocation'),
+    [statusFilteredRows, fieldMap]
   );
   const departmentPivot = useMemo(
-    () => buildPivot(filteredRows, fieldMap, 'jobpromisedate', 'department', formatDateOnly),
-    [filteredRows, fieldMap]
+    () => buildPivot(deptFilteredRows, fieldMap, 'jobpromisedate', 'department', formatDateOnly),
+    [deptFilteredRows, fieldMap]
   );
 
-  const pickerTheme = useMemo(
-    () => createTheme({ palette: { primary: { main: '#6c5ce7' } } }),
-    []
-  );
+  const pickerTheme = useMemo(() => createTheme({ palette: { primary: { main: '#6c5ce7' } } }), []);
 
-  // "Pcs" (sum of the "Quantity" API field for every row grouped under this
-  // row-label value) is inserted right after the row-label column on every
-  // pivot table, and is kept mandatory via filterEmptyColumns below.
   const buildPivotColumns = (rowLabel, colKeys) => [
     { field: 'row', headerName: rowLabel, flex: 1.4, minWidth: 160 },
     {
@@ -979,8 +970,6 @@ const WIPMis = () => {
       minWidth: 90,
       align: 'center',
       headerAlign: 'center',
-      // Bold the Total column body cells (used by every pivot table — Order
-      // Details has no 'total' field, so it's unaffected automatically)
       renderCell: (params) => (
         <Box className="heat-cell heat-cell--total" style={{ background: 'transparent', color: '#1a1f36' }}>
           {params.value}
@@ -1026,9 +1015,6 @@ const WIPMis = () => {
     return { columns, rows, totals };
   }, [statusPivot]);
 
-  // "Pending Request" is pinned as the 2nd column (right after the Promise
-  // Date row label) regardless of natural sort order, and is always kept
-  // even if every value in it is empty. "pcs" is also always kept.
   const department = useMemo(() => {
     const orderedColKeys = reorderPriorityColumn(departmentPivot.colKeys, 'Pending Request');
     const allCols = buildPivotColumns('Promise Date', orderedColKeys);
@@ -1040,13 +1026,12 @@ const WIPMis = () => {
 
   /* ---------------- Order Details (uses expstartdate) ---------------- */
   const orderDetails = useMemo(() => {
-    return filteredRows
+    return orderFilteredRows
       .map((row, idx) => {
         const promiseRaw = getField(row, fieldMap, 'jobpromisedate');
         const entryRaw = getField(row, fieldMap, 'expstartdate');
         const remDays = computeRemainingDays(row, fieldMap);
-  
-        // Build the tooltip message based on exactly which date(s) are missing
+
         let remainingDaysTooltip = '';
         const missingPromise = !promiseRaw;
         const missingEntry = !entryRaw;
@@ -1057,7 +1042,7 @@ const WIPMis = () => {
         } else if (missingEntry) {
           remainingDaysTooltip = 'Exp. Start Date Not Provided';
         }
-  
+
         return {
           __key: idx,
           promiseDateRaw: promiseRaw,
@@ -1073,12 +1058,11 @@ const WIPMis = () => {
         };
       })
       .sort((a, b) => new Date(b.promiseDateRaw || 0) - new Date(a.promiseDateRaw || 0));
-  }, [filteredRows, fieldMap]);
+  }, [orderFilteredRows, fieldMap]);
 
   const orderColumnsAll = useMemo(
     () => [
       { field: 'promiseDate', headerName: 'Promise Date', flex: 1, minWidth: 120, align: 'center', headerAlign: 'center' },
-     
       {
         field: 'remainingDays',
         headerName: 'Rem. Days',
@@ -1128,8 +1112,6 @@ const WIPMis = () => {
     []
   );
 
-  // 'remainingDays' and 'promiseDate' are mandatory — always shown even if
-  // every row is '-' for them. 'Pcs' is mandatory too.
   const orderColumns = useMemo(
     () => filterEmptyColumns(orderColumnsAll, orderDetails, ['Pcs', 'remainingDays', 'promiseDate']),
     [orderColumnsAll, orderDetails]
@@ -1194,25 +1176,8 @@ const WIPMis = () => {
           <Paper className="toolbar" elevation={0}>
             <Box className="toolbar__filters-row">
               <Box className="toolbar__group toolbar__group--left">
-              <Tooltip title="Filters">
-                  <IconButton
-                    className="wip-mis__filter-btn"
-                    onClick={openFilterDrawer}
-                    size="small"
-                    title="Filters"
-                  >
-                    <Badge
-                      badgeContent={activeFilterCount}
-                      color="primary"
-                      invisible={activeFilterCount === 0}
-                    >
-                      <FilterListIcon fontSize="small" />
-                    </Badge>
-                  </IconButton>
-                </Tooltip>
                 <Box className=" ">
-                  {/* <Typography className="filter-chip__label">Date Field</Typography> */}
-                  <Typography className="filter-chip__value" sx={{fontWeight:"bold"}}>
+                  <Typography className="filter-chip__value" sx={{ fontWeight: 'bold' }}>
                     {DATE_FIELD_OPTIONS[0]?.label} :
                   </Typography>
                 </Box>
@@ -1295,14 +1260,14 @@ const WIPMis = () => {
                     height: '36px',
                     ...(isAllDates
                       ? {
-                        background: '#6c5ce7',
-                        color: '#fff',
-                        '&:hover': { background: '#5a4bd6' },
-                      }
+                          background: '#6c5ce7',
+                          color: '#fff',
+                          '&:hover': { background: '#5a4bd6' },
+                        }
                       : {
-                        background: '#f2effe',
-                        color: '#5a4bd6',
-                      }),
+                          background: '#f2effe',
+                          color: '#5a4bd6',
+                        }),
                   }}
                 >
                   ALL
@@ -1310,7 +1275,6 @@ const WIPMis = () => {
               </Box>
 
               <Box className="toolbar__group toolbar__group--right">
-               
                 <IconButton
                   className="wip-mis__export-btn"
                   onClick={handleExportExcel}
@@ -1357,7 +1321,7 @@ const WIPMis = () => {
             <StatCard
               icon={<DiamondOutlinedIcon fontSize="small" />}
               label="DIAMOND PIECES"
-              value={formatDiamondSolitaire(stats.diaPcs, stats.solPcs, 0," ")}
+              value={formatDiamondSolitaire(stats.diaPcs, stats.solPcs, 0, ' ')}
               subLabel="Total Diamond"
               unit=""
             />
@@ -1370,139 +1334,76 @@ const WIPMis = () => {
             />
           </Box>
 
+          <Tabs
+            value={activeTab}
+            onChange={(e, val) => setActiveTab(val)}
+            variant="scrollable"
+            scrollButtons="auto"
+            className="wip-tabs"
+          >
+            {TAB_LABELS.map((label) => (
+              <Tab key={label} label={label} />
+            ))}
+          </Tabs>
+
           <Box className="wip-mis__pivots">
-          <DataGridPanel
-              icon={<Inventory2Icon fontSize="small" />}
-              title="Order Details"
-              dense
-              columns={orderColumns}
-              rows={orderDetails}
-            />
-            <DataGridPanel
-              icon={<EventNoteOutlinedIcon fontSize="small" />}
-              title="WIP Distribution by Location"
-              dense
-              showTotals
-              columns={promise.columns}
-              rows={promise.rows}
-            />
-            <DataGridPanel
-              icon={<Inventory2Icon fontSize="small" />}
-              title="Current Status by Location"
-              dense
-              showTotals
-              columns={status.columns}
-              rows={status.rows}
-            />
-           
-            <DataGridPanel
-              icon={<EventNoteOutlinedIcon fontSize="small" />}
-              title="Promise Date by Status"
-              dense
-              showTotals
-              columns={department.columns}
-              rows={department.rows}
-            />
+            {activeTab === 0 && (
+              <DataGridPanel
+                icon={<Inventory2Icon fontSize="small" />}
+                title="Order Details"
+                dense
+                columns={orderColumns}
+                rows={orderDetails}
+                headerFilters={
+                  <TabFilterBar filters={orderFilters} onChange={setOrderFilters} options={filterOptionSets} />
+                }
+              />
+            )}
+
+            {activeTab === 1 && (
+              <DataGridPanel
+                icon={<EventNoteOutlinedIcon fontSize="small" />}
+                title="WIP Distribution by Location"
+                dense
+                showTotals
+                columns={promise.columns}
+                rows={promise.rows}
+                headerFilters={
+                  <TabFilterBar filters={promiseFilters} onChange={setPromiseFilters} options={filterOptionSets} />
+                }
+              />
+            )}
+
+            {activeTab === 2 && (
+              <DataGridPanel
+                icon={<Inventory2Icon fontSize="small" />}
+                title="Current Status by Location"
+                dense
+                showTotals
+                columns={status.columns}
+                rows={status.rows}
+                headerFilters={
+                  <TabFilterBar filters={statusFilters} onChange={setStatusFilters} options={filterOptionSets} />
+                }
+              />
+            )}
+
+            {activeTab === 3 && (
+              <DataGridPanel
+                icon={<EventNoteOutlinedIcon fontSize="small" />}
+                title="Promise Date by Status"
+                dense
+                showTotals
+                columns={department.columns}
+                rows={department.rows}
+                headerFilters={
+                  <TabFilterBar filters={deptFilters} onChange={setDeptFilters} options={filterOptionSets} />
+                }
+              />
+            )}
           </Box>
         </Box>
       )}
-
-      {/* ---------------- Left-side filter drawer ---------------- */}
-      <Drawer
-        anchor="left"
-        open={filterDrawerOpen}
-        onClose={closeFilterDrawer}
-        PaperProps={{ className: 'filter-drawer' }}
-      >
-        <Box className="filter-drawer__header">
-          <Box className="filter-drawer__header-left">
-            <IconButton size="small" className="filter-drawer__back-btn" onClick={closeFilterDrawer}>
-              <KeyboardArrowLeftIcon fontSize="small" />
-            </IconButton>
-            <Typography className="filter-drawer__title">Filters</Typography>
-          </Box>
-
-          <Box className="filter-drawer__header-actions">
-            <Button
-              size="small"
-              color="inherit"
-              startIcon={<FilterAltOffOutlinedIcon fontSize="small" />}
-              onClick={handleClearFilters}
-              className="filter-drawer__clear-btn"
-              sx={{ textTransform: 'none', fontWeight: 600 }}
-            >
-              Clear
-            </Button>
-            <Button
-              size="small"
-              variant="contained"
-              startIcon={<FilterAltOutlinedIcon fontSize="small" />}
-              onClick={handleApplyFilters}
-              sx={{
-                textTransform: 'none',
-                fontWeight: 600,
-                borderRadius: '20px',
-                background: '#6c5ce7',
-                '&:hover': { background: '#5a4bd6' },
-              }}
-            >
-              Apply
-            </Button>
-          </Box>
-        </Box>
-        <Divider />
-
-        <Box className="filter-drawer__body">
-          <Box className="filter-drawer__field">
-            <MultiSelectFilterChip
-              label="Location"
-              value={stagingLocation}
-              onChange={setStagingLocation}
-              options={locationOptions}
-            />
-          </Box>
-          <Box className="filter-drawer__field">
-            <MultiSelectFilterChip
-              label="Customer Code"
-              value={stagingCustomerCode}
-              onChange={setStagingCustomerCode}
-              options={customerOptions}
-            />
-          </Box>
-          <Box className="filter-drawer__field">
-            <MultiSelectFilterChip
-              label="Order No."
-              value={stagingOrderNo}
-              onChange={setStagingOrderNo}
-              options={orderNoOptions}
-            />
-          </Box>
-          <Box className="filter-drawer__field">
-            <MultiSelectFilterChip
-              label="Current Status"
-              value={stagingCurrentStatus}
-              onChange={setStagingCurrentStatus}
-              options={currentStatusOptions}
-            />
-          </Box>
-          <Box className="filter-drawer__field">
-            <MultiSelectFilterChip
-              label="Metal Type"
-              value={stagingMetalType}
-              onChange={setStagingMetalType}
-              options={metalTypeOptions}
-            />
-          </Box>
-          <Box className="filter-drawer__field">
-            <FilterChip
-              label="Delivery Status"
-              value={stagingDeliveryStatus}
-              onChange={setStagingDeliveryStatus}
-              options={deliveryStatusOptions}
-            />
-          </Box>
-        </Box>
-      </Drawer>
     </Box>
   );
 };
