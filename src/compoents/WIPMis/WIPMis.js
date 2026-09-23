@@ -65,6 +65,31 @@ const sumField = (rows, fieldMap, fieldName) =>
     return acc + (Number.isFinite(v) ? v : 0);
   }, 0);
 
+// Same dedupe rule as the "Pcs" column in buildPivot below: "Quantity" is
+// summed once per BASE job number (S1/S2/... sub-rows of the same job are
+// not double-counted). Used for the "Quantity" KPI card.
+const sumQuantityDeduped = (rows, fieldMap) => {
+  const seenJobs = new Set();
+  let total = 0;
+
+  rows.forEach((row) => {
+    const jobNoRaw = getField(row, fieldMap, 'serialjobno');
+    const baseJobNo = jobNoRaw ? String(jobNoRaw).replace(/S\d+$/i, '') : null;
+
+    const qtyRaw = getField(row, fieldMap, 'Quantity');
+    const qtyParsed = parseFloat(qtyRaw);
+    const qty = Number.isFinite(qtyParsed) ? qtyParsed : 0;
+
+    const alreadyCounted = baseJobNo && seenJobs.has(baseJobNo);
+    if (!alreadyCounted) {
+      total += qty;
+      if (baseJobNo) seenJobs.add(baseJobNo);
+    }
+  });
+
+  return total;
+};
+
 // Date format used everywhere in the tables: "25 Sep 2026"
 const formatDateOnly = (iso) => {
   if (!iso) return '-';
@@ -288,12 +313,10 @@ const applyRowFilters = (rows, fieldMap, filters, dateCtx) => {
 
     if (orderNo.length === 0 && !isAllDates && dateRange.startDate && dateRange.endDate) {
       const raw = getField(row, fieldMap, dateField);
-      if (raw) {
-        const d = new Date(raw);
-        if (!Number.isNaN(d.getTime()) && (d < dateRange.startDate || d > dateRange.endDate)) {
-          return false;
-        }
-      }
+      if (!raw) return false; // no date at all → excluded, same as before
+      const d = new Date(raw);
+      if (Number.isNaN(d.getTime())) return false; // unparsable date → excluded
+      if (d < dateRange.startDate || d > dateRange.endDate) return false;
     }
     return true;
   });
@@ -341,7 +364,7 @@ const DataGridPanel = ({
   dense = false,
   showTotals = false,
   gridHeight, // optional manual override; auto-computed from row count otherwise
-  headerFilters, // NEW: optional filter controls rendered on the right of the header
+  headerFilters, // optional filter controls rendered on the right of the header
 }) => {
   const gridWrapRef = useRef(null);
   const totalsRowRef = useRef(null);
@@ -557,46 +580,64 @@ const StatCard = ({ icon, label, value, subLabel, unit }) => (
 );
 
 /* ---------------------------------------------------------------- */
-/* Filter chip (single select) — used for Delivery Status             */
-/* ---------------------------------------------------------------- */
-
-/* ---------------------------------------------------------------- */
-/* Filter chip (single select) — used for Delivery Status. Clicking   */
-/* ANYWHERE on the chip (not just the select) opens the dropdown.     */
+/* Filter chip (single select) — used for Delivery Status.            */
+/* Rebuilt on top of Popover (same mechanism as CheckboxFilterChip)   */
+/* instead of a nested native <Select>, so outside-click reliably     */
+/* closes it — the old version could get stuck open because clicks    */
+/* on the wrapping Box re-opened it right after the Select's own      */
+/* onClose fired.                                                     */
 /* ---------------------------------------------------------------- */
 
 const FilterChip = ({ label, value, onChange, options }) => {
-  const [open, setOpen] = useState(false);
+  const [anchorEl, setAnchorEl] = useState(null);
+  const open = Boolean(anchorEl);
+
+  const handleOpen = (e) => setAnchorEl(e.currentTarget);
+  const handleClose = () => setAnchorEl(null);
+
+  const handleSelect = (opt) => {
+    onChange(opt);
+    handleClose();
+  };
 
   return (
-    <Box className="filter-chip" onClick={() => setOpen(true)}>
-      <Typography className="filter-chip__label">{label}</Typography>
-      <Select
+    <>
+      <Button
         size="small"
-        value={value}
-        open={open}
-        onOpen={() => setOpen(true)}
-        onClose={() => setOpen(false)}
-        onChange={(e) => {
-          onChange(e.target.value);
-          setOpen(false);
-        }}
-        className="filter-chip__select"
+        variant="outlined"
+        onClick={handleOpen}
+        className="tab-filter-chip tab-filter-chip--select"
       >
-        {options.map((opt) => (
-          <MenuItem key={opt} value={opt}>
-            {opt}
-          </MenuItem>
-        ))}
-      </Select>
-    </Box>
+        <span className="tab-filter-chip__label-text">{label}</span>
+        <span className="tab-filter-chip__value">{value}</span>
+        <span className="tab-filter-chip__caret">▾</span>
+      </Button>
+
+      <Popover
+        open={open}
+        anchorEl={anchorEl}
+        onClose={handleClose}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
+        transformOrigin={{ vertical: 'top', horizontal: 'left' }}
+        PaperProps={{ className: 'tab-filter-popover' }}
+      >
+        <Box className="tab-filter-popover__list">
+          {options.map((opt) => (
+            <Box
+              key={opt}
+              className={`tab-filter-popover__item tab-filter-popover__item--select ${
+                value === opt ? 'is-selected' : ''
+              }`}
+              onClick={() => handleSelect(opt)}
+            >
+              <span>{opt}</span>
+            </Box>
+          ))}
+        </Box>
+      </Popover>
+    </>
   );
 };
-
-/* ---------------------------------------------------------------- */
-/* Checkbox-style multi-select filter — click the chip, a popover     */
-/* with checkboxes opens. Used inline in each tab's header.           */
-/* ---------------------------------------------------------------- */
 
 /* ---------------------------------------------------------------- */
 /* Checkbox-style multi-select filter — click the chip, a popover     */
@@ -694,6 +735,7 @@ const CheckboxFilterChip = ({ label, value, onChange, options }) => {
     </>
   );
 };
+
 /* ---------------------------------------------------------------- */
 /* Full filter bar for one tab — holds Location / Customer Code /     */
 /* Order No. / Current Status / Metal Type (checkbox chips) plus      */
@@ -847,8 +889,8 @@ const WIPMis = () => {
     setPickerAnchor(null);
   };
 
-  // Rows restricted ONLY by the Promise Date range — feeds both the KPI
-  // cards and the dropdown option lists shared by every tab's filter bar.
+  // Rows restricted ONLY by the Promise Date range — feeds the dropdown
+  // option lists shared by every tab's filter bar.
   const dateFilteredRows = useMemo(() => {
     if (isAllDates || !dateRange.startDate || !dateRange.endDate) return rawRows;
     return rawRows.filter((row) => {
@@ -907,18 +949,38 @@ const WIPMis = () => {
     [rawRows, fieldMap, deptFilters, isAllDates, dateRange, dateField]
   );
 
-  // KPI cards reflect the date range only (not any one tab's filters).
+  // Which per-tab filtered row set is currently "active" (drives the KPI
+  // cards below the Tabs) — matches whichever tab the user is on, so the
+  // KPI cards apply that SAME tab's filters instead of a shared global set.
+  const activeFilteredRows = useMemo(() => {
+    switch (activeTab) {
+      case 1:
+        return promiseFilteredRows;
+      case 2:
+        return statusFilteredRows;
+      case 3:
+        return deptFilteredRows;
+      case 0:
+      default:
+        return orderFilteredRows;
+    }
+  }, [activeTab, orderFilteredRows, promiseFilteredRows, statusFilteredRows, deptFilteredRows]);
+
+  // KPI cards now reflect the ACTIVE TAB's own filters (not a shared
+  // global set) — switching tabs or changing that tab's filters updates
+  // these cards accordingly.
   const stats = useMemo(
     () => ({
-      pcs: dateFilteredRows.length,
-      nwt: sumField(dateFilteredRows, fieldMap, 'NetWtgm'),
-      gwt: sumField(dateFilteredRows, fieldMap, 'GrossWeightgm'),
-      diaPcs: sumField(dateFilteredRows, fieldMap, 'Diamond_actualusedpcs'),
-      solPcs: sumField(dateFilteredRows, fieldMap, SOLITAIRE_PCS_FIELD),
-      diaWt: sumField(dateFilteredRows, fieldMap, DIAMOND_WEIGHT_FIELD),
-      solWt: sumField(dateFilteredRows, fieldMap, SOLITAIRE_WEIGHT_FIELD),
+      pcs: activeFilteredRows.length,
+      qty: sumQuantityDeduped(activeFilteredRows, fieldMap),
+      nwt: sumField(activeFilteredRows, fieldMap, 'NetWtgm'),
+      gwt: sumField(activeFilteredRows, fieldMap, 'GrossWeightgm'),
+      diaPcs: sumField(activeFilteredRows, fieldMap, 'Diamond_actualusedpcs'),
+      solPcs: sumField(activeFilteredRows, fieldMap, SOLITAIRE_PCS_FIELD),
+      diaWt: sumField(activeFilteredRows, fieldMap, DIAMOND_WEIGHT_FIELD),
+      solWt: sumField(activeFilteredRows, fieldMap, SOLITAIRE_WEIGHT_FIELD),
     }),
-    [dateFilteredRows, fieldMap]
+    [activeFilteredRows, fieldMap]
   );
 
   const promisePivot = useMemo(
@@ -1133,6 +1195,12 @@ const WIPMis = () => {
 
     XLSX.utils.book_append_sheet(
       wb,
+      XLSX.utils.aoa_to_sheet(buildSheetAOA(orderColumns, orderDetails, null)),
+      'Order Details'
+    );
+
+    XLSX.utils.book_append_sheet(
+      wb,
       XLSX.utils.aoa_to_sheet(buildSheetAOA(promise.columns, promise.rows, promise.totals)),
       'WIP Distribution'
     );
@@ -1141,11 +1209,7 @@ const WIPMis = () => {
       XLSX.utils.aoa_to_sheet(buildSheetAOA(status.columns, status.rows, status.totals)),
       'Current Status'
     );
-    XLSX.utils.book_append_sheet(
-      wb,
-      XLSX.utils.aoa_to_sheet(buildSheetAOA(orderColumns, orderDetails, null)),
-      'Order Details'
-    );
+   
     XLSX.utils.book_append_sheet(
       wb,
       XLSX.utils.aoa_to_sheet(buildSheetAOA(department.columns, department.rows, department.totals)),
@@ -1296,12 +1360,31 @@ const WIPMis = () => {
             </Box>
           </Paper>
 
+          <Tabs
+            value={activeTab}
+            onChange={(e, val) => setActiveTab(val)}
+            variant="scrollable"
+            scrollButtons="auto"
+            className="wip-tabs"
+          >
+            {TAB_LABELS.map((label) => (
+              <Tab key={label} label={label} />
+            ))}
+          </Tabs>
+
           <Box className="wip-mis__stats">
             <StatCard
               icon={<Inventory2OutlinedIcon fontSize="small" />}
               label="WIP JOBS"
               value={stats.pcs.toLocaleString()}
               subLabel="Active Jobs"
+              unit=""
+            />
+            <StatCard
+              icon={<Inventory2Icon fontSize="small" />}
+              label="QUANTITY"
+              value={stats.qty.toLocaleString(undefined, { maximumFractionDigits: 2 })}
+              subLabel="Total Quantity"
               unit=""
             />
             <StatCard
@@ -1333,18 +1416,6 @@ const WIPMis = () => {
               unit="Ct"
             />
           </Box>
-
-          <Tabs
-            value={activeTab}
-            onChange={(e, val) => setActiveTab(val)}
-            variant="scrollable"
-            scrollButtons="auto"
-            className="wip-tabs"
-          >
-            {TAB_LABELS.map((label) => (
-              <Tab key={label} label={label} />
-            ))}
-          </Tabs>
 
           <Box className="wip-mis__pivots">
             {activeTab === 0 && (
