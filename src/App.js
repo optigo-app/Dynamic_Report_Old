@@ -9,7 +9,7 @@ import { getClientIpAddress } from "./Utils/globalFunc";
 import { useEffect } from "react";
 
 function AppWrapper() {
-  
+
   function getBaseName() {
     const path = window.location.pathname;
     const match = path.match(/^\/([^/]+\/[^/]+)/);
@@ -34,11 +34,10 @@ function AppWrapper() {
 function App() {
   const [searchParams] = useSearchParams();
   const pid = searchParams.get("pid");
-
   return (
     <>
       <ToastContainer />
-      {pid === "18233" || pid === "18310" && <ConnectionManager />}
+      {(pid === "18233" || pid === "18310") && <ConnectionManager />}
       <GridMain />
     </>
   );
