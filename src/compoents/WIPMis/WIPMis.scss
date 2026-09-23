@@ -736,12 +736,13 @@ $red-bg: #fdecea;
 
 
 /* -------------------- tabs -------------------- */
+/* -------------------- tabs -------------------- */
 .wip-tabs {
   min-height: 40px !important;
   background: #fff;
   border: 1px solid $border;
   border-radius: 12px;
-  padding: 4px;
+  padding: 10px 8px;
 
   .MuiTabs-indicator {
     display: none;
@@ -755,25 +756,29 @@ $red-bg: #fdecea;
     text-transform: none;
     font-weight: 600;
     font-size: 13px;
-    color: $text-muted;
+    color: $purple-dark;
     min-height: 36px;
     border-radius: 8px;
-    margin-right: 4px;
+    margin-right: 6px;
     padding: 6px 16px;
+    background: $purple-soft;
+    border: 1px solid transparent;
+    opacity: 1;
 
     &.Mui-selected {
       color: #fff;
       background: $purple;
+      box-shadow: 0 2px 6px rgba(108, 92, 231, 0.35);
     }
 
     &:hover:not(.Mui-selected) {
-      background: $purple-soft;
-      color: $purple-dark;
+      background: #e6e0ff;
+      border-color: $purple;
     }
   }
 }
 
-/* header now wraps: title on the left, per-tab filter bar on the right */
+/* header wraps: title on the left, per-tab filter bar on the right */
 .data-table__header {
   flex-wrap: wrap;
   row-gap: 8px;
@@ -790,33 +795,24 @@ $red-bg: #fdecea;
   align-items: center;
   gap: 6px;
   flex-wrap: wrap;
-
-  .filter-chip {
-    height: 30px;
-    padding: 1px 8px 1px 10px;
-
-    &__select {
-      min-width: 90px;
-    }
-  }
 }
 
 .tab-filter-chip {
   text-transform: none !important;
-  font-size: 12px !important;
-  font-weight: 600 !important;
-  color: $navy !important;
-  border-color: $border !important;
+  font-size: 14.5px !important;
+  font-weight: 700 !important;
+  color: $purple-dark !important;
+  border: 1px solid $purple !important;
   border-radius: 8px !important;
-  padding: 4px 10px !important;
+  padding: 6px 16px !important;
   min-width: 0 !important;
   height: 30px;
-  background: $bg-soft !important;
+  background: $purple-soft !important;
   gap: 6px;
+  letter-spacing: 0.2px;
 
   &:hover {
-    border-color: $purple !important;
-    background: $purple-soft !important;
+    background: #e6e0ff !important;
   }
 }
 
@@ -827,11 +823,33 @@ $red-bg: #fdecea;
   font-weight: 700;
   min-width: 16px;
   height: 16px;
-  border-radius: 8px;
+  border-radius: 18px;
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 0 4px;
+}
+
+/* Delivery (single-select) chip — shows Label: Value + caret */
+.tab-filter-chip--select {
+  gap: 4px;
+}
+
+.tab-filter-chip__label-text {
+  color: $purple-dark;
+  font-weight: 700;
+}
+
+.tab-filter-chip__value {
+  color: $navy;
+  font-weight: 700;
+  padding-left: 2px;
+}
+
+.tab-filter-chip__caret {
+  color: $purple;
+  font-size: 11px;
+  margin-left: 2px;
 }
 
 .tab-filter-bar__clear {
@@ -839,6 +857,7 @@ $red-bg: #fdecea;
   width: 26px;
   height: 26px;
   background: $purple-soft !important;
+  border: 1px solid $purple !important;
 
   &:hover {
     background: #e6e0ff !important;
@@ -851,6 +870,24 @@ $red-bg: #fdecea;
   margin-top: 4px;
   min-width: 200px;
   max-width: 260px;
+}
+
+.tab-filter-popover__search {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 10px;
+  border-bottom: 1px solid $border;
+
+  .tab-filter-popover__search-icon {
+    color: $purple;
+    flex-shrink: 0;
+  }
+
+  .MuiInputBase-input {
+    font-size: 13px;
+    padding: 2px 0;
+  }
 }
 
 .tab-filter-popover__list {
@@ -874,6 +911,17 @@ $red-bg: #fdecea;
   }
 }
 
+.tab-filter-popover__item--select {
+  padding: 8px 12px;
+  font-weight: 600;
+
+  &.is-selected {
+    background: $purple-soft;
+    color: $purple-dark;
+    font-weight: 700;
+  }
+}
+
 .tab-filter-popover__empty {
   padding: 10px 14px;
   font-size: 12px;
@@ -888,20 +936,43 @@ $red-bg: #fdecea;
 }
 
 
-.tab-filter-popover__search {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 8px 10px;
-  border-bottom: 1px solid $border;
+.tab-filter-popover {
+  border-radius: 10px !important;
+  box-shadow: 0 8px 24px rgba(20, 20, 43, 0.16) !important;
+  margin-top: 4px;
+  min-width: 200px;
+  max-width: 260px;
 
-  .tab-filter-popover__search-icon {
-    color: $purple;
-    flex-shrink: 0;
+  /* checkbox items (ALLOY, GOLD, etc.) */
+  .MuiCheckbox-root {
+    color: $purple !important;
+
+    &.Mui-checked {
+      color: $purple !important;
+    }
   }
 
-  .MuiInputBase-input {
-    font-size: 13px;
-    padding: 2px 0;
+  /* search row */
+  .tab-filter-popover__search {
+    .tab-filter-popover__search-icon {
+      color: $purple;
+    }
+
+    .MuiInputBase-input:focus {
+      outline: none;
+    }
+  }
+
+  /* CLEAR button (currently default MUI blue) */
+  .tab-filter-popover__footer {
+    .MuiButton-text {
+      color: $purple !important;
+      font-weight: 700 !important;
+      text-transform: none !important;
+
+      &:hover {
+        background: $purple-soft !important;
+      }
+    }
   }
 }
