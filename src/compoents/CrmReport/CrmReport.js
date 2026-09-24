@@ -362,6 +362,7 @@ const mapSideMenu = (rd) => {
       url: item.URL,
       PageName: item.PageName,
       IsRedirect: item.IsRedirect,
+      PageId: item?.PageId,
       color: SIDE_MENU_COLORS[i % SIDE_MENU_COLORS.length],
       icon: getSideMenuIcon(item.DisplayName),
     }));

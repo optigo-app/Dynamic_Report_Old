@@ -17,7 +17,6 @@ import JobCompletion from "./compoents/JobCompletion/JobCompletion";
 import { AlertTriangle } from "lucide-react";
 import EmployeeDepartmentReportSpliter from "./compoents/EmployeeDepartmentReport/EmployeeDepartmentReportSpliter";
 import OSRReportSpliter from "./compoents/OSRReport/OSRReportSpliter";
-import ItaskReport from "./compoents/ItaskReport/ItaskReport";
 import FgSpliter from "./compoents/FgWiseWorkerReportSpliterView/FgSpliter";
 import RefiningReport from "./compoents/LossRefiningReport/LossRefiningReport";
 import LossRefiningReport from "./compoents/LossRefiningReport/LossRefiningReport";
@@ -216,9 +215,11 @@ const GridMain = () => {
       return <StockDetailINTemp />; // 1438 Doc.
     } else if (pid == 18319) {
       return <StockDetailOUTTemp />; // 1438 Doc.
-    } else if (pid == 1000) {
-      return <ItaskReport />; // 1256 Doc.
-    } else if (pid == 18324) {
+    } 
+    // else if (pid == 1000) {
+    //   return <ItaskReport />; // 1256 Doc.
+    // } 
+    else if (pid == 18324) {
       return <NewFirstSample />;
     } else if (pid == 18502) {
       return <AdvnaceWipReport />;
