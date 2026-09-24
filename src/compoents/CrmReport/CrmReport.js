@@ -783,8 +783,6 @@ const CrmReport = () => {
         CommonAPI(buildBody("CustomerNotes")),
         CommonAPI(buildBody("CallLogs")),
       ]);
-      console.log('overviewRes: ', overviewRes);
-
       if (overviewRes.status === "fulfilled") {
         setApiCustomerInfo(mapCustomerOverview(overviewRes.value?.Data?.rd?.[0]));
         setTopinfoNavigation(overviewRes.value?.Data?.rd1?.[0])
@@ -891,7 +889,6 @@ const CrmReport = () => {
      whether the link opens in a new tab or a modal
      ══════════════════════════════════════════════ */
   const handleMenuClick = (item, i) => {
-    console.log('item: ', item);
     if (!item?.url) return;
     setActiveMenu(i);
     // if (MODAL_ORDERS.includes(item.order)) {
@@ -909,6 +906,7 @@ const CrmReport = () => {
             payload: {
               TabName: item?.PageName,
               TabUrl: item?.url,
+              pageid: item?.PageId
             },
           },
           "*"
@@ -1117,22 +1115,22 @@ const CrmReport = () => {
           {/* Right: at-a-glance stat chips */}
           <Box className="crm_topbar_stats">
             <Box className="crm_stat_chip crm_stat_info"
-              // style={{ cursor: 'pointer' }}
-              // onClick={() => {
-              //   if (window?.parent?.postMessage) {
-              //     window.parent.postMessage(
-              //       {
-              //         type: "ADD_TAB",
-              //         evt: "DynamicReport",
-              //         payload: {
-              //           TabName: topinfoNavigation?.PageName,
-              //           TabUrl: topinfoNavigation?.URL,
-              //         },
-              //       },
-              //       "*"
-              //     );
-              //   }
-              // }}
+            style={{ cursor: 'pointer' }}
+            onClick={() => {
+              if (window?.parent?.postMessage) {
+                window.parent.postMessage(
+                  {
+                    type: "ADD_TAB",
+                    evt: "DynamicReport",
+                    payload: {
+                      TabName: topinfoNavigation?.PageName,
+                      TabUrl: topinfoNavigation?.URL,
+                    },
+                  },
+                  "*"
+                );
+              }
+            }}
             >
               <Box className="crm_stat_ico"><IndianRupee size={14} /></Box>
               <Box className="crm_stat_txt">
@@ -1141,22 +1139,22 @@ const CrmReport = () => {
               </Box>
             </Box>
             <Box className="crm_stat_chip crm_stat_info"
-              // style={{ cursor: 'pointer' }}
-              // onClick={() => {
-              //   if (window?.parent?.postMessage) {
-              //     window.parent.postMessage(
-              //       {
-              //         type: "ADD_TAB",
-              //         evt: "DynamicReport",
-              //         payload: {
-              //           TabName: topinfoNavigation?.PageName,
-              //           TabUrl: topinfoNavigation?.URL,
-              //         },
-              //       },
-              //       "*"
-              //     );
-              //   }
-              // }}
+            style={{ cursor: 'pointer' }}
+            onClick={() => {
+              if (window?.parent?.postMessage) {
+                window.parent.postMessage(
+                  {
+                    type: "ADD_TAB",
+                    evt: "DynamicReport",
+                    payload: {
+                      TabName: topinfoNavigation?.PageName,
+                      TabUrl: topinfoNavigation?.URL,
+                    },
+                  },
+                  "*"
+                );
+              }
+            }}
             >
               <Box className="crm_stat_ico"><GiMetalBar size={14} /></Box>
               <Box className="crm_stat_txt">
@@ -1165,22 +1163,22 @@ const CrmReport = () => {
               </Box>
             </Box>
             <Box className="crm_stat_chip crm_stat_info"
-              // style={{ cursor: 'pointer' }}
-              // onClick={() => {
-              //   if (window?.parent?.postMessage) {
-              //     window.parent.postMessage(
-              //       {
-              //         type: "ADD_TAB",
-              //         evt: "DynamicReport",
-              //         payload: {
-              //           TabName: topinfoNavigation?.PageName,
-              //           TabUrl: topinfoNavigation?.URL,
-              //         },
-              //       },
-              //       "*"
-              //     );
-              //   }
-              // }}
+            style={{ cursor: 'pointer' }}
+            onClick={() => {
+              if (window?.parent?.postMessage) {
+                window.parent.postMessage(
+                  {
+                    type: "ADD_TAB",
+                    evt: "DynamicReport",
+                    payload: {
+                      TabName: topinfoNavigation?.PageName,
+                      TabUrl: topinfoNavigation?.URL,
+                    },
+                  },
+                  "*"
+                );
+              }
+            }}
             >
               <Box className="crm_stat_ico"><Gem size={14} /></Box>
               <Box className="crm_stat_txt">
