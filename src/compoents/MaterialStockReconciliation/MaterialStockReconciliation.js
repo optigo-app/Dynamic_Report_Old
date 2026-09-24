@@ -18,15 +18,12 @@ import {
   TableContainer,
   Chip,
   Divider,
-  Checkbox,
-  FormControlLabel,
   IconButton,
   Popover,
   Dialog,
   DialogTitle,
   DialogContent,
   DialogActions,
-  Tooltip,
   Drawer,
   Badge,
   ThemeProvider,
@@ -36,16 +33,16 @@ import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import SearchIcon from "@mui/icons-material/Search";
 import SaveIcon from "@mui/icons-material/Save";
 import VisibilityIcon from "@mui/icons-material/Visibility";
-import ScaleIcon from "@mui/icons-material/Scale";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import CancelIcon from "@mui/icons-material/Cancel";
 import ClearAllIcon from "@mui/icons-material/ClearAll";
 import CloseIcon from "@mui/icons-material/Close";
 import FilterListIcon from "@mui/icons-material/FilterList";
-import CheckCircleRoundedIcon from '@mui/icons-material/CheckCircleRounded';
-import ErrorRoundedIcon from '@mui/icons-material/ErrorRounded';
-import PendingRoundedIcon from '@mui/icons-material/PendingRounded';
-import AssessmentRoundedIcon from '@mui/icons-material/AssessmentRounded';
+import QrCode2Icon from "@mui/icons-material/QrCode2";
+import QrCodeScannerIcon from "@mui/icons-material/QrCodeScanner";
+import CameraAltIcon from "@mui/icons-material/CameraAlt";
+import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
+import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 
 /* ========================================================================
    COLOR TOKENS  (single source of truth — used everywhere via sx)
@@ -84,8 +81,7 @@ const theme = createTheme({
 });
 
 /* ========================================================================
-   REUSABLE SX FRAGMENTS  (kept as plain JS objects so styling stays inline
-   with MUI's sx system instead of living in an external stylesheet)
+   REUSABLE SX FRAGMENTS
    ===================================================================== */
 const cardSx = {
   bgcolor: COLORS.surface,
@@ -129,22 +125,9 @@ const outlineBtnSx = {
   "&:hover": { borderColor: COLORS.purpleDark, bgcolor: COLORS.purpleLight },
 };
 
-const ghostBtnSx = {
-  color: COLORS.purple,
-  textTransform: "none",
-  fontSize: 12,
-  mt: -1,
-  mb: 1.5,
-  p: 0,
-  minWidth: 0,
-  "&:hover": { bgcolor: "transparent", textDecoration: "underline" },
-};
-
 const chipSx = { bgcolor: COLORS.purpleLight, color: COLORS.purpleDark, fontWeight: 500 };
-const badgeSx = { bgcolor: COLORS.purpleLight, color: COLORS.purpleDark, fontWeight: 600 };
 const chipSuccessSx = { bgcolor: COLORS.successBg, color: COLORS.success, fontWeight: 600 };
 const chipDangerSx = { bgcolor: COLORS.dangerBg, color: COLORS.danger, fontWeight: 600 };
-const chipPendingSx = { bgcolor: COLORS.warningBg, color: COLORS.warning, fontWeight: 600 };
 
 const tableContainerSx = {
   border: `1px solid ${COLORS.border}`,
@@ -169,7 +152,6 @@ const fieldSx = { mb: 1.75 };
    DUMMY DATA
    ===================================================================== */
 const RAW_DATA = [
-  // ---- exact records supplied by the user ----
   {
     itemname: "DIAMOND", rfbag: "0000005799", MaterialType: "Labgrown", master_item_id: 3,
     Mountcategoryname: "", supplier: "Customer", shape: "ASSCHER", quality: "RJ01",
@@ -217,7 +199,6 @@ const RAW_DATA = [
     salerate: 40.5, length: "", width: "", depth: "", depth_per: 0, table_per: 0, cutname: "",
     polishname: "", symmetryname: "", gridlename: "", fluorescencename: "", culetname: "", labname: "",
   },
-  // ---- additional rows so Metal / Mount / Finding branches have data to filter ----
   {
     itemname: "Metal", rfbag: "0000005845", MaterialType: "Gold", master_item_id: 3,
     Mountcategoryname: "", supplier: "Customer", shape: "ALLOY", quality: "18k",
@@ -249,8 +230,6 @@ const RAW_DATA = [
 
 const DIAMOND_GROUP = ["DIAMOND", "Colorstone", "MISC"];
 
-/* Sub-filter configuration per Material selection.
-   key = internal id, label = UI label, dataKey = field on the row object   */
 const FILTER_CONFIG = {
   diamondGroup: [
     { key: "materialtype", label: "Material Type", dataKey: "MaterialType" },
@@ -299,9 +278,6 @@ const nowStamp = () =>
     day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit",
   });
 
-/* Builds the "System Stock Summary" snapshot for a given set of filter
-   values. Used both for the initial (unfiltered) view and whenever the
-   user explicitly clicks "Search Summary". */
 function buildSummary(loc, mat, subs) {
   const base = RAW_DATA.filter((r) => (!loc || r.Locker === loc) && (!mat || r.itemname === mat));
   const cfg = getFilterConfig(mat);
@@ -312,19 +288,25 @@ function buildSummary(loc, mat, subs) {
   return { bags, pieces, weight, rows, material: mat, locker: loc, subFilters: { ...subs } };
 }
 
-/* small presentational helpers, built purely with sx (no external classes) */
-function KpiCard({ label, value, sub, valueColor }) {
-  return (
-    <Paper sx={{ ...cardSx, mb: 0 }} elevation={0}>
-      <Typography sx={{ fontSize: 11, fontWeight: 600, letterSpacing: "0.04em", color: COLORS.textMuted }}>
-        {label}
-      </Typography>
-      <Typography sx={{ fontSize: 26, fontWeight: 700, my: 0.5, color: valueColor || COLORS.text }}>
-        {value}
-      </Typography>
-      <Typography sx={{ fontSize: 11, color: COLORS.textMuted }}>{sub}</Typography>
-    </Paper>
-  );
+/* Build one combined summary from EVERY scanned Job / Lot No. (rfbag).
+   Rows for all scanned codes are grouped together — this is what "scan
+   mode" shows once the user clicks the "Scan" button, instead of the
+   filter-built summary. */
+function buildSummaryFromScanCodes(codes) {
+  const rows = RAW_DATA.filter((r) => codes.includes(r.rfbag));
+  const bags = rows.length;
+  const pieces = rows.reduce((s, r) => s + (Number(r.TotalRemainingPcs) || 0), 0);
+  const weight = rows.reduce((s, r) => s + (Number(r.TotalRemainingWeight) || 0), 0);
+  const materials = uniq(rows.map((r) => r.itemname));
+  return {
+    bags,
+    pieces,
+    weight,
+    rows,
+    material: materials.length === 1 ? materials[0] : "Scanned Items",
+    locker: rows[0]?.Locker || "",
+    subFilters: { lotno: codes.join(", ") },
+  };
 }
 
 function ResultLine({ label, value }) {
@@ -345,22 +327,163 @@ function ResultLine({ label, value }) {
 }
 
 /* ========================================================================
+   "Ready to Scan" landing panel — shown before the user has either
+   picked a filter or scanned anything.
+   ===================================================================== */
+function ScanLandingPanel({ onScanBarcode, onCameraScan }) {
+  return (
+    <Box
+      sx={{
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
+        minHeight: "60vh",
+        textAlign: "center",
+      }}
+    >
+      <QrCode2Icon sx={{ fontSize: 64, color: COLORS.textMuted, mb: 2 }} />
+      <Typography sx={{ fontSize: 20, fontWeight: 700, color: COLORS.text, mb: 0.5 }}>
+        Ready to Scan
+      </Typography>
+      <Typography sx={{ fontSize: 13, color: COLORS.textMuted, mb: 3, maxWidth: 380 }}>
+        Position the barcode in front of scanner to record the order manually,
+        or use the filters on the left to browse system stock instead.
+      </Typography>
+      <Box sx={{ display: "flex", gap: 1.5, flexWrap: "wrap", justifyContent: "center" }}>
+        <Button variant="contained" startIcon={<QrCodeScannerIcon />} sx={primaryBtnSx} onClick={onScanBarcode}>
+          Scan Barcode
+        </Button>
+        <Button
+          variant="contained"
+          startIcon={<CameraAltIcon />}
+          sx={{ ...primaryBtnSx, bgcolor: "#5B6EF5", "&:hover": { bgcolor: "#4657D6" } }}
+          onClick={onCameraScan}
+        >
+          Camera Scan
+        </Button>
+      </Box>
+    </Box>
+  );
+}
+
+/* ========================================================================
+   Shared filter fields — reused by both the full-height left sidebar (on
+   the landing page) and the overlay Drawer (once in 'filter' mode).
+   ===================================================================== */
+function FilterPanelContent({
+  locker,
+  setLocker,
+  lockerOptions,
+  material,
+  onMaterialChange,
+  materialOptions,
+  filterConfig,
+  subFilters,
+  onSubFilterChange,
+  optionsFor,
+  activeFilterCount,
+  onClear,
+  onSearch,
+  onClose,
+}) {
+  return (
+    <Box sx={{ p: 2.5 }}>
+      <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 2 }}>
+        <Typography sx={{ ...panelTitleSx, mb: 0 }}>Filters</Typography>
+        {onClose && (
+          <IconButton size="small" onClick={onClose}>
+            <CloseIcon fontSize="small" />
+          </IconButton>
+        )}
+      </Box>
+
+      <FormControl fullWidth size="small" sx={fieldSx}>
+        <InputLabel>Locker</InputLabel>
+        <Select label="Locker" value={locker} onChange={(e) => setLocker(e.target.value)}>
+          <MenuItem value="">All</MenuItem>
+          {lockerOptions.map((opt) => (
+            <MenuItem key={opt} value={opt}>{opt}</MenuItem>
+          ))}
+        </Select>
+      </FormControl>
+
+      <FormControl fullWidth size="small" sx={fieldSx}>
+        <InputLabel>Material</InputLabel>
+        <Select label="Material" value={material} onChange={(e) => onMaterialChange(e.target.value)}>
+          <MenuItem value="">All</MenuItem>
+          {materialOptions.map((opt) => (
+            <MenuItem key={opt} value={opt}>{opt}</MenuItem>
+          ))}
+        </Select>
+      </FormControl>
+
+      {filterConfig.length > 0 && <Divider sx={{ my: 1.5 }} />}
+
+      {filterConfig.map((f) => (
+        <FormControl fullWidth size="small" sx={fieldSx} key={f.key}>
+          <InputLabel>{f.label}</InputLabel>
+          <Select
+            label={f.label}
+            value={subFilters[f.key] || ""}
+            onChange={(e) => onSubFilterChange(f.key, e.target.value)}
+          >
+            <MenuItem value="">All</MenuItem>
+            {optionsFor(f.dataKey).map((opt) => (
+              <MenuItem key={opt} value={opt}>{opt}</MenuItem>
+            ))}
+          </Select>
+        </FormControl>
+      ))}
+
+      <Box sx={{ display: "flex", gap: 1.5, mt: 1 }}>
+        <Button
+          fullWidth
+          variant="outlined"
+          startIcon={<ClearAllIcon />}
+          sx={outlineBtnSx}
+          onClick={onClear}
+          disabled={activeFilterCount === 0}
+        >
+          Clear
+        </Button>
+        <Button fullWidth variant="contained" startIcon={<SearchIcon />} sx={primaryBtnSx} onClick={onSearch}>
+          Search
+        </Button>
+      </Box>
+    </Box>
+  );
+}
+
+/* ========================================================================
    COMPONENT
    ===================================================================== */
 export default function MaterialStockReconciliation() {
-  /* ---- filters (draft state — these only take effect on the data once
-     "Search Summary" is clicked, they never touch stockSummary directly) ---- */
+  /* ---- top-level mode:
+     'initial' -> "Ready to Scan" landing screen
+     'filter'  -> current page, driven by the Filters drawer
+     'scan'    -> current page, driven by scanned Lot/Job No.'s (filters disabled)
+     'history' -> just the Reconciliation History table (from "Reconcile Report") ---- */
+  const [mode, setMode] = useState("initial");
+
+  /* ---- filters (draft state) ---- */
   const [locker, setLocker] = useState("");
   const [material, setMaterial] = useState("");
   const [subFilters, setSubFilters] = useState({});
 
-  /* ---- filter drawer open/close ---- */
+  /* ---- filter drawer: only used once in 'filter' mode. The landing page
+     shows filters as a full-height left sidebar instead of this drawer. ---- */
   const [filterOpen, setFilterOpen] = useState(false);
 
-  /* ---- stock summary snapshot (built by "Search Summary"); starts out
-     showing ALL data, and only changes again when the user clicks
-     "Search Summary" — changing filters alone does not touch it ---- */
-  const [stockSummary, setStockSummary] = useState(() => buildSummary("", "", {}));
+  /* ---- stock summary snapshot: null until either a filter search or a
+     scan selection populates it ---- */
+  const [stockSummary, setStockSummary] = useState(null);
+
+  /* ---- scan flow ---- */
+  const [scanDialogOpen, setScanDialogOpen] = useState(false);
+  const [scanSource, setScanSource] = useState("barcode"); // 'barcode' | 'camera'
+  const [scanInput, setScanInput] = useState("");
+  const [scannedCodes, setScannedCodes] = useState([]);
 
   /* ---- physical measurement ---- */
   const [grossWeight, setGrossWeight] = useState("");
@@ -379,7 +502,6 @@ export default function MaterialStockReconciliation() {
   const [history, setHistory] = useState([]);
   const [reconciledIds, setReconciledIds] = useState(new Set());
   const [viewRecord, setViewRecord] = useState(null);
-  const [todayOnly, setTodayOnly] = useState(true);
 
   /* ------------------------------------------------------------------- */
   const lockerOptions = useMemo(() => uniq(RAW_DATA.map((r) => r.Locker)), []);
@@ -400,9 +522,6 @@ export default function MaterialStockReconciliation() {
     [baseFiltered]
   );
 
-  /* Filters only ever update their own (draft) state here — the stock
-     summary panel / table is left completely untouched until the user
-     explicitly clicks "Search Summary". */
   const handleMaterialChange = (val) => {
     setMaterial(val);
     setSubFilters({});
@@ -412,10 +531,13 @@ export default function MaterialStockReconciliation() {
     setSubFilters((prev) => ({ ...prev, [key]: val }));
   };
 
+  /* Filters drive the page ONLY when the user explicitly clicks Search.
+     This switches the page into 'filter' mode. */
   const handleSearchSummary = () => {
     setStockSummary(buildSummary(locker, material, subFilters));
     setResult(null);
     setFilterOpen(false);
+    setMode("filter");
   };
 
   const handleClearFilters = () => {
@@ -427,6 +549,69 @@ export default function MaterialStockReconciliation() {
   const activeFilterCount =
     (locker ? 1 : 0) + (material ? 1 : 0) + Object.values(subFilters).filter(Boolean).length;
 
+  /* ---- scan flow handlers ---- */
+  const openScanDialog = (source) => {
+    setScanSource(source);
+    setScanInput("");
+    setScannedCodes([]);
+    setScanDialogOpen(true);
+  };
+
+  const closeScanDialog = () => {
+    setScanDialogOpen(false);
+    setScanInput("");
+  };
+
+  /* A physical barcode scanner behaves like a fast keyboard, ending each
+     scan with an Enter keystroke — but the field is now a textarea, so the
+     user (or the scanner) can also enter several Job/Lot No.'s at once,
+     separated by commas or new lines. We split on both and add whatever
+     is found, all in one go. */
+  const parseAndAddScannedCodes = () => {
+    const parts = scanInput
+      .split(/[\n,]+/)
+      .map((s) => s.trim())
+      .filter(Boolean);
+    if (parts.length === 0) return;
+    setScannedCodes((prev) => {
+      const merged = [...prev];
+      parts.forEach((code) => {
+        if (!merged.includes(code)) merged.push(code);
+      });
+      return merged;
+    });
+    setScanInput("");
+  };
+
+  const handleScanKeyDown = (e) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      parseAndAddScannedCodes();
+    }
+  };
+
+  const handleRemoveScanned = (code) => {
+    setScannedCodes((prev) => prev.filter((c) => c !== code));
+  };
+
+  /* Clicking "Scan" is what actually loads the data — for every Job/Lot
+     No. gathered in the list, combined into one summary. Filters play no
+     part in this mode. */
+  const handleScanAndView = () => {
+    if (scannedCodes.length === 0) return;
+    setStockSummary(buildSummaryFromScanCodes(scannedCodes));
+    setResult(null);
+    setMode("scan");
+    setScanDialogOpen(false);
+  };
+
+  const goToStart = () => {
+    setMode("initial");
+    setStockSummary(null);
+    setResult(null);
+    setFilterOpen(false);
+  };
+
   /* ---- physical measurement calculations ---- */
   const totalBags = stockSummary?.bags || 0;
   const stickerTotal = totalBags * (Number(stickerWeight) || 0);
@@ -434,12 +619,6 @@ export default function MaterialStockReconciliation() {
   const trayTotal = 1 * (Number(trayWeight) || 0);
   const deduction = stickerTotal + polytheneTotal + trayTotal;
   const netWeightLive = (Number(grossWeight) || 0) - deduction;
-
-  const fetchFromMachine = () => {
-    if (!stockSummary) return;
-    const simulated = stockSummary.weight + deduction + (Math.random() * 0.06 - 0.03);
-    setGrossWeight(simulated.toFixed(3));
-  };
 
   const applicableTolerance = material === "Metal" ? toleranceMetal : toleranceOther;
   const toleranceLabel = material === "Metal" ? "Metal" : "Other Material";
@@ -515,520 +694,544 @@ export default function MaterialStockReconciliation() {
     return chips;
   }, [stockSummary]);
 
+  const showWorkspace = mode === "filter" || mode === "scan";
+  const showSummaryBlock = showWorkspace; // Summary + Measurement + Result
+  const showHistoryBlock = mode === "filter" || mode === "scan" || mode === "history";
+
   /* ----------------------------------------------------------------- */
   return (
     <ThemeProvider theme={theme}>
       <Box
         sx={{
-          bgcolor: COLORS.bg,
+          display: "flex",
+          alignItems: "stretch",
           minHeight: "100vh",
-          p: 2,
-          pt:1,
+          bgcolor: COLORS.bg,
           color: COLORS.text,
           "*": { boxSizing: "border-box" },
         }}
       >
-        {/* ================= FILTER DRAWER (left side) ================= */}
-        <Drawer
-          anchor="left"
-          open={filterOpen}
-          onClose={() => setFilterOpen(false)}
-          PaperProps={{ sx: { width: 320, bgcolor: COLORS.bg } }}
-        >
-          <Box sx={{ p: 2.5 }}>
-            <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 2 }}>
-              <Typography sx={{ ...panelTitleSx, mb: 0 }}>Filters</Typography>
-              <IconButton size="small" onClick={() => setFilterOpen(false)}>
-                <CloseIcon fontSize="small" />
-              </IconButton>
-            </Box>
-
-            <FormControl fullWidth size="small" sx={fieldSx}>
-              <InputLabel>Locker</InputLabel>
-              <Select label="Locker" value={locker} onChange={(e) => setLocker(e.target.value)}>
-                <MenuItem value="">All</MenuItem>
-                {lockerOptions.map((opt) => (
-                  <MenuItem key={opt} value={opt}>{opt}</MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-
-            <FormControl fullWidth size="small" sx={fieldSx}>
-              <InputLabel>Material</InputLabel>
-              <Select label="Material" value={material} onChange={(e) => handleMaterialChange(e.target.value)}>
-                <MenuItem value="">All</MenuItem>
-                {materialOptions.map((opt) => (
-                  <MenuItem key={opt} value={opt}>{opt}</MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-
-            {filterConfig.length > 0 && <Divider sx={{ my: 1.5 }} />}
-
-            {filterConfig.map((f) => (
-              <FormControl fullWidth size="small" sx={fieldSx} key={f.key}>
-                <InputLabel>{f.label}</InputLabel>
-                <Select
-                  label={f.label}
-                  value={subFilters[f.key] || ""}
-                  onChange={(e) => handleSubFilterChange(f.key, e.target.value)}
-                >
-                  <MenuItem value="">All</MenuItem>
-                  {optionsFor(f.dataKey).map((opt) => (
-                    <MenuItem key={opt} value={opt}>{opt}</MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            ))}
-
-            <Box sx={{ display: "flex", gap: 1.5, mt: 1 }}>
-              <Button
-                fullWidth
-                variant="outlined"
-                startIcon={<ClearAllIcon />}
-                sx={outlineBtnSx}
-                onClick={handleClearFilters}
-                disabled={activeFilterCount === 0}
-              >
-                Clear
-              </Button>
-              <Button
-                fullWidth
-                variant="contained"
-                startIcon={<SearchIcon />}
-                sx={primaryBtnSx}
-                onClick={handleSearchSummary}
-              >
-                Search
-              </Button>
-            </Box>
-          </Box>
-        </Drawer>
-
-        {/* ================= MAIN CONTENT (full width) ================= */}
-        <Box  >
-          {/* Page header with Filters toggle */}
-          <Box sx={{ display: "flex", alignItems: "center", justifyContent: "flex-start", mb: 1,gap:1.5,marginLeft:"6px" }}>
-            <Typography sx={{ fontSize: 18, fontWeight: 700 }}>Material Stock Reconciliation</Typography>
-            <Badge color="error" badgeContent={activeFilterCount} invisible={activeFilterCount === 0}>
-              <Button
-                variant="outlined"
-                startIcon={<FilterListIcon />}
-                sx={outlineBtnSx}
-                onClick={() => setFilterOpen(true)}
-              >
-                Filters
-              </Button>
-            </Badge>
-          </Box>
-
-          {/* Today's Reconciliations — static */}
-           
-
-          {/* System Stock Summary */}
-          <Paper
-            elevation={0}
-            sx={{
-              ...cardSx,
-              p: 3,
-              border: '1px solid',
-              borderColor: 'divider',
-              backgroundColor: '#fff'
-            }}
-          >
-            {/* Header with Title and Chips */}
-            <Box sx={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 1.5, mb: 2.5, flexWrap: "wrap" }}>
-              <Typography sx={{ fontSize: 16, fontWeight: 600, color: "#6c3fc5" }}>
-                System Stock Summary
-              </Typography>
-              <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.75, justifyContent: "flex-end" }}>
-                {summaryChips.map((c, i) => (
-                  <Chip key={i} label={c} size="small" sx={{ ...chipSx, backgroundColor: '#f3f4f6', fontWeight: 500 }} />
-                ))}
-              </Box>
-            </Box>
-
-            {/* Metrics Grid Cards */}
-            <Box
-              sx={{
-                display: "grid",
-                gridTemplateColumns: { xs: "1fr", sm: "repeat(4, 1fr)" },
-                gap: 2.5,
-                mb: 2.5,
-              }}
-            >
-              {/* Total RM Bags Card */}
-              <Paper
-                elevation={0}
-                sx={{
-                  p: 2.5,
-                  border: '1px solid',
-                  borderColor: '#6c3fc5',
-                  backgroundColor: '#ffffff',
-                  borderLeft: '4px solid #6c3fc5',
-                }}
-              >
-                <Typography sx={{ fontSize: 16, fontWeight: 700, color: COLORS.text }}>
-                  TOTAL RM BAGS
-                </Typography>
-                <Typography sx={{ fontSize: 22, fontWeight: 800, mt: 1, color: COLORS.text }}>
-                  {stockSummary ? stockSummary.bags : "—"}
-                </Typography>
-              </Paper>
-
-              {/* Total Pieces Card */}
-              <Paper
-                elevation={0}
-                sx={{
-                  p: 2.5,
-                  border: '1px solid',
-                  borderColor: '#6c3fc5',
-                  backgroundColor: '#ffffff',
-                  borderLeft: '4px solid #6c3fc5',
-                }}
-              >
-                <Typography sx={{ fontSize: 16, fontWeight: 700, color: COLORS.text }}>
-                  TOTAL PIECES
-                </Typography>
-                <Typography sx={{ fontSize: 22, fontWeight: 800, mt: 1, color: COLORS.text }}>
-                  {stockSummary ? stockSummary.pieces : "—"}
-                </Typography>
-              </Paper>
-
-              {/* System Weight Card */}
-              <Paper
-                elevation={0}
-                sx={{
-                  p: 2.5,
-                  border: '1px solid',
-                  borderColor: '#6c3fc5',
-                  borderLeft: '4px solid #6c3fc5',
-                  backgroundColor: '#ffffff'
-                }}
-              >
-                <Typography sx={{ fontSize: 16, fontWeight: 700, color: COLORS.text }}>
-                  SYSTEM WEIGHT
-                </Typography>
-                <Box sx={{ display: 'flex', alignItems: 'baseline', gap: 1, mt: 1 }}>
-                  <Typography sx={{ fontSize: 22, fontWeight: 800, color: COLORS.text }}>
-                    {stockSummary ? fmt(stockSummary.weight) : "—"}
-                  </Typography>
-                  {stockSummary && (
-                    <Typography component="span" sx={{ fontSize: 16, color: COLORS.textMuted, fontWeight: 600 }}>
-                      gm
-                    </Typography>
-                  )}
-                </Box>
-              </Paper>
-              <Paper
-              elevation={0}
-              sx={{
-                ...cardSx,
-                p: 2,
-              
-                border: '1px solid',
-                  borderColor: '#6c3fc5',
-                  borderLeft: '4px solid #6c3fc5',
-                  backgroundColor: '#ffffff',
-               mb:0,
-                width: "100%"
-              }}
-            >
-              {/* Master Header with Title and Total Count Badge */}
-              <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 2.5 }}>
-                <Typography sx={{ fontSize: 16, fontWeight: 700, color: COLORS.text }}>
-                  Today's Reconciliations
-                </Typography>
-                <Chip
-                  label="44"
-                  size="small"
-                  sx={{
-                    backgroundColor: '#f3f4f6',
-                    fontWeight: 700,
-                    color: COLORS.text,
-                    borderRadius: 2
-                  }}
-                />
-              </Box>
-
-              {/* Inner Nested Container Card for Sub-metrics */}
-              <Box
-                sx={{
-                  display: "grid",
-                  gridTemplateColumns: "repeat(3, 1fr)",
-                  gap: 2,
-              
-                 
-              
-                  
-                  borderColor: 'divider',
-                }}
-              >
-                {/* Passed */}
-                <Box>
-                  <Typography sx={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.04em", color: COLORS.textMuted }}>
-                    Passed
-                  </Typography>
-                  <Typography sx={{ fontSize: 24, fontWeight: 800, mt: 0.5, color: COLORS.success }}>
-                    35
-                  </Typography>
-                </Box>
-
-                {/* Failed */}
-                <Box>
-                  <Typography sx={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.04em", color: COLORS.textMuted }}>
-                    Failed
-                  </Typography>
-                  <Typography sx={{ fontSize: 24, fontWeight: 800, mt: 0.5, color: COLORS.danger }}>
-                   2
-                  </Typography>
-                </Box>
-
-                {/* Pending */}
-                <Box>
-                  <Typography sx={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.04em", color: COLORS.textMuted }}>
-                    Pending
-                  </Typography>
-                  <Typography sx={{ fontSize: 24, fontWeight: 800, mt: 0.5, color: COLORS.warning }}>
-                    7
-                  </Typography>
-                </Box>
-              </Box>
-            </Paper>
-            </Box>
-          </Paper>
-
-          {/* Physical Measurement + Reconciliation Result */}
+        {/* ================= LEFT SIDEBAR (landing page only) ================= */}
+        {/* Full-height, flush to the left edge — always visible on the
+            landing screen, no drawer/overlay involved. */}
+        {mode === "initial" && (
           <Box
             sx={{
-              display: "grid",
-              gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" },
-              gap: 3,
-              mb: 2.5,
-              alignItems: "stretch",
+              width: 320,
+              flexShrink: 0,
+              minHeight: "100vh",
+              borderRight: `1px solid ${COLORS.border}`,
+              bgcolor: "#ffffff",
             }}
           >
-            {/* --- Physical Measurement --- */}
-            <Paper sx={{ ...cardSx, mb: 0, display: "flex", flexDirection: "column" }} elevation={0}>
-              <Box sx={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 1.5, mb: 1.5 }}>
-                <Typography sx={{ ...panelTitleSx, mb: 0 }}>Physical Measurement</Typography>
+            <FilterPanelContent
+              locker={locker}
+              setLocker={setLocker}
+              lockerOptions={lockerOptions}
+              material={material}
+              onMaterialChange={handleMaterialChange}
+              materialOptions={materialOptions}
+              filterConfig={filterConfig}
+              subFilters={subFilters}
+              onSubFilterChange={handleSubFilterChange}
+              optionsFor={optionsFor}
+              activeFilterCount={activeFilterCount}
+              onClear={handleClearFilters}
+              onSearch={handleSearchSummary}
+            />
+          </Box>
+        )}
+
+        {/* ================= FILTER DRAWER (left side) ================= */}
+        {/* Only used once the user has moved into 'filter' mode and clicks
+            the Filters button — NOT shown on the landing page, which has
+            its own full-height sidebar instead. In 'scan' mode there is no
+            trigger to open it, so filters can't interfere with a
+            scan-driven view. */}
+        {mode !== "initial" && (
+          <Drawer
+            anchor="left"
+            open={filterOpen}
+            onClose={() => setFilterOpen(false)}
+            PaperProps={{ sx: { width: 320, bgcolor: COLORS.bg } }}
+          >
+            <FilterPanelContent
+              locker={locker}
+              setLocker={setLocker}
+              lockerOptions={lockerOptions}
+              material={material}
+              onMaterialChange={handleMaterialChange}
+              materialOptions={materialOptions}
+              filterConfig={filterConfig}
+              subFilters={subFilters}
+              onSubFilterChange={handleSubFilterChange}
+              optionsFor={optionsFor}
+              activeFilterCount={activeFilterCount}
+              onClear={handleClearFilters}
+              onSearch={handleSearchSummary}
+              onClose={() => setFilterOpen(false)}
+            />
+          </Drawer>
+        )}
+
+        {/* ================= SCAN DIALOG ================= */}
+        <Dialog open={scanDialogOpen} onClose={closeScanDialog} maxWidth="xs" fullWidth>
+          <DialogTitle sx={{ fontWeight: 600, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+            {scanSource === "camera" ? "Camera Scan" : "Scan Barcode"}
+            <IconButton size="small" onClick={closeScanDialog}>
+              <CloseIcon fontSize="small" />
+            </IconButton>
+          </DialogTitle>
+          <DialogContent dividers>
+            {/* <Typography sx={hintSx}>
+              {scanSource === "camera"
+                ? "Camera scanning is simulated here — type or paste scanned codes below, separated by commas or new lines, then press Enter (or Add)."
+                : "Keep this field focused — scans are captured automatically. You can also scan or paste several Job No.'s at once, separated by commas, then press Enter (or Add)."}
+            </Typography> */}
+            <TextField
+              autoFocus
+              fullWidth
+              multiline
+              minRows={3}
+              size="small"
+              placeholder="Scan or type Job No.'s, separated by commas — e.g. 1/1254, 2/3464"
+              value={scanInput}
+              onChange={(e) => setScanInput(e.target.value)}
+              onKeyDown={handleScanKeyDown}
+              sx={{ mb: 1, mt: 1 }}
+            />
+            <Button
+              size="small"
+              variant="outlined"
+              sx={{ ...outlineBtnSx, py: 0.5, mb: 2 }}
+              onClick={parseAndAddScannedCodes}
+              disabled={!scanInput.trim()}
+            >
+              Add
+            </Button>
+
+            <Typography sx={{ fontSize: 12, fontWeight: 700, color: COLORS.textMuted, mb: 1 }}>
+              Scanned Job   ({scannedCodes.length})
+            </Typography>
+
+            {scannedCodes.length === 0 ? (
+              <Typography sx={hintInlineSx}>No items scanned yet.</Typography>
+            ) : (
+              <Box sx={{ display: "flex", flexDirection: "column", gap: 1, maxHeight: 260, overflowY: "auto", mb: 2 }}>
+                {scannedCodes.map((code) => {
+                  const match = RAW_DATA.find((r) => r.rfbag === code);
+                  return (
+                    <Box
+                      key={code}
+                      sx={{
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        border: `1px solid ${COLORS.border}`,
+                        borderRadius: "8px",
+                        px: 1.5,
+                        py: 1,
+                      }}
+                    >
+                      <Box>
+                        <Typography sx={{ fontSize: 13, fontWeight: 700 }}>{code}</Typography>
+                        <Typography sx={{ fontSize: 11, color: match ? COLORS.textMuted : COLORS.danger }}>
+                          {match ? match.itemname : "Not found in system"}
+                        </Typography>
+                      </Box>
+                      <IconButton size="small" onClick={() => handleRemoveScanned(code)}>
+                        <DeleteOutlineIcon fontSize="small" sx={{ color: COLORS.textMuted }} />
+                      </IconButton>
+                    </Box>
+                  );
+                })}
               </Box>
-
-              <TextField
-                label="Enter Weight"
-                required
+            )}
+            {scannedCodes.length !== 0 && (
+                <Button
                 fullWidth
-                size="small"
-                type="number"
-                sx={fieldSx}
-                value={grossWeight}
-                onChange={(e) => setGrossWeight(e.target.value)}
-                InputProps={{ endAdornment: <Typography sx={{ fontSize: 12, color: COLORS.textMuted }}>gm</Typography> }}
-              />
-
-              <Box sx={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 1.5, mb: 1.75 }}>
-                <TextField
-                  label="Tray/Box Weight"
-                  required
-                  fullWidth
-                  size="small"
-                  type="number"
-                  value={trayWeight}
-                  onChange={(e) => setTrayWeight(e.target.value)}
-                  InputProps={{ endAdornment: <Typography sx={{ fontSize: 12, color: COLORS.textMuted }}>gm</Typography> }}
-                />
-                <TextField
-                  label="Sticker Weight"
-                  required
-                  fullWidth
-                  size="small"
-                  type="number"
-                  value={stickerWeight}
-                  onChange={(e) => setStickerWeight(e.target.value)}
-                  InputProps={{ endAdornment: <Typography sx={{ fontSize: 12, color: COLORS.textMuted }}>gm</Typography> }}
-                />
-                <TextField
-                  label="Polythene Weight"
-                  required
-                  fullWidth
-                  size="small"
-                  type="number"
-                  value={polytheneWeight}
-                  onChange={(e) => setPolytheneWeight(e.target.value)}
-                  InputProps={{ endAdornment: <Typography sx={{ fontSize: 12, color: COLORS.textMuted }}>gm</Typography> }}
-                />
-              </Box>
-
-              <Typography sx={hintSx}>
-                Total Bags: <b>{totalBags}</b> · Sticker Total: <b>{fmt(stickerTotal)}</b> gm · Polythene
-                Total: <b>{fmt(polytheneTotal)}</b> gm · Tray/Box: <b>{fmt(trayTotal)}</b> gm
-              </Typography>
-              <Typography sx={hintSx}>
-                Net Weight: <b>{fmt(netWeightLive)} gm</b>
-              </Typography>
-
-              <TextField
-                label="Remarks"
-                fullWidth
-                multiline
-                minRows={2}
-                size="small"
-                sx={fieldSx}
-                placeholder="Enter remarks (optional)"
-                value={remarks}
-                onChange={(e) => setRemarks(e.target.value)}
-              />
-
-              <Button
-                fullWidth
-                variant="outlined"
-                sx={{ ...outlineBtnSx, mt: "auto" }}
-                onClick={handleReconcile}
-                disabled={!stockSummary || grossWeight === ""}
+                variant="contained"
+                startIcon={<QrCodeScannerIcon />}
+                sx={primaryBtnSx}
+                onClick={handleScanAndView}
+                disabled={scannedCodes.length === 0}
               >
-                Reconcile
+                Scan
               </Button>
-            </Paper>
 
-            {/* --- Reconciliation Result --- */}
-            <Paper sx={{ ...cardSx, mb: 0, display: "flex", flexDirection: "column" }} elevation={0}>
-              <Box sx={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 1.5, mb: 1.5 }}>
-                <Typography sx={{ ...panelTitleSx, mb: 0 }}>Reconciliation Result</Typography>
-                <IconButton size="small" onClick={(e) => setTolAnchor(e.currentTarget)}>
-                  <InfoOutlinedIcon fontSize="small" />
-                </IconButton>
-              </Box>
-              <Popover
-                open={Boolean(tolAnchor)}
-                anchorEl={tolAnchor}
-                onClose={() => setTolAnchor(null)}
-                anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
-              >
-                <Box sx={{ p: 2, width: 220 }}>
-                  <Typography sx={panelTitleSx}>Existing Tolerance</Typography>
-                  <TextField
-                    label="Metal (gm)"
-                    size="small"
-                    type="number"
-                    fullWidth
-                    sx={fieldSx}
-                    value={toleranceMetal}
-                    onChange={(e) => setToleranceMetal(Number(e.target.value))}
-                  />
-                  <TextField
-                    label="Other Material (ct/gm)"
-                    size="small"
-                    type="number"
-                    fullWidth
-                    sx={{ mb: 0 }}
-                    value={toleranceOther}
-                    onChange={(e) => setToleranceOther(Number(e.target.value))}
-                  />
-                </Box>
-              </Popover>
+            )}
+          
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={closeScanDialog} sx={{ textTransform: "none", color: COLORS.textMuted }}>
+              Close
+            </Button>
+          </DialogActions>
+        </Dialog>
 
-              {result ? (
-                <>
-                  <ResultLine label="System Weight" value={`${fmt(result.systemWeight)} gm`} />
-                  <ResultLine label="Physical Weight" value={`${fmt(result.physicalNet)} gm`} />
-                  <ResultLine
-                    label="Difference"
-                    value={`${result.difference >= 0 ? "+" : ""}${fmt(result.difference)} gm`}
-                  />
-                  <ResultLine label={`Allowed Tolerance (${toleranceLabel})`} value={`±${fmt(result.tolerance)} gm`} />
+        {/* ================= MAIN CONTENT ================= */}
+        <Box sx={{ flex: 1, minWidth: 0, p: 2, pt: 1 }}>
+          {/* Back button — filter/scan/history modes only */}
+          {mode !== "initial" && (
+            <Button
+              variant="text"
+              startIcon={<ArrowBackIcon fontSize="small" />}
+              onClick={goToStart}
+              sx={{ textTransform: "none", color: COLORS.textMuted, fontSize: 12 }}
+            >
+              Back
+            </Button>
+          )}
 
-                  <Box
-                    sx={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 1,
-                      borderRadius: "8px",
-                      px: 1.75,
-                      py: 1.5,
-                      my: 2,
-                      bgcolor: result.status === "ACCEPT" ? COLORS.successBg : COLORS.dangerBg,
-                      color: result.status === "ACCEPT" ? COLORS.success : COLORS.danger,
-                    }}
+          {/* Page header — content changes with mode */}
+          {mode !== "initial" && (
+            <Box sx={{ display: "flex", alignItems: "center", justifyContent: "flex-start", mb: 1, gap: 1.5, marginLeft: "6px" }}>
+              {mode === "filter" && (
+                <Badge color="error" badgeContent={activeFilterCount} invisible={activeFilterCount === 0}>
+                  <Button
+                    variant="outlined"
+                    startIcon={<FilterListIcon />}
+                    sx={outlineBtnSx}
+                    onClick={() => setFilterOpen(true)}
                   >
-                    {result.status === "ACCEPT" ? <CheckCircleIcon fontSize="small" /> : <CancelIcon fontSize="small" />}
-                    <Typography sx={{ fontSize: 13, fontWeight: 700 }}>{result.message}</Typography>
+                    Filters
+                  </Button>
+                </Badge>
+              )}
+
+              {mode === "scan" && (
+                <Button
+                  variant="outlined"
+                  startIcon={<QrCodeScannerIcon />}
+                  sx={outlineBtnSx}
+                  onClick={() => openScanDialog("barcode")}
+                >
+                  New Scan
+                </Button>
+              )}
+
+              <Typography sx={{ fontSize: 18, fontWeight: 700 }}>
+                {mode === "scan"
+                  ? `Scanned Lot: ${stockSummary?.subFilters?.lotno || ""}`
+                  : "Material Stock Reconciliation"}
+              </Typography>
+            </Box>
+          )}
+
+          {/* Landing screen — filters live in the full-height sidebar to the left */}
+          {mode === "initial" && (
+            <ScanLandingPanel
+              onScanBarcode={() => openScanDialog("barcode")}
+              onCameraScan={() => openScanDialog("camera")}
+            />
+          )}
+
+          {/* System Stock Summary + Physical Measurement + Result (filter or scan mode) */}
+          {showSummaryBlock && (
+            <>
+              <Paper
+                elevation={0}
+                sx={{
+                  ...cardSx,
+                  p: 3,
+                  border: "1px solid",
+                  borderColor: "divider",
+                  backgroundColor: "#fff",
+                }}
+              >
+                <Box sx={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 1.5, mb: 2.5, flexWrap: "wrap" }}>
+                  <Typography sx={{ fontSize: 16, fontWeight: 600, color: "#6c3fc5" }}>
+                    System Stock Summary
+                  </Typography>
+                  <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.75, justifyContent: "flex-end" }}>
+                    {summaryChips.map((c, i) => (
+                      <Chip key={i} label={c} size="small" sx={{ ...chipSx, backgroundColor: "#f3f4f6", fontWeight: 500 }} />
+                    ))}
                   </Box>
+                </Box>
+
+                <Box
+                  sx={{
+                    display: "grid",
+                    gridTemplateColumns: { xs: "1fr", sm: "repeat(4, 1fr)" },
+                    gap: 2.5,
+                    mb: 2.5,
+                  }}
+                >
+                  <Paper elevation={0} sx={{ p: 2.5, border: "1px solid", borderColor: "#6c3fc5", backgroundColor: "#ffffff", borderLeft: "4px solid #6c3fc5" }}>
+                    <Typography sx={{ fontSize: 16, fontWeight: 700, color: COLORS.text }}>TOTAL RM BAGS</Typography>
+                    <Typography sx={{ fontSize: 22, fontWeight: 800, mt: 1, color: COLORS.text }}>
+                      {stockSummary ? stockSummary.bags : "—"}
+                    </Typography>
+                  </Paper>
+
+                  <Paper elevation={0} sx={{ p: 2.5, border: "1px solid", borderColor: "#6c3fc5", backgroundColor: "#ffffff", borderLeft: "4px solid #6c3fc5" }}>
+                    <Typography sx={{ fontSize: 16, fontWeight: 700, color: COLORS.text }}>TOTAL PIECES</Typography>
+                    <Typography sx={{ fontSize: 22, fontWeight: 800, mt: 1, color: COLORS.text }}>
+                      {stockSummary ? stockSummary.pieces : "—"}
+                    </Typography>
+                  </Paper>
+
+                  <Paper elevation={0} sx={{ p: 2.5, border: "1px solid", borderColor: "#6c3fc5", borderLeft: "4px solid #6c3fc5", backgroundColor: "#ffffff" }}>
+                    <Typography sx={{ fontSize: 16, fontWeight: 700, color: COLORS.text }}>SYSTEM WEIGHT</Typography>
+                    <Box sx={{ display: "flex", alignItems: "baseline", gap: 1, mt: 1 }}>
+                      <Typography sx={{ fontSize: 22, fontWeight: 800, color: COLORS.text }}>
+                        {stockSummary ? fmt(stockSummary.weight) : "—"}
+                      </Typography>
+                      {stockSummary && (
+                        <Typography component="span" sx={{ fontSize: 16, color: COLORS.textMuted, fontWeight: 600 }}>
+                          gm
+                        </Typography>
+                      )}
+                    </Box>
+                  </Paper>
+
+                  <Paper elevation={0} sx={{ ...cardSx, p: 2, border: "1px solid", borderColor: "#6c3fc5", borderLeft: "4px solid #6c3fc5", backgroundColor: "#ffffff", mb: 0, width: "100%" }}>
+                    <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 2.5 }}>
+                      <Typography sx={{ fontSize: 16, fontWeight: 700, color: COLORS.text }}>Today's Reconciliations</Typography>
+                      <Chip label="44" size="small" sx={{ backgroundColor: "#f3f4f6", fontWeight: 700, color: COLORS.text, borderRadius: 2 }} />
+                    </Box>
+                    <Box sx={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 2 }}>
+                      <Box>
+                        <Typography sx={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.04em", color: COLORS.textMuted }}>Passed</Typography>
+                        <Typography sx={{ fontSize: 24, fontWeight: 800, mt: 0.5, color: COLORS.success }}>35</Typography>
+                      </Box>
+                      <Box>
+                        <Typography sx={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.04em", color: COLORS.textMuted }}>Failed</Typography>
+                        <Typography sx={{ fontSize: 24, fontWeight: 800, mt: 0.5, color: COLORS.danger }}>2</Typography>
+                      </Box>
+                      <Box>
+                        <Typography sx={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.04em", color: COLORS.textMuted }}>Pending</Typography>
+                        <Typography sx={{ fontSize: 24, fontWeight: 800, mt: 0.5, color: COLORS.warning }}>7</Typography>
+                      </Box>
+                    </Box>
+                  </Paper>
+                </Box>
+              </Paper>
+
+              {/* Physical Measurement + Reconciliation Result */}
+              <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" }, gap: 3, mb: 2.5, alignItems: "stretch" }}>
+                <Paper sx={{ ...cardSx, mb: 0, display: "flex", flexDirection: "column" }} elevation={0}>
+                  <Box sx={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 1.5, mb: 1.5 }}>
+                    <Typography sx={{ ...panelTitleSx, mb: 0 }}>Physical Measurement</Typography>
+                  </Box>
+
+                  <TextField
+                    label="Enter Weight"
+                    required
+                    fullWidth
+                    size="small"
+                    type="number"
+                    sx={fieldSx}
+                    value={grossWeight}
+                    onChange={(e) => setGrossWeight(e.target.value)}
+                    InputProps={{ endAdornment: <Typography sx={{ fontSize: 12, color: COLORS.textMuted }}>gm</Typography> }}
+                  />
+
+                  <Box sx={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 1.5, mb: 1.75 }}>
+                    <TextField
+                      label="Tray/Box Weight"
+                      required
+                      fullWidth
+                      size="small"
+                      type="number"
+                      value={trayWeight}
+                      onChange={(e) => setTrayWeight(e.target.value)}
+                      InputProps={{ endAdornment: <Typography sx={{ fontSize: 12, color: COLORS.textMuted }}>gm</Typography> }}
+                    />
+                    <TextField
+                      label="Sticker Weight"
+                      required
+                      fullWidth
+                      size="small"
+                      type="number"
+                      value={stickerWeight}
+                      onChange={(e) => setStickerWeight(e.target.value)}
+                      InputProps={{ endAdornment: <Typography sx={{ fontSize: 12, color: COLORS.textMuted }}>gm</Typography> }}
+                    />
+                    <TextField
+                      label="Polythene Weight"
+                      required
+                      fullWidth
+                      size="small"
+                      type="number"
+                      value={polytheneWeight}
+                      onChange={(e) => setPolytheneWeight(e.target.value)}
+                      InputProps={{ endAdornment: <Typography sx={{ fontSize: 12, color: COLORS.textMuted }}>gm</Typography> }}
+                    />
+                  </Box>
+
+                  <Typography sx={hintSx}>
+                    Total Bags: <b>{totalBags}</b> · Sticker Total: <b>{fmt(stickerTotal)}</b> gm · Polythene
+                    Total: <b>{fmt(polytheneTotal)}</b> gm · Tray/Box: <b>{fmt(trayTotal)}</b> gm
+                  </Typography>
+                  <Typography sx={hintSx}>
+                    Net Weight: <b>{fmt(netWeightLive)} gm</b>
+                  </Typography>
+
+                  <TextField
+                    label="Remarks"
+                    fullWidth
+                    multiline
+                    minRows={2}
+                    size="small"
+                    sx={fieldSx}
+                    placeholder="Enter remarks (optional)"
+                    value={remarks}
+                    onChange={(e) => setRemarks(e.target.value)}
+                  />
 
                   <Button
                     fullWidth
-                    variant="contained"
-                    startIcon={<SaveIcon />}
-                    sx={{ ...primaryBtnSx, mt: "auto" }}
-                    onClick={handleSaveReconciliation}
+                    variant="outlined"
+                    sx={{ ...outlineBtnSx, mt: "auto" }}
+                    onClick={handleReconcile}
+                    disabled={!stockSummary || grossWeight === ""}
                   >
-                    Save Reconciliation
+                    Reconcile
                   </Button>
-                </>
-              ) : (
-                <Typography sx={hintInlineSx}>
-                  Enter the physical weights and click "Reconcile" to see the comparison against
-                  system weight.
-                </Typography>
-              )}
-            </Paper>
-          </Box>
+                </Paper>
 
-          {/* Reconciliation History */}
-          <Paper sx={cardSx} elevation={0}>
-            <Typography sx={panelTitleSx}>Reconciliation History</Typography>
-            <TableContainer sx={tableContainerSx}>
-              <Table size="small">
-                <TableHead>
-                  <TableRow>
-                    <TableCell sx={theadCellSx}>Date &amp; Time</TableCell>
-                    <TableCell sx={theadCellSx}>Material</TableCell>
-                    <TableCell sx={theadCellSx}>Shape</TableCell>
-                    <TableCell sx={theadCellSx}>Size</TableCell>
-                    <TableCell sx={theadCellSx}>Lot No</TableCell>
-                    <TableCell sx={theadCellSx} align="right">System Weight</TableCell>
-                    <TableCell sx={theadCellSx} align="right">Physical Weight</TableCell>
-                    <TableCell sx={theadCellSx} align="right">Difference</TableCell>
-                    <TableCell sx={theadCellSx}>Status</TableCell>
-                    <TableCell sx={theadCellSx}>Remarks</TableCell>
-                    <TableCell sx={theadCellSx} align="center">Action</TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {history.length === 0 && (
-                    <TableRow>
-                      <TableCell colSpan={11} align="center" sx={{ color: COLORS.textMuted, py: 3 }}>
-                        No reconciliations saved yet.
-                      </TableCell>
-                    </TableRow>
+                <Paper sx={{ ...cardSx, mb: 0, display: "flex", flexDirection: "column" }} elevation={0}>
+                  <Box sx={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 1.5, mb: 1.5 }}>
+                    <Typography sx={{ ...panelTitleSx, mb: 0 }}>Reconciliation Result</Typography>
+                    <IconButton size="small" onClick={(e) => setTolAnchor(e.currentTarget)}>
+                      <InfoOutlinedIcon fontSize="small" />
+                    </IconButton>
+                  </Box>
+                  <Popover
+                    open={Boolean(tolAnchor)}
+                    anchorEl={tolAnchor}
+                    onClose={() => setTolAnchor(null)}
+                    anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+                  >
+                    <Box sx={{ p: 2, width: 220 }}>
+                      <Typography sx={panelTitleSx}>Existing Tolerance</Typography>
+                      <TextField
+                        label="Metal (gm)"
+                        size="small"
+                        type="number"
+                        fullWidth
+                        sx={fieldSx}
+                        value={toleranceMetal}
+                        onChange={(e) => setToleranceMetal(Number(e.target.value))}
+                      />
+                      <TextField
+                        label="Other Material (ct/gm)"
+                        size="small"
+                        type="number"
+                        fullWidth
+                        sx={{ mb: 0 }}
+                        value={toleranceOther}
+                        onChange={(e) => setToleranceOther(Number(e.target.value))}
+                      />
+                    </Box>
+                  </Popover>
+
+                  {result ? (
+                    <>
+                      <ResultLine label="System Weight" value={`${fmt(result.systemWeight)} gm`} />
+                      <ResultLine label="Physical Weight" value={`${fmt(result.physicalNet)} gm`} />
+                      <ResultLine label="Difference" value={`${result.difference >= 0 ? "+" : ""}${fmt(result.difference)} gm`} />
+                      <ResultLine label={`Allowed Tolerance (${toleranceLabel})`} value={`±${fmt(result.tolerance)} gm`} />
+
+                      <Box
+                        sx={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 1,
+                          borderRadius: "8px",
+                          px: 1.75,
+                          py: 1.5,
+                          my: 2,
+                          bgcolor: result.status === "ACCEPT" ? COLORS.successBg : COLORS.dangerBg,
+                          color: result.status === "ACCEPT" ? COLORS.success : COLORS.danger,
+                        }}
+                      >
+                        {result.status === "ACCEPT" ? <CheckCircleIcon fontSize="small" /> : <CancelIcon fontSize="small" />}
+                        <Typography sx={{ fontSize: 13, fontWeight: 700 }}>{result.message}</Typography>
+                      </Box>
+
+                      <Button
+                        fullWidth
+                        variant="contained"
+                        startIcon={<SaveIcon />}
+                        sx={{ ...primaryBtnSx, mt: "auto" }}
+                        onClick={handleSaveReconciliation}
+                      >
+                        Save Reconciliation
+                      </Button>
+                    </>
+                  ) : (
+                    <Typography sx={hintInlineSx}>
+                      Enter the physical weights and click "Reconcile" to see the comparison against
+                      system weight.
+                    </Typography>
                   )}
-                  {history.map((h) => (
-                    <TableRow key={h.id}>
-                      <TableCell sx={tbodyCellSx}>{h.dateTime}</TableCell>
-                      <TableCell sx={linkCellSx}>{h.material}</TableCell>
-                      <TableCell sx={tbodyCellSx}>{h.shape}</TableCell>
-                      <TableCell sx={tbodyCellSx}>{h.size}</TableCell>
-                      <TableCell sx={tbodyCellSx}>{h.lotNo}</TableCell>
-                      <TableCell sx={tbodyCellSx} align="right">{fmt(h.systemWeight)}</TableCell>
-                      <TableCell sx={tbodyCellSx} align="right">{fmt(h.physicalNet)}</TableCell>
-                      <TableCell sx={tbodyCellSx} align="right">
-                        {h.difference >= 0 ? "+" : ""}
-                        {fmt(h.difference)}
-                      </TableCell>
-                      <TableCell sx={tbodyCellSx}>
-                        <Chip size="small" label={h.status === "ACCEPT" ? "PASS" : "FAIL"} sx={h.status === "ACCEPT" ? chipSuccessSx : chipDangerSx} />
-                      </TableCell>
-                      <TableCell sx={tbodyCellSx}>{h.remarks || "—"}</TableCell>
-                      <TableCell sx={tbodyCellSx} align="center">
-                        <IconButton size="small" onClick={() => setViewRecord(h)}>
-                          <VisibilityIcon fontSize="small" />
-                        </IconButton>
-                      </TableCell>
+                </Paper>
+              </Box>
+            </>
+          )}
+
+          {/* Reconciliation History — visible from filter mode, scan mode, and the
+              dedicated "Reconcile Report" view */}
+          {showHistoryBlock && (
+            <Paper sx={cardSx} elevation={0}>
+              <Typography sx={panelTitleSx}>Reconciliation History</Typography>
+              <TableContainer sx={tableContainerSx}>
+                <Table size="small">
+                  <TableHead>
+                    <TableRow>
+                      <TableCell sx={theadCellSx}>Date &amp; Time</TableCell>
+                      <TableCell sx={theadCellSx}>Material</TableCell>
+                      <TableCell sx={theadCellSx}>Shape</TableCell>
+                      <TableCell sx={theadCellSx}>Size</TableCell>
+                      <TableCell sx={theadCellSx}>Lot No</TableCell>
+                      <TableCell sx={theadCellSx} align="right">System Weight</TableCell>
+                      <TableCell sx={theadCellSx} align="right">Physical Weight</TableCell>
+                      <TableCell sx={theadCellSx} align="right">Difference</TableCell>
+                      <TableCell sx={theadCellSx}>Status</TableCell>
+                      <TableCell sx={theadCellSx}>Remarks</TableCell>
+                      <TableCell sx={theadCellSx} align="center">Action</TableCell>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </TableContainer>
-          </Paper>
+                  </TableHead>
+                  <TableBody>
+                    {history.length === 0 && (
+                      <TableRow>
+                        <TableCell colSpan={11} align="center" sx={{ color: COLORS.textMuted, py: 3 }}>
+                          No reconciliations saved yet.
+                        </TableCell>
+                      </TableRow>
+                    )}
+                    {history.map((h) => (
+                      <TableRow key={h.id}>
+                        <TableCell sx={tbodyCellSx}>{h.dateTime}</TableCell>
+                        <TableCell sx={linkCellSx}>{h.material}</TableCell>
+                        <TableCell sx={tbodyCellSx}>{h.shape}</TableCell>
+                        <TableCell sx={tbodyCellSx}>{h.size}</TableCell>
+                        <TableCell sx={tbodyCellSx}>{h.lotNo}</TableCell>
+                        <TableCell sx={tbodyCellSx} align="right">{fmt(h.systemWeight)}</TableCell>
+                        <TableCell sx={tbodyCellSx} align="right">{fmt(h.physicalNet)}</TableCell>
+                        <TableCell sx={tbodyCellSx} align="right">
+                          {h.difference >= 0 ? "+" : ""}
+                          {fmt(h.difference)}
+                        </TableCell>
+                        <TableCell sx={tbodyCellSx}>
+                          <Chip size="small" label={h.status === "ACCEPT" ? "PASS" : "FAIL"} sx={h.status === "ACCEPT" ? chipSuccessSx : chipDangerSx} />
+                        </TableCell>
+                        <TableCell sx={tbodyCellSx}>{h.remarks || "—"}</TableCell>
+                        <TableCell sx={tbodyCellSx} align="center">
+                          <IconButton size="small" onClick={() => setViewRecord(h)}>
+                            <VisibilityIcon fontSize="small" />
+                          </IconButton>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+            </Paper>
+          )}
         </Box>
 
         {/* View saved reconciliation dialog */}
