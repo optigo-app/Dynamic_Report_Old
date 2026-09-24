@@ -18,6 +18,9 @@ import {
   Pagination,
   Tabs,
   Tab,
+  Dialog,
+  DialogTitle,
+  DialogContent,
 } from '@mui/material';
 import { DataGrid } from '@mui/x-data-grid';
 import Inventory2OutlinedIcon from '@mui/icons-material/Inventory2Outlined';
@@ -263,6 +266,33 @@ const formatDiamondSolitaire = (dVal, sVal, decimals = 0, unit = '') => {
     return `${dStr}\u00A0\u00A0\u00A0\u00A0S:${fmt(sVal)}${suffix}`;
   }
   return dStr;
+};
+
+/* ---------------------------------------------------------------- */
+/* NEW: Pcs drill-down helpers                                        */
+/* Returns the source rows that make up ONE pivot row (i.e. the rows  */
+/* behind the clicked Pcs value). Uses the exact same rules as        */
+/* buildPivot so what you see matches what was counted.               */
+/* ---------------------------------------------------------------- */
+
+const getPivotSourceRows = (rows, fieldMap, rowField, colField, rowFormatter, rowLabel) =>
+  rows.filter((row) => {
+    let rVal = getField(row, fieldMap, rowField);
+    let cVal = getField(row, fieldMap, colField);
+
+    if (rowFormatter) rVal = rowFormatter(rVal);
+    rVal = stripHtml(rVal);
+    cVal = stripHtml(cVal);
+
+    if (rVal === undefined || rVal === null || rVal === '') return false;
+    if (cVal === undefined || cVal === null || cVal === '') return false;
+
+    return rVal === rowLabel;
+  });
+
+const formatWeight = (val) => {
+  const n = parseFloat(val);
+  return Number.isFinite(n) ? n.toFixed(3) : '-';
 };
 
 /* ---------------------------------------------------------------- */
@@ -826,6 +856,18 @@ const TAB_LABELS = [
   'Promise Date by Status',
 ];
 
+/* NEW: columns for the Pcs drill-down popup */
+const PCS_DETAIL_COLUMNS = [
+  { field: 'promiseDate', headerName: 'Promise Date', flex: 1, minWidth: 120, align: 'center', headerAlign: 'center' },
+  { field: 'jobNo', headerName: 'Job No', flex: 1, minWidth: 120 },
+  { field: 'design', headerName: 'Design', flex: 1.1, minWidth: 130 },
+  { field: 'status', headerName: 'Status', flex: 1.4, minWidth: 160 },
+  { field: 'workerName', headerName: 'Worker Name', flex: 1.2, minWidth: 140 },
+  { field: 'location', headerName: 'Location', flex: 1.2, minWidth: 140 },
+  { field: 'grossWt', headerName: 'Gross Wt', flex: 0.9, minWidth: 100, align: 'right', headerAlign: 'center' },
+  { field: 'netWt', headerName: 'Net Wt', flex: 0.9, minWidth: 100, align: 'right', headerAlign: 'center' },
+];
+
 const WIPMis = () => {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -845,6 +887,10 @@ const WIPMis = () => {
   const [promiseFilters, setPromiseFilters] = useState(createEmptyFilters);
   const [statusFilters, setStatusFilters] = useState(createEmptyFilters);
   const [deptFilters, setDeptFilters] = useState(createEmptyFilters);
+
+  // ---- NEW: Pcs drill-down popup state ----
+  // { title: string, rows: [...] } or null when closed
+  const [pcsDetail, setPcsDetail] = useState(null);
 
   const handleFetchData = async (start, end) => {
     setLoading(true);
@@ -998,7 +1044,43 @@ const WIPMis = () => {
 
   const pickerTheme = useMemo(() => createTheme({ palette: { primary: { main: '#6c5ce7' } } }), []);
 
-  const buildPivotColumns = (rowLabel, colKeys) => [
+  /* ---------------- NEW: open the Pcs drill-down popup ---------------- */
+  // cfg = { rows, rowField, colField, rowFormatter, tableTitle }
+  const openPcsDetail = (cfg, rowLabel) => {
+    const sourceRows = getPivotSourceRows(
+      cfg.rows,
+      fieldMap,
+      cfg.rowField,
+      cfg.colField,
+      cfg.rowFormatter,
+      rowLabel
+    );
+
+    const detailRows = sourceRows
+      .map((row, idx) => {
+        const promiseRaw = getField(row, fieldMap, 'jobpromisedate');
+        return {
+          __key: idx,
+          promiseDateRaw: promiseRaw,
+          promiseDate: formatDateOnly(promiseRaw),
+          jobNo: getField(row, fieldMap, 'serialjobno') || '-',
+          design: getField(row, fieldMap, 'Designcode') || '-',
+          status: stripHtml(getField(row, fieldMap, 'department')) || '-',
+          workerName: getField(row, fieldMap, 'LastProcessedBy') || '-',
+          location: getField(row, fieldMap, 'Mastermanagement_MFG_JobLastLocationname') || '-',
+          grossWt: formatWeight(getField(row, fieldMap, 'GrossWeightgm')),
+          netWt: formatWeight(getField(row, fieldMap, 'NetWtgm')),
+        };
+      })
+      .sort((a, b) => new Date(b.promiseDateRaw || 0) - new Date(a.promiseDateRaw || 0));
+
+    setPcsDetail({
+      title: `${cfg.tableTitle} — ${rowLabel}`,
+      rows: detailRows,
+    });
+  };
+
+  const buildPivotColumns = (rowLabel, colKeys, detailCfg) => [
     { field: 'row', headerName: rowLabel, flex: 1.4, minWidth: 160 },
     {
       field: 'pcs',
@@ -1007,6 +1089,27 @@ const WIPMis = () => {
       minWidth: 90,
       align: 'center',
       headerAlign: 'center',
+      // NEW: clickable Pcs value → opens drill-down popup
+      renderCell: (params) => {
+        const val = params.value;
+        if (!detailCfg || !val) return val;
+        return (
+          <Box
+            onClick={() => openPcsDetail(detailCfg, params.row.row)}
+            className="heat-Pcs-cell"
+            title="Click to view details"
+            style={{
+              cursor: 'pointer',
+              color: '#6c5ce7',
+              fontWeight: 700,
+              textDecoration: 'underline',
+              textUnderlineOffset: '2px',
+            }}
+          >
+            {val}
+          </Box>
+        );
+      },
     },
     ...colKeys.map((c) => ({
       field: c,
@@ -1062,29 +1165,47 @@ const WIPMis = () => {
   });
 
   const promise = useMemo(() => {
-    const allCols = buildPivotColumns('Promise Date', promisePivot.colKeys);
+    const allCols = buildPivotColumns('Promise Date', promisePivot.colKeys, {
+      rows: promiseFilteredRows,
+      rowField: 'jobpromisedate',
+      colField: 'JobLocation',
+      rowFormatter: formatDateOnly,
+      tableTitle: 'WIP Distribution by Location',
+    });
     const rows = buildPivotRows(promisePivot);
     const columns = filterEmptyColumns(allCols, rows, ['pcs']);
     const totals = buildPivotTotals(promisePivot);
     return { columns, rows, totals };
-  }, [promisePivot]);
+  }, [promisePivot, promiseFilteredRows, fieldMap]);
 
   const status = useMemo(() => {
-    const allCols = buildPivotColumns('Current Status', statusPivot.colKeys);
+    const allCols = buildPivotColumns('Current Status', statusPivot.colKeys, {
+      rows: statusFilteredRows,
+      rowField: 'department',
+      colField: 'JobLocation',
+      rowFormatter: undefined,
+      tableTitle: 'Current Status by Location',
+    });
     const rows = buildPivotRows(statusPivot);
     const columns = filterEmptyColumns(allCols, rows, ['pcs']);
     const totals = buildPivotTotals(statusPivot);
     return { columns, rows, totals };
-  }, [statusPivot]);
+  }, [statusPivot, statusFilteredRows, fieldMap]);
 
   const department = useMemo(() => {
     const orderedColKeys = reorderPriorityColumn(departmentPivot.colKeys, 'Pending Request');
-    const allCols = buildPivotColumns('Promise Date', orderedColKeys);
+    const allCols = buildPivotColumns('Promise Date', orderedColKeys, {
+      rows: deptFilteredRows,
+      rowField: 'jobpromisedate',
+      colField: 'department',
+      rowFormatter: formatDateOnly,
+      tableTitle: 'Promise Date by Status',
+    });
     const rows = buildPivotRows(departmentPivot, orderedColKeys);
     const columns = filterEmptyColumns(allCols, rows, ['Pending Request', 'pcs']);
     const totals = buildPivotTotals(departmentPivot, orderedColKeys);
     return { columns, rows, totals };
-  }, [departmentPivot]);
+  }, [departmentPivot, deptFilteredRows, fieldMap]);
 
   /* ---------------- Order Details (uses expstartdate) ---------------- */
   const orderDetails = useMemo(() => {
@@ -1475,6 +1596,41 @@ const WIPMis = () => {
           </Box>
         </Box>
       )}
+
+      {/* ---------------- NEW: Pcs drill-down popup ---------------- */}
+      <Dialog
+        open={Boolean(pcsDetail)}
+        onClose={() => setPcsDetail(null)}
+        maxWidth="lg"
+        fullWidth
+      >
+        <DialogTitle
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            fontWeight: 700,
+            fontSize: '16px',
+            paddingBottom: '8px',
+          }}
+        >
+          <span>{pcsDetail?.title}</span>
+          <IconButton size="small" onClick={() => setPcsDetail(null)} title="Close">
+            <CloseIcon fontSize="small" />
+          </IconButton>
+        </DialogTitle>
+        <DialogContent dividers sx={{ padding: '12px' }}>
+          {pcsDetail && (
+            <DataGridPanel
+              icon={<Inventory2Icon fontSize="small" />}
+              title={`${pcsDetail.rows.length} record${pcsDetail.rows.length === 1 ? '' : 's'}`}
+              dense
+              columns={PCS_DETAIL_COLUMNS}
+              rows={pcsDetail.rows}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
     </Box>
   );
 };
