@@ -859,15 +859,16 @@ const TAB_LABELS = [
 /* NEW: columns for the Pcs drill-down popup */
 const PCS_DETAIL_COLUMNS = [
   { field: 'promiseDate', headerName: 'Promise Date', flex: 1, minWidth: 120, align: 'center', headerAlign: 'center' },
+  { field: 'remDays', headerName: 'Rem. Date', flex: 0.9, minWidth: 100, align: 'center', headerAlign: 'center' }, // NEW
+  { field: 'location', headerName: 'Location', flex: 1.2, minWidth: 140 },
+  { field: 'custCode', headerName: 'Cust Code', flex: 1, minWidth: 120 },          // NEW
   { field: 'jobNo', headerName: 'Job No', flex: 1, minWidth: 120 },
   { field: 'design', headerName: 'Design', flex: 1.1, minWidth: 130 },
   { field: 'status', headerName: 'Status', flex: 1.4, minWidth: 160 },
-  { field: 'workerName', headerName: 'Worker Name', flex: 1.2, minWidth: 140 },
-  { field: 'location', headerName: 'Location', flex: 1.2, minWidth: 140 },
-  { field: 'grossWt', headerName: 'Gross Wt', flex: 0.9, minWidth: 100, align: 'right', headerAlign: 'center' },
-  { field: 'netWt', headerName: 'Net Wt', flex: 0.9, minWidth: 100, align: 'right', headerAlign: 'center' },
+  // { field: 'workerName', headerName: 'Worker Name', flex: 1.2, minWidth: 140 },
+  // { field: 'grossWt', headerName: 'Gross Wt', flex: 0.9, minWidth: 100, align: 'right', headerAlign: 'center' },
+  // { field: 'netWt', headerName: 'Net Wt', flex: 0.9, minWidth: 100, align: 'right', headerAlign: 'center' },
 ];
-
 const WIPMis = () => {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -1057,23 +1058,25 @@ const WIPMis = () => {
     );
 
     const detailRows = sourceRows
-      .map((row, idx) => {
-        const promiseRaw = getField(row, fieldMap, 'jobpromisedate');
-        return {
-          __key: idx,
-          promiseDateRaw: promiseRaw,
-          promiseDate: formatDateOnly(promiseRaw),
-          jobNo: getField(row, fieldMap, 'serialjobno') || '-',
-          design: getField(row, fieldMap, 'Designcode') || '-',
-          status: stripHtml(getField(row, fieldMap, 'department')) || '-',
-          workerName: getField(row, fieldMap, 'LastProcessedBy') || '-',
-          location: getField(row, fieldMap, 'Mastermanagement_MFG_JobLastLocationname') || '-',
-          grossWt: formatWeight(getField(row, fieldMap, 'GrossWeightgm')),
-          netWt: formatWeight(getField(row, fieldMap, 'NetWtgm')),
-        };
-      })
-      .sort((a, b) => new Date(b.promiseDateRaw || 0) - new Date(a.promiseDateRaw || 0));
-
+  .map((row, idx) => {
+    const promiseRaw = getField(row, fieldMap, 'jobpromisedate');
+    const remDays = computeRemainingDays(row, fieldMap);          // NEW
+    return {
+      __key: idx,
+      promiseDateRaw: promiseRaw,
+      promiseDate: formatDateOnly(promiseRaw),
+      jobNo: getField(row, fieldMap, 'serialjobno') || '-',
+      design: getField(row, fieldMap, 'Designcode') || '-',
+      custCode: getField(row, fieldMap, 'Customercode') || '-',    // NEW
+      status: stripHtml(getField(row, fieldMap, 'department')) || '-',
+      workerName: getField(row, fieldMap, 'LastProcessedBy') || '-',
+      location: getField(row, fieldMap, 'Mastermanagement_MFG_JobLastLocationname') || '-',
+      grossWt: formatWeight(getField(row, fieldMap, 'GrossWeightgm')),
+      netWt: formatWeight(getField(row, fieldMap, 'NetWtgm')),
+      remDays: remDays === null ? '-' : remDays,                  // NEW
+    };
+  })
+  .sort((a, b) => new Date(b.promiseDateRaw || 0) - new Date(a.promiseDateRaw || 0));
     setPcsDetail({
       title: `${cfg.tableTitle} — ${rowLabel}`,
       rows: detailRows,
@@ -1098,11 +1101,11 @@ const WIPMis = () => {
             onClick={() => openPcsDetail(detailCfg, params.row.row)}
             className="heat-Pcs-cell"
             title="Click to view details"
-            style={{
+            sx={{
               cursor: 'pointer',
-              color: '#6c5ce7',
+              color: '#6c5ce7 !important',
               fontWeight: 700,
-              textDecoration: 'underline',
+              textDecoration: 'underline !important',
               textUnderlineOffset: '2px',
             }}
           >
