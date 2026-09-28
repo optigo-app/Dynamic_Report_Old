@@ -1028,6 +1028,22 @@ export default function AllEmployeeDataReport({
     );
   }
 
+
+  const CustomerBindevo = [
+    {
+      "id": 1,
+      "name": "ATM Binding"
+    },
+    {
+      "id": 3,
+      "name": "On Floor"
+    },
+    {
+      "id": 4,
+      "name": "ATM Binding + On Floor"
+    }
+  ]
+
   React.useEffect(() => {
     setColumns((prev) =>
       prev.map((col) => {
@@ -1092,7 +1108,7 @@ export default function AllEmployeeDataReport({
                     fullWidth
                     className="MenuSelectItem"
                   >
-                    {CustomerBind.map((item) => (
+                    {CustomerBindevo?.map((item) => (
                       <MenuItem
                         key={item.id}
                         value={item.id}
@@ -2758,7 +2774,7 @@ export default function AllEmployeeDataReport({
             {isPaneCollapsed && (
               <p
                 onClick={onOpenPane}
-                style={{ cursor: "pointer", color: "green", margin: "10px" , display: 'flex'}}
+                style={{ cursor: "pointer", color: "green", margin: "10px", display: 'flex' }}
               >
                 <ChevronsRight />
                 <p>{selectedFilterCategory}</p>
