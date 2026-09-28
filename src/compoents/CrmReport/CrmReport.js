@@ -1116,22 +1116,22 @@ const CrmReport = () => {
           {/* Right: at-a-glance stat chips */}
           <Box className="crm_topbar_stats">
             <Box className="crm_stat_chip crm_stat_info"
-            style={{ cursor: 'pointer' }}
-            onClick={() => {
-              if (window?.parent?.postMessage) {
-                window.parent.postMessage(
-                  {
-                    type: "ADD_TAB",
-                    evt: "DynamicReport",
-                    payload: {
-                      TabName: topinfoNavigation?.PageName,
-                      TabUrl: topinfoNavigation?.URL,
+              style={{ cursor: 'pointer' }}
+              onClick={() => {
+                if (window?.parent?.postMessage) {
+                  window.parent.postMessage(
+                    {
+                      type: "ADD_TAB",
+                      evt: "DynamicReport",
+                      payload: {
+                        TabName: topinfoNavigation?.PageName,
+                        TabUrl: topinfoNavigation?.URL,
+                      },
                     },
-                  },
-                  "*"
-                );
-              }
-            }}
+                    "*"
+                  );
+                }
+              }}
             >
               <Box className="crm_stat_ico"><IndianRupee size={14} /></Box>
               <Box className="crm_stat_txt">
@@ -1140,22 +1140,22 @@ const CrmReport = () => {
               </Box>
             </Box>
             <Box className="crm_stat_chip crm_stat_info"
-            style={{ cursor: 'pointer' }}
-            onClick={() => {
-              if (window?.parent?.postMessage) {
-                window.parent.postMessage(
-                  {
-                    type: "ADD_TAB",
-                    evt: "DynamicReport",
-                    payload: {
-                      TabName: topinfoNavigation?.PageName,
-                      TabUrl: topinfoNavigation?.URL,
+              style={{ cursor: 'pointer' }}
+              onClick={() => {
+                if (window?.parent?.postMessage) {
+                  window.parent.postMessage(
+                    {
+                      type: "ADD_TAB",
+                      evt: "DynamicReport",
+                      payload: {
+                        TabName: topinfoNavigation?.PageName,
+                        TabUrl: topinfoNavigation?.URL,
+                      },
                     },
-                  },
-                  "*"
-                );
-              }
-            }}
+                    "*"
+                  );
+                }
+              }}
             >
               <Box className="crm_stat_ico"><GiMetalBar size={14} /></Box>
               <Box className="crm_stat_txt">
@@ -1164,22 +1164,22 @@ const CrmReport = () => {
               </Box>
             </Box>
             <Box className="crm_stat_chip crm_stat_info"
-            style={{ cursor: 'pointer' }}
-            onClick={() => {
-              if (window?.parent?.postMessage) {
-                window.parent.postMessage(
-                  {
-                    type: "ADD_TAB",
-                    evt: "DynamicReport",
-                    payload: {
-                      TabName: topinfoNavigation?.PageName,
-                      TabUrl: topinfoNavigation?.URL,
+              style={{ cursor: 'pointer' }}
+              onClick={() => {
+                if (window?.parent?.postMessage) {
+                  window.parent.postMessage(
+                    {
+                      type: "ADD_TAB",
+                      evt: "DynamicReport",
+                      payload: {
+                        TabName: topinfoNavigation?.PageName,
+                        TabUrl: topinfoNavigation?.URL,
+                      },
                     },
-                  },
-                  "*"
-                );
-              }
-            }}
+                    "*"
+                  );
+                }
+              }}
             >
               <Box className="crm_stat_ico"><Gem size={14} /></Box>
               <Box className="crm_stat_txt">
@@ -1432,7 +1432,20 @@ const CrmReport = () => {
                     >
                       {displayOutstandingMarks?.breakdown?.map((e, i) => <Cell key={i} fill={e.color} />)}
                     </Pie>
-                    <Tooltip formatter={(v) => `${v}%`} contentStyle={{ fontSize: 11, borderRadius: 6 }} />
+                    <Tooltip
+                      wrapperStyle={{ zIndex: 1000 }}
+                      formatter={(v) => `${v}%`}
+                      contentStyle={{
+                        fontSize: 11,
+                        borderRadius: 6,
+                        backgroundColor: '#ffffff',
+                        opacity: 1,
+                        border: '1px solid #e0e0e0',
+                        boxShadow: '0 2px 8px rgba(0,0,0,0.15)'
+                      }}
+                      itemStyle={{ color: '#333' }}
+                      labelStyle={{ color: '#333' }}
+                    />
                   </PieChart>
                   <Box className="crm_donut_center_box" sx={{
                     position: 'absolute',
