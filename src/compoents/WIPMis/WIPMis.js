@@ -432,8 +432,8 @@ const DataGridPanel = ({
           typeof raw === 'number'
             ? raw
             : raw !== '' && raw !== null && raw !== undefined && !Number.isNaN(Number(raw))
-            ? Number(raw)
-            : null;
+              ? Number(raw)
+              : null;
         if (num !== null) {
           sum += num;
           hasNumeric = true;
@@ -464,21 +464,21 @@ const DataGridPanel = ({
         col.renderHeader
           ? col
           : {
-              ...col,
-              renderHeader: () => (
-                <span
-                  style={{
-                    whiteSpace: 'normal',
-                    textAlign: 'center',
-                    lineHeight: 1.2,
-                    fontWeight: 700,
-                    fontSize: 13,
-                  }}
-                >
-                  {col.headerName}
-                </span>
-              ),
-            }
+            ...col,
+            renderHeader: () => (
+              <span
+                style={{
+                  whiteSpace: 'normal',
+                  textAlign: 'center',
+                  lineHeight: 1.2,
+                  fontWeight: 700,
+                  fontSize: 13,
+                }}
+              >
+                {col.headerName}
+              </span>
+            ),
+          }
       ),
     [columns]
   );
@@ -655,9 +655,8 @@ const FilterChip = ({ label, value, onChange, options }) => {
           {options.map((opt) => (
             <Box
               key={opt}
-              className={`tab-filter-popover__item tab-filter-popover__item--select ${
-                value === opt ? 'is-selected' : ''
-              }`}
+              className={`tab-filter-popover__item tab-filter-popover__item--select ${value === opt ? 'is-selected' : ''
+                }`}
               onClick={() => handleSelect(opt)}
             >
               <span>{opt}</span>
@@ -856,16 +855,18 @@ const TAB_LABELS = [
   'Promise Date by Status',
 ];
 
-/* NEW: columns for the Pcs drill-down popup */
+/* NEW: columns for the Pcs drill-down popup  
+*/
 const PCS_DETAIL_COLUMNS = [
   { field: 'promiseDate', headerName: 'Promise Date', flex: 1, minWidth: 120, align: 'center', headerAlign: 'center' },
-  { field: 'remDays', headerName: 'Rem. Date', flex: 0.9, minWidth: 100, align: 'center', headerAlign: 'center' }, // NEW
-  { field: 'location', headerName: 'Location', flex: 1.2, minWidth: 140 },
-  { field: 'custCode', headerName: 'Cust Code', flex: 1, minWidth: 120 },          // NEW
+  { field: 'remDays', headerName: 'Rem. Days', flex: 1.0, minWidth: 100, align: 'center', headerAlign: 'center' }, 
+  { field: 'location', headerName: 'Location', flex: 1.1, minWidth: 120 },
+  { field: 'custCode', headerName: 'Cust Code', flex: 1, minWidth: 120 },          
   { field: 'jobNo', headerName: 'Job No', flex: 1, minWidth: 120 },
-  { field: 'design', headerName: 'Design', flex: 1.1, minWidth: 130 },
-  { field: 'status', headerName: 'Status', flex: 1.4, minWidth: 160 },
-  // { field: 'workerName', headerName: 'Worker Name', flex: 1.2, minWidth: 140 },
+  { field: 'Pcs', headerName: 'Pcs', flex: 0.8, minWidth: 90 },
+  { field: 'design', headerName: 'Design No.', flex: 1.1, minWidth: 130 },
+  { field: 'status', headerName: 'Current Status', flex: 1.4, minWidth: 140 },
+  { field: 'workerName', headerName: 'Worker Name', flex: 1.2, minWidth: 140 },
   // { field: 'grossWt', headerName: 'Gross Wt', flex: 0.9, minWidth: 100, align: 'right', headerAlign: 'center' },
   // { field: 'netWt', headerName: 'Net Wt', flex: 0.9, minWidth: 100, align: 'right', headerAlign: 'center' },
 ];
@@ -892,6 +893,8 @@ const WIPMis = () => {
   // ---- NEW: Pcs drill-down popup state ----
   // { title: string, rows: [...] } or null when closed
   const [pcsDetail, setPcsDetail] = useState(null);
+  // NEW: search text for the drill-down popup
+  const [pcsSearch, setPcsSearch] = useState('');
 
   const handleFetchData = async (start, end) => {
     setLoading(true);
@@ -1058,29 +1061,50 @@ const WIPMis = () => {
     );
 
     const detailRows = sourceRows
-  .map((row, idx) => {
-    const promiseRaw = getField(row, fieldMap, 'jobpromisedate');
-    const remDays = computeRemainingDays(row, fieldMap);          // NEW
-    return {
-      __key: idx,
-      promiseDateRaw: promiseRaw,
-      promiseDate: formatDateOnly(promiseRaw),
-      jobNo: getField(row, fieldMap, 'serialjobno') || '-',
-      design: getField(row, fieldMap, 'Designcode') || '-',
-      custCode: getField(row, fieldMap, 'Customercode') || '-',    // NEW
-      status: stripHtml(getField(row, fieldMap, 'department')) || '-',
-      workerName: getField(row, fieldMap, 'LastProcessedBy') || '-',
-      location: getField(row, fieldMap, 'Mastermanagement_MFG_JobLastLocationname') || '-',
-      grossWt: formatWeight(getField(row, fieldMap, 'GrossWeightgm')),
-      netWt: formatWeight(getField(row, fieldMap, 'NetWtgm')),
-      remDays: remDays === null ? '-' : remDays,                  // NEW
-    };
-  })
-  .sort((a, b) => new Date(b.promiseDateRaw || 0) - new Date(a.promiseDateRaw || 0));
+      .map((row, idx) => {
+        const promiseRaw = getField(row, fieldMap, 'jobpromisedate');
+        const remDays = computeRemainingDays(row, fieldMap);          // NEW
+        return {
+          __key: idx,
+          promiseDateRaw: promiseRaw,
+          promiseDate: formatDateOnly(promiseRaw),
+          jobNo: getField(row, fieldMap, 'serialjobno') || '-',
+          Pcs: getField(row, fieldMap, 'Quantity') || '-',
+          design: getField(row, fieldMap, 'Designcode') || '-',
+          custCode: getField(row, fieldMap, 'Customercode') || '-',    // NEW
+          status: stripHtml(getField(row, fieldMap, 'department')) || '-',
+          workerName: getField(row, fieldMap, 'LastProcessedBy') || '-',
+          location: getField(row, fieldMap, 'Mastermanagement_MFG_JobLastLocationname') || '-',
+          grossWt: formatWeight(getField(row, fieldMap, 'GrossWeightgm')),
+          netWt: formatWeight(getField(row, fieldMap, 'NetWtgm')),
+          remDays: remDays === null ? '-' : remDays,                  // NEW
+        };
+      })
+      .sort((a, b) => new Date(b.promiseDateRaw || 0) - new Date(a.promiseDateRaw || 0));
+    setPcsSearch('');
     setPcsDetail({
       title: `${cfg.tableTitle} — ${rowLabel}`,
       rows: detailRows,
     });
+  };
+
+  // NEW: filter popup rows by search text (searches every visible column)
+  const pcsDetailFilteredRows = useMemo(() => {
+    if (!pcsDetail) return [];
+    const q = pcsSearch.trim().toLowerCase();
+    if (!q) return pcsDetail.rows;
+
+    return pcsDetail.rows.filter((r) =>
+      PCS_DETAIL_COLUMNS.some((col) =>
+        String(r[col.field] ?? '').toLowerCase().includes(q)
+      )
+    );
+  }, [pcsDetail, pcsSearch]);
+
+  // NEW: close helper that also resets the search
+  const closePcsDetail = () => {
+    setPcsDetail(null);
+    setPcsSearch('');
   };
 
   const buildPivotColumns = (rowLabel, colKeys, detailCfg) => [
@@ -1333,7 +1357,7 @@ const WIPMis = () => {
       XLSX.utils.aoa_to_sheet(buildSheetAOA(status.columns, status.rows, status.totals)),
       'Current Status'
     );
-   
+
     XLSX.utils.book_append_sheet(
       wb,
       XLSX.utils.aoa_to_sheet(buildSheetAOA(department.columns, department.rows, department.totals)),
@@ -1448,14 +1472,14 @@ const WIPMis = () => {
                     height: '36px',
                     ...(isAllDates
                       ? {
-                          background: '#6c5ce7',
-                          color: '#fff',
-                          '&:hover': { background: '#5a4bd6' },
-                        }
+                        background: '#6c5ce7',
+                        color: '#fff',
+                        '&:hover': { background: '#5a4bd6' },
+                      }
                       : {
-                          background: '#f2effe',
-                          color: '#5a4bd6',
-                        }),
+                        background: '#f2effe',
+                        color: '#5a4bd6',
+                      }),
                   }}
                 >
                   ALL
@@ -1603,8 +1627,9 @@ const WIPMis = () => {
       {/* ---------------- NEW: Pcs drill-down popup ---------------- */}
       <Dialog
         open={Boolean(pcsDetail)}
-        onClose={() => setPcsDetail(null)}
+        onClose={closePcsDetail}
         maxWidth="lg"
+       
         fullWidth
       >
         <DialogTitle
@@ -1618,18 +1643,38 @@ const WIPMis = () => {
           }}
         >
           <span>{pcsDetail?.title}</span>
-          <IconButton size="small" onClick={() => setPcsDetail(null)} title="Close">
+          <IconButton size="small" onClick={closePcsDetail} title="Close">
             <CloseIcon fontSize="small" />
           </IconButton>
         </DialogTitle>
-        <DialogContent dividers sx={{ padding: '12px' }}>
+        <DialogContent dividers sx={{ padding: '12px', minHeight: 550, }}>
           {pcsDetail && (
             <DataGridPanel
               icon={<Inventory2Icon fontSize="small" />}
-              title={`${pcsDetail.rows.length} record${pcsDetail.rows.length === 1 ? '' : 's'}`}
+              title={`${pcsDetailFilteredRows.length} record${pcsDetailFilteredRows.length === 1 ? '' : 's'}`}
               dense
               columns={PCS_DETAIL_COLUMNS}
-              rows={pcsDetail.rows}
+              rows={pcsDetailFilteredRows}
+              headerFilters={
+                <TextField
+                  size="small"
+                  placeholder="Search job, design, status, worker..."
+                  value={pcsSearch}
+                  onChange={(e) => setPcsSearch(e.target.value)}
+                  autoFocus
+                  InputProps={{
+                    startAdornment: (
+                      <SearchIcon fontSize="small" style={{ marginRight: 6, color: '#8a90a6' }} />
+                    ),
+                    endAdornment: pcsSearch ? (
+                      <IconButton size="small" onClick={() => setPcsSearch('')} title="Clear">
+                        <CloseIcon fontSize="small" />
+                      </IconButton>
+                    ) : null,
+                  }}
+                  sx={{ minWidth: 330 }}
+                />
+              }
             />
           )}
         </DialogContent>
