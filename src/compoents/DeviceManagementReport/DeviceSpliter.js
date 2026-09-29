@@ -11,7 +11,6 @@ import AllEmployeeDataReport from "./AllEmployeeDataReport/AllEmployeeDataReport
 import DualDatePicker from "../DatePicker/DualDatePicker";
 import { useSearchParams } from "react-router-dom";
 import { AlertTriangle } from "lucide-react";
-import APICALLRES from "./APICALLRES.json";
 
 const formatToMMDDYYYY = (date) => {
   const d = new Date(date);

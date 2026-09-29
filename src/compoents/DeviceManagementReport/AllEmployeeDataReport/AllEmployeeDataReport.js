@@ -44,12 +44,13 @@ import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
 import { AiFillSetting } from "react-icons/ai";
 import OtherKeyData from "./AllEmployeeData.json";
-import OtherKeyDataAdmin from "./AdminApp.json";
-import OtherKeyDataSales from "./SalesRep.json";
-import OtherKeyDataExpress from "./ExpressApp.json";
-import OtherKeyDataEvoApp from "./evoApp.json";
-import OtherKeyDataIcate from "./IcateApp.json";
-import OtherKeyDataOptigoScan from "./OptigoScan.json";
+import OtherKeyDataAdmin from "./AppWiseJson/AdminApp.json";
+import OtherKeyDataSales from "./AppWiseJson/SalesRep.json";
+import OtherKeyDataExpress from "./AppWiseJson/ExpressApp.json";
+import OtherKeyDataEvoApp from "./AppWiseJson/evoApp.json";
+import OtherKeyDataIcate from "./AppWiseJson/IcateApp.json";
+import OtherKeyDataTechoChat from "./AppWiseJson/TechoChat.json";
+import OtherKeyDataOptigoScan from "./AppWiseJson/OptigoScan.json";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import SingleEmployeeWiseData from "./SingleEmployeeWiseData/SingleEmployeeWiseData";
 import { GetWorkerData } from "../../../API/GetWorkerData/GetWorkerData";
@@ -318,9 +319,9 @@ export default function AllEmployeeDataReport({
         filteredData = rd1.filter(
           (entry) => entry["1"] === selectedFilterCategory
         );
-        if (selectedFilterCategory === "Admin app") {
+        if (selectedFilterCategory === "Admin app" || selectedFilterCategory === "AdminApp") {
           filteredDataColumKey = OtherKeyDataAdmin?.rd1;
-        } else if (selectedFilterCategory === "Sales rep app") {
+        } else if (selectedFilterCategory === "Sales rep app" || selectedFilterCategory === "SalesRepApp") {
           filteredDataColumKey = OtherKeyDataSales?.rd1;
         } else if (selectedFilterCategory === "ExpressApp") {
           filteredDataColumKey = OtherKeyDataExpress?.rd1;
@@ -328,6 +329,10 @@ export default function AllEmployeeDataReport({
           filteredDataColumKey = OtherKeyDataEvoApp?.rd1;
         } else if (selectedFilterCategory === "Optigo Scan") {
           filteredDataColumKey = OtherKeyDataOptigoScan?.rd1;
+        } else if (selectedFilterCategory === "Teco Chat") {
+          filteredDataColumKey = OtherKeyDataTechoChat?.rd1;
+        } else if (selectedFilterCategory === "Optigo Support") {
+          filteredDataColumKey = OtherKeyDataTechoChat?.rd1;
         } else {
           filteredDataColumKey = OtherKeyDataIcate?.rd1;
         }
@@ -1023,6 +1028,22 @@ export default function AllEmployeeDataReport({
     );
   }
 
+
+  const CustomerBindevo = [
+    {
+      "id": 1,
+      "name": "ATM Binding"
+    },
+    {
+      "id": 3,
+      "name": "On Floor"
+    },
+    {
+      "id": 4,
+      "name": "ATM Binding + On Floor"
+    }
+  ]
+
   React.useEffect(() => {
     setColumns((prev) =>
       prev.map((col) => {
@@ -1087,7 +1108,7 @@ export default function AllEmployeeDataReport({
                     fullWidth
                     className="MenuSelectItem"
                   >
-                    {CustomerBind.map((item) => (
+                    {CustomerBindevo?.map((item) => (
                       <MenuItem
                         key={item.id}
                         value={item.id}
@@ -1706,7 +1727,7 @@ export default function AllEmployeeDataReport({
         {summaryArray?.map((col) => {
           return (
             <div className="summaryItem" key={col.field}>
-              <div className="AllEmploe_boxViewTotal">
+              <div className="appdevice_total">
                 <div>
                   <p className="AllEmplo_boxViewTotalValue">{col?.Title}</p>
                   <p className="boxViewTotalTitle">{col.summaryTitle}</p>
@@ -2753,9 +2774,10 @@ export default function AllEmployeeDataReport({
             {isPaneCollapsed && (
               <p
                 onClick={onOpenPane}
-                style={{ cursor: "pointer", color: "green", margin: "10px" }}
+                style={{ cursor: "pointer", color: "green", margin: "10px", display: 'flex' }}
               >
                 <ChevronsRight />
+                <p>{selectedFilterCategory}</p>
               </p>
             )}
           </div>

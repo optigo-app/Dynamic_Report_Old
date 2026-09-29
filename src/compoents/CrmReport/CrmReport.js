@@ -96,6 +96,7 @@ import {
   ScrollText,
   Award,
   PackageCheck,
+  RefreshCcw,
 } from "lucide-react";
 import "./CrmReport.scss";
 import axios from "axios";
@@ -673,40 +674,39 @@ const CrmReport = () => {
     }));
   };
 
-  useEffect(() => {
-    const getDataremark = async () => {
-      if (!selectedCustomer?.customercode) return;
-      try {
-        const AllData = JSON.parse(sessionStorage.getItem("AuthqueryParams") || "{}");
-        const body = {
-          con: JSON.stringify({
-            id: "",
-            mode: "EvoRemarks",
-            appuserid: AllData?.uid,
-            IPAddress: clientIpAddress,
-          }),
-          p: JSON.stringify({ CustomerCode: selectedCustomer.customercode }),
-          f: "DynamicAdvanceCRM",
-        };
-        const res = await CommonAPI(body);
-        setEvoRemarksData(mapEvoRemarks(res?.Data?.rd));
-      } catch (err) {
-        console.error("EvoRemarks API error:", err);
-        setEvoRemarksData(null);
-      } finally {
-        setEvoRemarksLoading(false);
-      }
-    };
-
-    getDataremark();
-  }, [selectedCustomer])
-
-
-
-  const handleOpenEvoRemarks = async () => {
-    setEvoRemarksOpen(true);
+  const fetchEvoRemarks = async (customerCode) => {
+    if (!customerCode) return;
+    setEvoRemarksLoading(true);
+    try {
+      const AllData = JSON.parse(sessionStorage.getItem("AuthqueryParams") || "{}");
+      const body = {
+        con: JSON.stringify({
+          id: "",
+          mode: "EvoRemarks",
+          appuserid: AllData?.uid,
+          IPAddress: clientIpAddress,
+        }),
+        p: JSON.stringify({ CustomerCode: customerCode }),
+        f: "DynamicAdvanceCRM",
+      };
+      const res = await CommonAPI(body);
+      setEvoRemarksData(mapEvoRemarks(res?.Data?.rd));
+    } catch (err) {
+      console.error("EvoRemarks API error:", err);
+      setEvoRemarksData(null);
+    } finally {
+      setEvoRemarksLoading(false);
+    }
   };
 
+  useEffect(() => {
+    fetchEvoRemarks(selectedCustomer?.customercode);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedCustomer]);
+
+  const handleOpenEvoRemarks = () => {
+    setEvoRemarksOpen(true);
+  };
 
   const handleCloseEvoRemarks = () => {
     setEvoRemarksOpen(false);
@@ -724,34 +724,28 @@ const CrmReport = () => {
   };
 
   /* ══════════════════════════════════════════════
-     API CALLS — CustomerOverview / QuickCounts /
-     TopDealingCategories / RecentActivity / SideMenuURL /
-     PaymentBehaviour / CustomerNotes / CallLogs / ...
-     Fired together on "View Detail" click, keyed by
-     the selected customer's CustomerCode.
+     Core loader — used by View Detail AND Refresh
      ══════════════════════════════════════════════ */
-  const handleViewDetail = async (record) => {
-    setSelectedCustomer(record);
-    setView("report");
+  const loadReportData = async (customerCode, { silentReset = false } = {}) => {
+    if (!customerCode) return;
 
-    // Reset any previously-loaded report data and show the loader
-    // while the fresh customer's data is fetched.
-    setApiCustomerInfo(null);
-    setApiQuickCounts(null);
-    setApiTopCategories(null);
-    setApiRecentActivity(null);
-    setApiLastInvoices(null);
-    setApiOutstandingMarks(null);
-    setApiMonthlySales(null);
-    setApiMonitorSale(null);
-    setApiSideMenu(null);
-    setApiPaymentBehaviour(null);
-    setApiCustomerNotes(null);
-    setApiCallLogs(null);
+    if (!silentReset) {
+      // full reset (fresh customer)
+      setApiCustomerInfo(null);
+      setApiQuickCounts(null);
+      setApiTopCategories(null);
+      setApiRecentActivity(null);
+      setApiLastInvoices(null);
+      setApiOutstandingMarks(null);
+      setApiMonthlySales(null);
+      setApiMonitorSale(null);
+      setApiSideMenu(null);
+      setApiPaymentBehaviour(null);
+      setApiCustomerNotes(null);
+      setApiCallLogs(null);
+    }
     setCallLogNote("");
     setReportLoading(true);
-
-    const customerCode = record.customercode;
 
     try {
       const AllData = JSON.parse(sessionStorage.getItem("AuthqueryParams") || "{}");
@@ -784,9 +778,10 @@ const CrmReport = () => {
         CommonAPI(buildBody("CustomerNotes")),
         CommonAPI(buildBody("CallLogs")),
       ]);
+
       if (overviewRes.status === "fulfilled") {
         setApiCustomerInfo(mapCustomerOverview(overviewRes.value?.Data?.rd?.[0]));
-        setTopinfoNavigation(overviewRes.value?.Data?.rd1?.[0])
+        setTopinfoNavigation(overviewRes.value?.Data?.rd1?.[0]);
       } else {
         console.error("CustomerOverview API error:", overviewRes.reason);
       }
@@ -861,6 +856,26 @@ const CrmReport = () => {
     } finally {
       setReportLoading(false);
     }
+  };
+
+  const handleViewDetail = async (record) => {
+    setSelectedCustomer(record);
+    setView("report");
+    setActiveMenu(undefined);
+    await loadReportData(record.customercode);
+  };
+
+  /* ══════════════════════════════════════════════
+     REFRESH — same customer, reload everything
+     (screen pe purana data rehta hai jab tak naya
+     aa nahi jata, upar loader overlay dikhta hai)
+     ══════════════════════════════════════════════ */
+  const handleRefresh = async () => {
+    if (!selectedCustomer?.customercode || reportLoading) return;
+    await Promise.allSettled([
+      loadReportData(selectedCustomer.customercode, { silentReset: true }),
+      fetchEvoRemarks(selectedCustomer.customercode),
+    ]);
   };
 
   const handleEditCustomer = () => {
@@ -1116,22 +1131,22 @@ const CrmReport = () => {
           {/* Right: at-a-glance stat chips */}
           <Box className="crm_topbar_stats">
             <Box className="crm_stat_chip crm_stat_info"
-            style={{ cursor: 'pointer' }}
-            onClick={() => {
-              if (window?.parent?.postMessage) {
-                window.parent.postMessage(
-                  {
-                    type: "ADD_TAB",
-                    evt: "DynamicReport",
-                    payload: {
-                      TabName: topinfoNavigation?.PageName,
-                      TabUrl: topinfoNavigation?.URL,
+              style={{ cursor: 'pointer' }}
+              onClick={() => {
+                if (window?.parent?.postMessage) {
+                  window.parent.postMessage(
+                    {
+                      type: "ADD_TAB",
+                      evt: "DynamicReport",
+                      payload: {
+                        TabName: topinfoNavigation?.PageName,
+                        TabUrl: topinfoNavigation?.URL,
+                      },
                     },
-                  },
-                  "*"
-                );
-              }
-            }}
+                    "*"
+                  );
+                }
+              }}
             >
               <Box className="crm_stat_ico"><IndianRupee size={14} /></Box>
               <Box className="crm_stat_txt">
@@ -1140,22 +1155,22 @@ const CrmReport = () => {
               </Box>
             </Box>
             <Box className="crm_stat_chip crm_stat_info"
-            style={{ cursor: 'pointer' }}
-            onClick={() => {
-              if (window?.parent?.postMessage) {
-                window.parent.postMessage(
-                  {
-                    type: "ADD_TAB",
-                    evt: "DynamicReport",
-                    payload: {
-                      TabName: topinfoNavigation?.PageName,
-                      TabUrl: topinfoNavigation?.URL,
+              style={{ cursor: 'pointer' }}
+              onClick={() => {
+                if (window?.parent?.postMessage) {
+                  window.parent.postMessage(
+                    {
+                      type: "ADD_TAB",
+                      evt: "DynamicReport",
+                      payload: {
+                        TabName: topinfoNavigation?.PageName,
+                        TabUrl: topinfoNavigation?.URL,
+                      },
                     },
-                  },
-                  "*"
-                );
-              }
-            }}
+                    "*"
+                  );
+                }
+              }}
             >
               <Box className="crm_stat_ico"><GiMetalBar size={14} /></Box>
               <Box className="crm_stat_txt">
@@ -1164,22 +1179,22 @@ const CrmReport = () => {
               </Box>
             </Box>
             <Box className="crm_stat_chip crm_stat_info"
-            style={{ cursor: 'pointer' }}
-            onClick={() => {
-              if (window?.parent?.postMessage) {
-                window.parent.postMessage(
-                  {
-                    type: "ADD_TAB",
-                    evt: "DynamicReport",
-                    payload: {
-                      TabName: topinfoNavigation?.PageName,
-                      TabUrl: topinfoNavigation?.URL,
+              style={{ cursor: 'pointer' }}
+              onClick={() => {
+                if (window?.parent?.postMessage) {
+                  window.parent.postMessage(
+                    {
+                      type: "ADD_TAB",
+                      evt: "DynamicReport",
+                      payload: {
+                        TabName: topinfoNavigation?.PageName,
+                        TabUrl: topinfoNavigation?.URL,
+                      },
                     },
-                  },
-                  "*"
-                );
-              }
-            }}
+                    "*"
+                  );
+                }
+              }}
             >
               <Box className="crm_stat_ico"><Gem size={14} /></Box>
               <Box className="crm_stat_txt">
@@ -1264,6 +1279,15 @@ const CrmReport = () => {
           >
             <MessageCircle size={14} />
             <span>Evo Remarks</span>
+          </Box>
+
+          <Box
+            className={`crm_sec_tab`}
+            style={{ opacity: reportLoading ? 0.6 : 1, pointerEvents: reportLoading ? "none" : "auto" }}
+            onClick={handleRefresh}
+          >
+            <RefreshCcw size={14} className={reportLoading ? "crm_spin" : ""} />
+            <span>{reportLoading ? "Refreshing..." : "Refresh"}</span>
           </Box>
         </Box>
       </Box>
@@ -1432,7 +1456,20 @@ const CrmReport = () => {
                     >
                       {displayOutstandingMarks?.breakdown?.map((e, i) => <Cell key={i} fill={e.color} />)}
                     </Pie>
-                    <Tooltip formatter={(v) => `${v}%`} contentStyle={{ fontSize: 11, borderRadius: 6 }} />
+                    <Tooltip
+                      wrapperStyle={{ zIndex: 1000 }}
+                      formatter={(v) => `${v}%`}
+                      contentStyle={{
+                        fontSize: 11,
+                        borderRadius: 6,
+                        backgroundColor: '#ffffff',
+                        opacity: 1,
+                        border: '1px solid #e0e0e0',
+                        boxShadow: '0 2px 8px rgba(0,0,0,0.15)'
+                      }}
+                      itemStyle={{ color: '#333' }}
+                      labelStyle={{ color: '#333' }}
+                    />
                   </PieChart>
                   <Box className="crm_donut_center_box" sx={{
                     position: 'absolute',
