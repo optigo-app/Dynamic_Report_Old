@@ -744,13 +744,13 @@ export default function MaterialStockReconciliation() {
   //   setMode("filter");
   // };
 
-const handleOpenSystemData = () => {
-  handleClearFilters();
-  setStockSummary(null);      // <-- no default data
-  setResult(null);
-  setFilterOpen(true);        // <-- open the filter drawer right away
-  setMode("filter");
-};
+  const handleOpenSystemData = () => {
+    handleClearFilters();
+    setStockSummary(null);      // <-- no default data
+    setResult(null);
+    setFilterOpen(true);        // <-- open the filter drawer right away
+    setMode("filter");
+  };
 
   /* ---- scan flow handlers ---- */
   const openScanDialog = (source) => {
@@ -918,6 +918,15 @@ const handleOpenSystemData = () => {
     URL.revokeObjectURL(url);
   };
 
+  const validScannedCodes = useMemo(
+    () => scannedCodes.filter((code) => RAW_DATA.some((r) => r.rfbag === code)),
+    [scannedCodes]
+  );
+  const invalidScannedCodes = useMemo(
+    () => scannedCodes.filter((code) => !RAW_DATA.some((r) => r.rfbag === code)),
+    [scannedCodes]
+  );
+
   const summaryChips = useMemo(() => {
     if (!stockSummary) return [];
     const chips = [];
@@ -933,9 +942,9 @@ const handleOpenSystemData = () => {
   // const showSummaryBlock = showWorkspace; // Summary + Measurement + Result
   // const showHistoryBlock = mode === "filter" || mode === "scan" || mode === "history";
   const showWorkspace = mode === "filter" || mode === "scan";
-// In filter mode, show the summary/measurement/result only after Search is clicked
-const showSummaryBlock = mode === "scan" || (mode === "filter" && !!stockSummary);
-const showHistoryBlock = mode === "filter" || mode === "scan" || mode === "history";
+  // In filter mode, show the summary/measurement/result only after Search is clicked
+  const showSummaryBlock = mode === "scan" || (mode === "filter" && !!stockSummary);
+  const showHistoryBlock = mode === "filter" || mode === "scan" || mode === "history";
 
   /* ----------------------------------------------------------------- */
   return (
@@ -1009,6 +1018,8 @@ const showHistoryBlock = mode === "filter" || mode === "scan" || mode === "histo
               Add
             </Button>
 
+           
+
             <Typography sx={{ fontSize: 12, fontWeight: 700, color: COLORS.textMuted, mb: 1 }}>
               Scanned Job ({scannedCodes.length})
             </Typography>
@@ -1016,46 +1027,56 @@ const showHistoryBlock = mode === "filter" || mode === "scan" || mode === "histo
             {scannedCodes.length === 0 ? (
               <Typography sx={hintInlineSx}>No items scanned yet.</Typography>
             ) : (
-              <Box sx={{ display: "flex", flexDirection: "column", gap: 1, maxHeight: 260, overflowY: "auto", mb: 2 }}>
-                {scannedCodes.map((code) => {
-                  const match = RAW_DATA.find((r) => r.rfbag === code);
-                  return (
-                    <Box
-                      key={code}
-                      sx={{
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "space-between",
-                        border: `1px solid ${COLORS.border}`,
-                        borderRadius: "8px",
-                        px: 1.5,
-                        py: 1,
-                      }}
+              <>
+                <Box sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 1.5, mb: 2 }}>
+                  <Box sx={{ bgcolor: COLORS.successBg, borderRadius: "8px", px: 1.5, py: 1.25 }}>
+                    <Typography sx={{ fontSize: 11, fontWeight: 700, color: COLORS.success }}>VALID</Typography>
+                    <Typography sx={{ fontSize: 22, fontWeight: 800, color: COLORS.success }}>
+                      {validScannedCodes.length}
+                    </Typography>
+                  </Box>
+                  <Box sx={{ bgcolor: COLORS.dangerBg, borderRadius: "8px", px: 1.5, py: 1.25 }}>
+                    <Typography sx={{ fontSize: 11, fontWeight: 700, color: COLORS.danger }}>INVALID</Typography>
+                    <Typography sx={{ fontSize: 22, fontWeight: 800, color: COLORS.danger }}>
+                      {invalidScannedCodes.length}
+                    </Typography>
+                  </Box>
+                </Box>
+
+                <Box sx={{ display: "flex", gap: 1, mb: 2 }}>
+                  <Button
+                    size="small"
+                    variant="outlined"
+                    startIcon={<DeleteOutlineIcon />}
+                    sx={{ ...outlineBtnSx, py: 0.5 }}
+                    onClick={() => setScannedCodes([])}
+                  >
+                    Clear All
+                  </Button>
+                  {invalidScannedCodes.length > 0 && (
+                    <Button
+                      size="small"
+                      variant="outlined"
+                      color="error"
+                      sx={{ textTransform: "none", fontWeight: 600, borderRadius: "8px", py: 0.5 }}
+                      onClick={() => setScannedCodes(validScannedCodes)}
                     >
-                      <Box>
-                        <Typography sx={{ fontSize: 13, fontWeight: 700 }}>{code}</Typography>
-                        <Typography sx={{ fontSize: 11, color: match ? COLORS.textMuted : COLORS.danger }}>
-                          {match ? match.itemname : "Not found in system"}
-                        </Typography>
-                      </Box>
-                      <IconButton size="small" onClick={() => handleRemoveScanned(code)}>
-                        <DeleteOutlineIcon fontSize="small" sx={{ color: COLORS.textMuted }} />
-                      </IconButton>
-                    </Box>
-                  );
-                })}
-              </Box>
-            )}
-            {scannedCodes.length !== 0 && (
-              <Button
-                fullWidth
-                variant="contained"
-                startIcon={<QrCodeScannerIcon />}
-                sx={primaryBtnSx}
-                onClick={handleScanAndView}
-              >
-                Scan
-              </Button>
+                      Remove Invalid
+                    </Button>
+                  )}
+                </Box>
+
+                <Button
+                  fullWidth
+                  variant="contained"
+                  startIcon={<QrCodeScannerIcon />}
+                  sx={primaryBtnSx}
+                  onClick={handleScanAndView}
+                  disabled={validScannedCodes.length === 0}
+                >
+                  Scan
+                </Button>
+              </>
             )}
           </DialogContent>
           <DialogActions>
@@ -1078,8 +1099,8 @@ const showHistoryBlock = mode === "filter" || mode === "scan" || mode === "histo
               setToleranceOther={setToleranceOther}
             />
           )}
- {/* Back button — filter/scan/history modes only */}
- {mode !== "initial" && (
+          {/* Back button — filter/scan/history modes only */}
+          {mode !== "initial" && (
             <Tooltip title="Back" arrow>
               <IconButton
                 onClick={goToStart}
