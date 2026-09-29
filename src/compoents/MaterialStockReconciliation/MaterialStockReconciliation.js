@@ -1,4 +1,4 @@
-// http://localhost:3000/testreport/?sp=9&ifid=AdvanceCRM&pid=186662
+// http://localhost:3000/testreport/?sp=9&ifid=AdvanceCRM&pid=18618
 import React, { useMemo, useState, useCallback } from "react";
 import {
   Box,
@@ -10,6 +10,7 @@ import {
   MenuItem,
   TextField,
   Button,
+  ButtonBase,
   Table,
   TableHead,
   TableBody,
@@ -27,22 +28,24 @@ import {
   Drawer,
   Badge,
   ThemeProvider,
+  Tooltip,
   createTheme,
 } from "@mui/material";
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import SearchIcon from "@mui/icons-material/Search";
 import SaveIcon from "@mui/icons-material/Save";
-import VisibilityIcon from "@mui/icons-material/Visibility";
+import DownloadIcon from "@mui/icons-material/Download";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import CancelIcon from "@mui/icons-material/Cancel";
 import ClearAllIcon from "@mui/icons-material/ClearAll";
 import CloseIcon from "@mui/icons-material/Close";
 import FilterListIcon from "@mui/icons-material/FilterList";
-import QrCode2Icon from "@mui/icons-material/QrCode2";
 import QrCodeScannerIcon from "@mui/icons-material/QrCodeScanner";
-import CameraAltIcon from "@mui/icons-material/CameraAlt";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
+import Inventory2OutlinedIcon from "@mui/icons-material/Inventory2Outlined";
+import TuneIcon from "@mui/icons-material/Tune";
 
 /* ========================================================================
    COLOR TOKENS  (single source of truth — used everywhere via sx)
@@ -327,49 +330,232 @@ function ResultLine({ label, value }) {
 }
 
 /* ========================================================================
-   "Ready to Scan" landing panel — shown before the user has either
-   picked a filter or scanned anything.
+   LANDING PAGE
+   Two entry points (System Data / Scan Barcode) + tolerance settings.
    ===================================================================== */
-function ScanLandingPanel({ onScanBarcode, onCameraScan }) {
+function LandingActionCard({ icon, title, description, onClick, variant }) {
+  const isPrimary = variant === "primary";
+  return (
+    <ButtonBase
+      onClick={onClick}
+      sx={{
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "flex-start",
+        textAlign: "left",
+        width: "100%",
+        p: 3,
+        borderRadius: "16px",
+        border: `1px solid ${isPrimary ? "transparent" : COLORS.border}`,
+        background: isPrimary
+          ? `linear-gradient(135deg, ${COLORS.purple} 0%, #8A5CE0 100%)`
+          : COLORS.surface,
+        color: isPrimary ? "#fff" : COLORS.text,
+        boxShadow: isPrimary
+          ? "0 10px 28px rgba(108,63,197,0.28)"
+          : "0 4px 16px rgba(30,27,46,0.06)",
+        transition: "transform .18s ease, box-shadow .18s ease, border-color .18s ease",
+        "&:hover": {
+          transform: "translateY(-4px)",
+          boxShadow: isPrimary
+            ? "0 16px 34px rgba(108,63,197,0.38)"
+            : "0 12px 28px rgba(108,63,197,0.16)",
+          borderColor: isPrimary ? "transparent" : COLORS.purple,
+        },
+      }}
+    >
+      <Box
+        sx={{
+          width: 56,
+          height: 56,
+          borderRadius: "14px",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          mb: 2.5,
+          bgcolor: isPrimary ? "rgba(255,255,255,0.2)" : COLORS.purpleLight,
+          color: isPrimary ? "#fff" : COLORS.purple,
+        }}
+      >
+        {icon}
+      </Box>
+      <Typography sx={{ fontSize: 20, fontWeight: 700, mb: 0.75 }}>{title}</Typography>
+      <Typography
+        sx={{
+          fontSize: 13,
+          lineHeight: 1.6,
+          mb: 2.5,
+          color: isPrimary ? "rgba(255,255,255,0.85)" : COLORS.textMuted,
+        }}
+      >
+        {description}
+      </Typography>
+      <Box
+        sx={{
+          display: "flex",
+          alignItems: "center",
+          gap: 0.75,
+          mt: "auto",
+          fontSize: 13,
+          fontWeight: 600,
+          color: isPrimary ? "#fff" : COLORS.purple,
+        }}
+      >
+        Continue <ArrowForwardIcon sx={{ fontSize: 18 }} />
+      </Box>
+    </ButtonBase>
+  );
+}
+
+function LandingPage({
+  onSystemData,
+  onScanBarcode,
+  toleranceMetal,
+  setToleranceMetal,
+  toleranceOther,
+  setToleranceOther,
+}) {
   return (
     <Box
       sx={{
+        minHeight: "calc(100vh - 24px)",
         display: "flex",
         flexDirection: "column",
         alignItems: "center",
         justifyContent: "center",
-        minHeight: "60vh",
-        textAlign: "center",
+        py: 5,
+        px: 2,
+        borderRadius: "20px",
+        background: `radial-gradient(1200px 500px at 50% -10%, ${COLORS.purpleLight} 0%, ${COLORS.bg} 65%)`,
       }}
     >
-      <QrCode2Icon sx={{ fontSize: 64, color: COLORS.textMuted, mb: 2 }} />
-      <Typography sx={{ fontSize: 20, fontWeight: 700, color: COLORS.text, mb: 0.5 }}>
-        Ready to Scan
-      </Typography>
-      <Typography sx={{ fontSize: 13, color: COLORS.textMuted, mb: 3, maxWidth: 380 }}>
-        Position the barcode in front of scanner to record the order manually,
-        or use the filters on the left to browse system stock instead.
-      </Typography>
-      <Box sx={{ display: "flex", gap: 1.5, flexWrap: "wrap", justifyContent: "center" }}>
-        <Button variant="contained" startIcon={<QrCodeScannerIcon />} sx={primaryBtnSx} onClick={onScanBarcode}>
-          Scan Barcode
-        </Button>
-        <Button
-          variant="contained"
-          startIcon={<CameraAltIcon />}
-          sx={{ ...primaryBtnSx, bgcolor: "#5B6EF5", "&:hover": { bgcolor: "#4657D6" } }}
-          onClick={onCameraScan}
+      {/* Heading */}
+      <Box sx={{ textAlign: "center", mb: 4.5, maxWidth: 560 }}>
+        {/* <Box
+          sx={{
+            width: 64,
+            height: 64,
+            mx: "auto",
+            mb: 2,
+            borderRadius: "18px",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            color: "#fff",
+            background: `linear-gradient(135deg, ${COLORS.purple} 0%, #8A5CE0 100%)`,
+            boxShadow: "0 10px 24px rgba(108,63,197,0.3)",
+          }}
         >
-          Camera Scan
-        </Button>
+          <QrCodeScannerIcon sx={{ fontSize: 32 }} />
+        </Box> */}
+        <Typography sx={{ fontSize: 28, fontWeight: 800, color: COLORS.text, mb: 1 }}>
+          Material Stock Reconciliation
+        </Typography>
+        <Typography sx={{ fontSize: 14, color: COLORS.textMuted, lineHeight: 1.7 }}>
+          Choose how you want to start — browse system stock using filters, or scan
+          barcodes to reconcile specific jobs.
+        </Typography>
       </Box>
+
+      {/* Two entry cards */}
+      <Box
+        sx={{
+          display: "grid",
+          gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" },
+          gap: 3,
+          width: "100%",
+          maxWidth: 720,
+          mb: 3,
+        }}
+      >
+        <LandingActionCard
+          variant="outline"
+          icon={<Inventory2OutlinedIcon sx={{ fontSize: 30 }} />}
+          title="Criteria Wise RM Reconciliation "
+          description="Browse stock from the system by Locker, Material, Shape, Quality and more, then reconcile."
+          onClick={onSystemData}
+        />
+        <LandingActionCard
+          variant="primary"
+          icon={<QrCodeScannerIcon sx={{ fontSize: 30 }} />}
+          title="Scan RM Bag to Reconciliation"
+          description="Scan or paste one or many Job numbers and reconcile them together in one go."
+          onClick={onScanBarcode}
+        />
+      </Box>
+
+      {/* Tolerance settings */}
+      <Paper
+        elevation={0}
+        sx={{
+          width: "100%",
+          maxWidth: 720,
+          p: 3,
+          borderRadius: "16px",
+          border: `1px solid ${COLORS.border}`,
+          bgcolor: COLORS.surface,
+          boxShadow: "0 4px 16px rgba(30,27,46,0.05)",
+        }}
+      >
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, mb: 2.5 }}>
+          <Box
+            sx={{
+              width: 40,
+              height: 40,
+              borderRadius: "10px",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              bgcolor: COLORS.purpleLight,
+              color: COLORS.purple,
+            }}
+          >
+            <TuneIcon fontSize="small" />
+          </Box>
+          <Box>
+            <Typography sx={{ fontSize: 15, fontWeight: 700, color: COLORS.text }}>
+              Tolerance Settings
+            </Typography>
+            {/* <Typography sx={{ fontSize: 12, color: COLORS.textMuted }}>
+              Maximum allowed difference between system and physical weight. Applied automatically
+              to every reconciliation.
+            </Typography> */}
+          </Box>
+        </Box>
+
+        <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr" }, gap: 2 }}>
+          <TextField
+            label="Metal Tolerance"
+            size="small"
+            type="number"
+            fullWidth
+            value={toleranceMetal}
+            onChange={(e) => setToleranceMetal(Number(e.target.value))}
+            inputProps={{ step: 0.001, min: 0 }}
+            InputProps={{
+              endAdornment: <Typography sx={{ fontSize: 12, color: COLORS.textMuted }}>gm</Typography>,
+            }}
+          />
+          <TextField
+            label="Other Material Tolerance"
+            size="small"
+            type="number"
+            fullWidth
+            value={toleranceOther}
+            onChange={(e) => setToleranceOther(Number(e.target.value))}
+            inputProps={{ step: 0.001, min: 0 }}
+            InputProps={{
+              endAdornment: <Typography sx={{ fontSize: 12, color: COLORS.textMuted }}>ct/gm</Typography>,
+            }}
+          />
+        </Box>
+      </Paper>
     </Box>
   );
 }
 
 /* ========================================================================
-   Shared filter fields — reused by both the full-height left sidebar (on
-   the landing page) and the overlay Drawer (once in 'filter' mode).
+   Shared filter fields — used inside the left Drawer (System Data mode).
    ===================================================================== */
 function FilterPanelContent({
   locker,
@@ -460,10 +646,10 @@ function FilterPanelContent({
    ===================================================================== */
 export default function MaterialStockReconciliation() {
   /* ---- top-level mode:
-     'initial' -> "Ready to Scan" landing screen
-     'filter'  -> current page, driven by the Filters drawer
-     'scan'    -> current page, driven by scanned Lot/Job No.'s (filters disabled)
-     'history' -> just the Reconciliation History table (from "Reconcile Report") ---- */
+     'initial' -> landing page (System Data / Scan Barcode / tolerance settings)
+     'filter'  -> System Data view, driven by the Filters drawer
+     'scan'    -> driven by scanned Job No.'s (filters disabled)
+     'history' -> just the Reconciliation History table ---- */
   const [mode, setMode] = useState("initial");
 
   /* ---- filters (draft state) ---- */
@@ -471,8 +657,7 @@ export default function MaterialStockReconciliation() {
   const [material, setMaterial] = useState("");
   const [subFilters, setSubFilters] = useState({});
 
-  /* ---- filter drawer: only used once in 'filter' mode. The landing page
-     shows filters as a full-height left sidebar instead of this drawer. ---- */
+  /* ---- filter drawer (System Data mode only) ---- */
   const [filterOpen, setFilterOpen] = useState(false);
 
   /* ---- stock summary snapshot: null until either a filter search or a
@@ -493,7 +678,8 @@ export default function MaterialStockReconciliation() {
   const [remarks, setRemarks] = useState("");
   const [result, setResult] = useState(null);
 
-  /* ---- tolerance (editable) ---- */
+  /* ---- tolerance (editable — set from the landing page, also visible
+     via the info icon next to "Reconciliation Result") ---- */
   const [toleranceMetal, setToleranceMetal] = useState(0.02);
   const [toleranceOther, setToleranceOther] = useState(0.01);
   const [tolAnchor, setTolAnchor] = useState(null);
@@ -501,7 +687,6 @@ export default function MaterialStockReconciliation() {
   /* ---- saved reconciliation log ---- */
   const [history, setHistory] = useState([]);
   const [reconciledIds, setReconciledIds] = useState(new Set());
-  const [viewRecord, setViewRecord] = useState(null);
 
   /* ------------------------------------------------------------------- */
   const lockerOptions = useMemo(() => uniq(RAW_DATA.map((r) => r.Locker)), []);
@@ -531,8 +716,7 @@ export default function MaterialStockReconciliation() {
     setSubFilters((prev) => ({ ...prev, [key]: val }));
   };
 
-  /* Filters drive the page ONLY when the user explicitly clicks Search.
-     This switches the page into 'filter' mode. */
+  /* Filters drive the page ONLY when the user explicitly clicks Search. */
   const handleSearchSummary = () => {
     setStockSummary(buildSummary(locker, material, subFilters));
     setResult(null);
@@ -549,6 +733,17 @@ export default function MaterialStockReconciliation() {
   const activeFilterCount =
     (locker ? 1 : 0) + (material ? 1 : 0) + Object.values(subFilters).filter(Boolean).length;
 
+  /* Landing → "System Data": enter the filter view with ALL data loaded
+     and the filter drawer closed. The user can then open Filters and
+     narrow the data down. */
+  const handleOpenSystemData = () => {
+    handleClearFilters();
+    setStockSummary(buildSummary("", "", {}));
+    setResult(null);
+    setFilterOpen(false);
+    setMode("filter");
+  };
+
   /* ---- scan flow handlers ---- */
   const openScanDialog = (source) => {
     setScanSource(source);
@@ -563,10 +758,9 @@ export default function MaterialStockReconciliation() {
   };
 
   /* A physical barcode scanner behaves like a fast keyboard, ending each
-     scan with an Enter keystroke — but the field is now a textarea, so the
-     user (or the scanner) can also enter several Job/Lot No.'s at once,
-     separated by commas or new lines. We split on both and add whatever
-     is found, all in one go. */
+     scan with an Enter keystroke — the field is a textarea, so the user
+     (or the scanner) can also enter several Job No.'s at once, separated
+     by commas or new lines. */
   const parseAndAddScannedCodes = () => {
     const parts = scanInput
       .split(/[\n,]+/)
@@ -594,9 +788,8 @@ export default function MaterialStockReconciliation() {
     setScannedCodes((prev) => prev.filter((c) => c !== code));
   };
 
-  /* Clicking "Scan" is what actually loads the data — for every Job/Lot
-     No. gathered in the list, combined into one summary. Filters play no
-     part in this mode. */
+  /* Clicking "Scan" loads the data for every Job No. in the list,
+     combined into one summary. */
   const handleScanAndView = () => {
     if (scannedCodes.length === 0) return;
     setStockSummary(buildSummaryFromScanCodes(scannedCodes));
@@ -683,6 +876,40 @@ export default function MaterialStockReconciliation() {
     setStockSummary(null);
   };
 
+  /* Direct download of a saved reconciliation (no popup). */
+  const handleDownloadRecord = (r) => {
+    const rows = [
+      ["Date & Time", r.dateTime],
+      ["User", r.user],
+      ["Material", r.material],
+      ["Lot No", r.lotNo],
+      ["Total Bags", r.totalBags],
+      ["Total Pieces", r.totalPieces],
+      ["System Weight (gm)", fmt(r.systemWeight)],
+      ["Gross Weight (gm)", fmt(r.grossWeight)],
+      ["Sticker Weight (gm)", fmt(r.stickerWeight)],
+      ["Polythene Weight (gm)", fmt(r.polytheneWeight)],
+      ["Tray/Box Weight (gm)", fmt(r.trayWeight)],
+      ["Physical Net Weight (gm)", fmt(r.physicalNet)],
+      ["Difference (gm)", fmt(r.difference)],
+      ["Tolerance (gm)", fmt(r.tolerance)],
+      ["Result", r.status],
+      ["Remarks", r.remarks || ""],
+    ];
+    const csv = rows
+      .map(([k, v]) => `"${k}","${String(v).replace(/"/g, '""')}"`)
+      .join("\n");
+    const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `Reconciliation_${r.id}_${Date.now()}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
   const summaryChips = useMemo(() => {
     if (!stockSummary) return [];
     const chips = [];
@@ -711,44 +938,9 @@ export default function MaterialStockReconciliation() {
           "*": { boxSizing: "border-box" },
         }}
       >
-        {/* ================= LEFT SIDEBAR (landing page only) ================= */}
-        {/* Full-height, flush to the left edge — always visible on the
-            landing screen, no drawer/overlay involved. */}
-        {mode === "initial" && (
-          <Box
-            sx={{
-              width: 320,
-              flexShrink: 0,
-              minHeight: "100vh",
-              borderRight: `1px solid ${COLORS.border}`,
-              bgcolor: "#ffffff",
-            }}
-          >
-            <FilterPanelContent
-              locker={locker}
-              setLocker={setLocker}
-              lockerOptions={lockerOptions}
-              material={material}
-              onMaterialChange={handleMaterialChange}
-              materialOptions={materialOptions}
-              filterConfig={filterConfig}
-              subFilters={subFilters}
-              onSubFilterChange={handleSubFilterChange}
-              optionsFor={optionsFor}
-              activeFilterCount={activeFilterCount}
-              onClear={handleClearFilters}
-              onSearch={handleSearchSummary}
-            />
-          </Box>
-        )}
-
         {/* ================= FILTER DRAWER (left side) ================= */}
-        {/* Only used once the user has moved into 'filter' mode and clicks
-            the Filters button — NOT shown on the landing page, which has
-            its own full-height sidebar instead. In 'scan' mode there is no
-            trigger to open it, so filters can't interfere with a
-            scan-driven view. */}
-        {mode !== "initial" && (
+        {/* Only used in System Data mode. The landing page has no filters. */}
+        {mode === "filter" && (
           <Drawer
             anchor="left"
             open={filterOpen}
@@ -783,11 +975,6 @@ export default function MaterialStockReconciliation() {
             </IconButton>
           </DialogTitle>
           <DialogContent dividers>
-            {/* <Typography sx={hintSx}>
-              {scanSource === "camera"
-                ? "Camera scanning is simulated here — type or paste scanned codes below, separated by commas or new lines, then press Enter (or Add)."
-                : "Keep this field focused — scans are captured automatically. You can also scan or paste several Job No.'s at once, separated by commas, then press Enter (or Add)."}
-            </Typography> */}
             <TextField
               autoFocus
               fullWidth
@@ -811,7 +998,7 @@ export default function MaterialStockReconciliation() {
             </Button>
 
             <Typography sx={{ fontSize: 12, fontWeight: 700, color: COLORS.textMuted, mb: 1 }}>
-              Scanned Job   ({scannedCodes.length})
+              Scanned Job ({scannedCodes.length})
             </Typography>
 
             {scannedCodes.length === 0 ? (
@@ -848,19 +1035,16 @@ export default function MaterialStockReconciliation() {
               </Box>
             )}
             {scannedCodes.length !== 0 && (
-                <Button
+              <Button
                 fullWidth
                 variant="contained"
                 startIcon={<QrCodeScannerIcon />}
                 sx={primaryBtnSx}
                 onClick={handleScanAndView}
-                disabled={scannedCodes.length === 0}
               >
                 Scan
               </Button>
-
             )}
-          
           </DialogContent>
           <DialogActions>
             <Button onClick={closeScanDialog} sx={{ textTransform: "none", color: COLORS.textMuted }}>
@@ -870,19 +1054,40 @@ export default function MaterialStockReconciliation() {
         </Dialog>
 
         {/* ================= MAIN CONTENT ================= */}
-        <Box sx={{ flex: 1, minWidth: 0, p: 2, pt: 1 }}>
-          {/* Back button — filter/scan/history modes only */}
-          {mode !== "initial" && (
-            <Button
-              variant="text"
-              startIcon={<ArrowBackIcon fontSize="small" />}
-              onClick={goToStart}
-              sx={{ textTransform: "none", color: COLORS.textMuted, fontSize: 12 }}
-            >
-              Back
-            </Button>
+        <Box sx={{ flex: 1, minWidth: 0, p: 1.5, pt: 1 }}>
+          {/* Landing page */}
+          {mode === "initial" && (
+            <LandingPage
+              onSystemData={handleOpenSystemData}
+              onScanBarcode={() => openScanDialog("barcode")}
+              toleranceMetal={toleranceMetal}
+              setToleranceMetal={setToleranceMetal}
+              toleranceOther={toleranceOther}
+              setToleranceOther={setToleranceOther}
+            />
           )}
-
+ {/* Back button — filter/scan/history modes only */}
+ {mode !== "initial" && (
+            <Tooltip title="Back" arrow>
+              <IconButton
+                onClick={goToStart}
+                aria-label="Back"
+                sx={{
+                  width: 38,
+                  height: 38,
+                  mb: 0.5,
+                  ml: 0.5,
+                  color: COLORS.purple,
+                  bgcolor: COLORS.surface,
+                  border: `1px solid ${COLORS.border}`,
+                  boxShadow: "0 2px 6px rgba(30,27,46,0.06)",
+                  "&:hover": { bgcolor: COLORS.purpleLight, borderColor: COLORS.purple },
+                }}
+              >
+                <ArrowBackIcon fontSize="small" />
+              </IconButton>
+            </Tooltip>
+          )}
           {/* Page header — content changes with mode */}
           {mode !== "initial" && (
             <Box sx={{ display: "flex", alignItems: "center", justifyContent: "flex-start", mb: 1, gap: 1.5, marginLeft: "6px" }}>
@@ -916,14 +1121,6 @@ export default function MaterialStockReconciliation() {
                   : "Material Stock Reconciliation"}
               </Typography>
             </Box>
-          )}
-
-          {/* Landing screen — filters live in the full-height sidebar to the left */}
-          {mode === "initial" && (
-            <ScanLandingPanel
-              onScanBarcode={() => openScanDialog("barcode")}
-              onCameraScan={() => openScanDialog("camera")}
-            />
           )}
 
           {/* System Stock Summary + Physical Measurement + Result (filter or scan mode) */}
@@ -1017,7 +1214,7 @@ export default function MaterialStockReconciliation() {
                   </Box>
 
                   <TextField
-                    label="Enter Weight"
+                    label="Enter Total Weight"
                     required
                     fullWidth
                     size="small"
@@ -1030,7 +1227,7 @@ export default function MaterialStockReconciliation() {
 
                   <Box sx={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 1.5, mb: 1.75 }}>
                     <TextField
-                      label="Tray/Box Weight"
+                      label="Singale Tray/Box Weight"
                       required
                       fullWidth
                       size="small"
@@ -1040,7 +1237,7 @@ export default function MaterialStockReconciliation() {
                       InputProps={{ endAdornment: <Typography sx={{ fontSize: 12, color: COLORS.textMuted }}>gm</Typography> }}
                     />
                     <TextField
-                      label="Sticker Weight"
+                      label=" Singale Sticker Weight"
                       required
                       fullWidth
                       size="small"
@@ -1173,8 +1370,7 @@ export default function MaterialStockReconciliation() {
             </>
           )}
 
-          {/* Reconciliation History — visible from filter mode, scan mode, and the
-              dedicated "Reconcile Report" view */}
+          {/* Reconciliation History */}
           {showHistoryBlock && (
             <Paper sx={cardSx} elevation={0}>
               <Typography sx={panelTitleSx}>Reconciliation History</Typography>
@@ -1221,8 +1417,8 @@ export default function MaterialStockReconciliation() {
                         </TableCell>
                         <TableCell sx={tbodyCellSx}>{h.remarks || "—"}</TableCell>
                         <TableCell sx={tbodyCellSx} align="center">
-                          <IconButton size="small" onClick={() => setViewRecord(h)}>
-                            <VisibilityIcon fontSize="small" />
+                          <IconButton size="small" onClick={() => handleDownloadRecord(h)}>
+                            <DownloadIcon fontSize="small" />
                           </IconButton>
                         </TableCell>
                       </TableRow>
@@ -1233,55 +1429,6 @@ export default function MaterialStockReconciliation() {
             </Paper>
           )}
         </Box>
-
-        {/* View saved reconciliation dialog */}
-        <Dialog open={Boolean(viewRecord)} onClose={() => setViewRecord(null)} maxWidth="xs" fullWidth>
-          <DialogTitle sx={{ fontWeight: 600 }}>Reconciliation Detail</DialogTitle>
-          <DialogContent dividers>
-            {viewRecord && (
-              <Box sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 2 }}>
-                {[
-                  ["Date & Time", viewRecord.dateTime],
-                  ["User", viewRecord.user],
-                  ["Material", viewRecord.material],
-                  ["Total Bags", viewRecord.totalBags],
-                  ["Total Pieces", viewRecord.totalPieces],
-                  ["System Weight", `${fmt(viewRecord.systemWeight)} gm`],
-                  ["Gross Weight", `${fmt(viewRecord.grossWeight)} gm`],
-                  ["Sticker Weight", `${fmt(viewRecord.stickerWeight)} gm`],
-                  ["Polythene Weight", `${fmt(viewRecord.polytheneWeight)} gm`],
-                  ["Tray/Box Weight", `${fmt(viewRecord.trayWeight)} gm`],
-                  ["Physical Net Weight", `${fmt(viewRecord.physicalNet)} gm`],
-                  ["Difference", `${fmt(viewRecord.difference)} gm`],
-                  ["Tolerance", `±${fmt(viewRecord.tolerance)} gm`],
-                  ["Remarks", viewRecord.remarks || "—"],
-                ].map(([label, val]) => (
-                  <Box key={label} sx={{ display: "flex", flexDirection: "column" }}>
-                    <Typography sx={{ fontSize: 11, color: COLORS.textMuted, mb: 0.25 }}>{label}</Typography>
-                    <Typography sx={{ fontSize: 13, fontWeight: 700 }}>{val}</Typography>
-                  </Box>
-                ))}
-                <Box sx={{ display: "flex", flexDirection: "column" }}>
-                  <Typography sx={{ fontSize: 11, color: COLORS.textMuted, mb: 0.25 }}>Result</Typography>
-                  <Typography
-                    sx={{
-                      fontSize: 13,
-                      fontWeight: 700,
-                      color: viewRecord.status === "ACCEPT" ? COLORS.success : COLORS.danger,
-                    }}
-                  >
-                    {viewRecord.status}
-                  </Typography>
-                </Box>
-              </Box>
-            )}
-          </DialogContent>
-          <DialogActions>
-            <Button onClick={() => setViewRecord(null)} sx={{ textTransform: "none", color: COLORS.textMuted }}>
-              Close
-            </Button>
-          </DialogActions>
-        </Dialog>
       </Box>
     </ThemeProvider>
   );
