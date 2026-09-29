@@ -736,13 +736,21 @@ export default function MaterialStockReconciliation() {
   /* Landing → "System Data": enter the filter view with ALL data loaded
      and the filter drawer closed. The user can then open Filters and
      narrow the data down. */
-  const handleOpenSystemData = () => {
-    handleClearFilters();
-    setStockSummary(buildSummary("", "", {}));
-    setResult(null);
-    setFilterOpen(false);
-    setMode("filter");
-  };
+  // const handleOpenSystemData = () => {
+  //   handleClearFilters();
+  //   setStockSummary(buildSummary("", "", {}));
+  //   setResult(null);
+  //   setFilterOpen(false);
+  //   setMode("filter");
+  // };
+
+const handleOpenSystemData = () => {
+  handleClearFilters();
+  setStockSummary(null);      // <-- no default data
+  setResult(null);
+  setFilterOpen(true);        // <-- open the filter drawer right away
+  setMode("filter");
+};
 
   /* ---- scan flow handlers ---- */
   const openScanDialog = (source) => {
@@ -921,9 +929,13 @@ export default function MaterialStockReconciliation() {
     return chips;
   }, [stockSummary]);
 
+  // const showWorkspace = mode === "filter" || mode === "scan";
+  // const showSummaryBlock = showWorkspace; // Summary + Measurement + Result
+  // const showHistoryBlock = mode === "filter" || mode === "scan" || mode === "history";
   const showWorkspace = mode === "filter" || mode === "scan";
-  const showSummaryBlock = showWorkspace; // Summary + Measurement + Result
-  const showHistoryBlock = mode === "filter" || mode === "scan" || mode === "history";
+// In filter mode, show the summary/measurement/result only after Search is clicked
+const showSummaryBlock = mode === "scan" || (mode === "filter" && !!stockSummary);
+const showHistoryBlock = mode === "filter" || mode === "scan" || mode === "history";
 
   /* ----------------------------------------------------------------- */
   return (
@@ -1227,7 +1239,7 @@ export default function MaterialStockReconciliation() {
 
                   <Box sx={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 1.5, mb: 1.75 }}>
                     <TextField
-                      label="Singale Tray/Box Weight"
+                      label="Tray/Box Weight"
                       required
                       fullWidth
                       size="small"
@@ -1247,7 +1259,7 @@ export default function MaterialStockReconciliation() {
                       InputProps={{ endAdornment: <Typography sx={{ fontSize: 12, color: COLORS.textMuted }}>gm</Typography> }}
                     />
                     <TextField
-                      label="Polythene Weight"
+                      label="Singale Polythene Weight"
                       required
                       fullWidth
                       size="small"
@@ -1309,6 +1321,7 @@ export default function MaterialStockReconciliation() {
                         size="small"
                         type="number"
                         fullWidth
+                        disabled
                         sx={fieldSx}
                         value={toleranceMetal}
                         onChange={(e) => setToleranceMetal(Number(e.target.value))}
@@ -1317,6 +1330,7 @@ export default function MaterialStockReconciliation() {
                         label="Other Material (ct/gm)"
                         size="small"
                         type="number"
+                        disabled
                         fullWidth
                         sx={{ mb: 0 }}
                         value={toleranceOther}
