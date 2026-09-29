@@ -1053,17 +1053,7 @@ export default function MaterialStockReconciliation() {
                   >
                     Clear All
                   </Button>
-                  {invalidScannedCodes.length > 0 && (
-                    <Button
-                      size="small"
-                      variant="outlined"
-                      color="error"
-                      sx={{ textTransform: "none", fontWeight: 600, borderRadius: "8px", py: 0.5 }}
-                      onClick={() => setScannedCodes(validScannedCodes)}
-                    >
-                      Remove Invalid
-                    </Button>
-                  )}
+                 
                 </Box>
 
                 <Button
@@ -1150,7 +1140,7 @@ export default function MaterialStockReconciliation() {
 
               <Typography sx={{ fontSize: 18, fontWeight: 700 }}>
                 {mode === "scan"
-                  ? `Scanned Lot: ${stockSummary?.subFilters?.lotno || ""}`
+                  ? ""
                   : "Material Stock Reconciliation"}
               </Typography>
             </Box>
