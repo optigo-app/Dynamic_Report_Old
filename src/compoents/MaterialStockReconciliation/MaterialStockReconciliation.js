@@ -21,10 +21,6 @@ import {
   Divider,
   IconButton,
   Popover,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
   Drawer,
   Badge,
   ThemeProvider,
@@ -331,7 +327,7 @@ function ResultLine({ label, value }) {
 
 /* ========================================================================
    LANDING PAGE
-   Two entry points (System Data / Scan Barcode) + tolerance settings.
+   Two entry points (Criteria Wise / Scan RM Bag) + tolerance settings.
    ===================================================================== */
 function LandingActionCard({ icon, title, description, onClick, variant }) {
   const isPrimary = variant === "primary";
@@ -431,23 +427,6 @@ function LandingPage({
     >
       {/* Heading */}
       <Box sx={{ textAlign: "center", mb: 4.5, maxWidth: 560 }}>
-        {/* <Box
-          sx={{
-            width: 64,
-            height: 64,
-            mx: "auto",
-            mb: 2,
-            borderRadius: "18px",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            color: "#fff",
-            background: `linear-gradient(135deg, ${COLORS.purple} 0%, #8A5CE0 100%)`,
-            boxShadow: "0 10px 24px rgba(108,63,197,0.3)",
-          }}
-        >
-          <QrCodeScannerIcon sx={{ fontSize: 32 }} />
-        </Box> */}
         <Typography sx={{ fontSize: 28, fontWeight: 800, color: COLORS.text, mb: 1 }}>
           Material Stock Reconciliation
         </Typography>
@@ -516,10 +495,6 @@ function LandingPage({
             <Typography sx={{ fontSize: 15, fontWeight: 700, color: COLORS.text }}>
               Tolerance Settings
             </Typography>
-            {/* <Typography sx={{ fontSize: 12, color: COLORS.textMuted }}>
-              Maximum allowed difference between system and physical weight. Applied automatically
-              to every reconciliation.
-            </Typography> */}
           </Box>
         </Box>
 
@@ -555,7 +530,8 @@ function LandingPage({
 }
 
 /* ========================================================================
-   Shared filter fields — used inside the left Drawer (System Data mode).
+   Shared filter fields — used inside the left Drawer (Criteria Wise
+   mode). UNCHANGED.
    ===================================================================== */
 function FilterPanelContent({
   locker,
@@ -642,31 +618,147 @@ function FilterPanelContent({
 }
 
 /* ========================================================================
+   Scan panel — the "Scan RM Bag to Reconciliation" drawer. Scanned Job
+   No.'s are shown as small deletable chips instead of a modal list.
+   ===================================================================== */
+function ScanPanelContent({
+  scanInput,
+  setScanInput,
+  onKeyDown,
+  onAdd,
+  scannedCodes,
+  validScannedCodes,
+  invalidScannedCodes,
+  onRemove,
+  onClearAll,
+  onScan,
+  onClose,
+}) {
+  const isValid = (code) => validScannedCodes.includes(code);
+
+  return (
+    <Box sx={{ p: 2.5, width: 320 }}>
+      <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 2 }}>
+        <Typography sx={{ ...panelTitleSx, mb: 0 }}>Scan RM Bag</Typography>
+        {onClose && (
+          <IconButton size="small" onClick={onClose}>
+            <CloseIcon fontSize="small" />
+          </IconButton>
+        )}
+      </Box>
+
+      <TextField
+        autoFocus
+        fullWidth
+        multiline
+        minRows={3}
+        size="small"
+        placeholder="Scan or type Job No.'s, separated by commas — e.g. 1/1254, 2/3464"
+        value={scanInput}
+        onChange={(e) => setScanInput(e.target.value)}
+        onKeyDown={onKeyDown}
+        sx={{ mb: 1 }}
+      />
+      <Button
+        size="small"
+        variant="outlined"
+        sx={{ ...outlineBtnSx, py: 0.5, mb: 2 }}
+        onClick={onAdd}
+        disabled={!scanInput.trim()}
+      >
+        Add
+      </Button>
+
+      <Divider sx={{ mb: 1.75 }} />
+
+      <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 1 }}>
+        <Typography sx={{ fontSize: 12, fontWeight: 700, color: COLORS.textMuted }}>
+          Scanned Job ({scannedCodes.length})
+        </Typography>
+        {scannedCodes.length > 0 && (
+          <Button
+            size="small"
+            startIcon={<DeleteOutlineIcon fontSize="small" />}
+            onClick={onClearAll}
+            sx={{ textTransform: "none", color: COLORS.textMuted, fontSize: 12, p: 0, minWidth: 0 }}
+          >
+            Clear All
+          </Button>
+        )}
+      </Box>
+
+      {scannedCodes.length === 0 ? (
+        <Typography sx={hintInlineSx}>No items scanned yet.</Typography>
+      ) : (
+        <>
+          <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1, maxHeight: 260, overflowY: "auto", mb: 2 }}>
+            {scannedCodes.map((code) => (
+              <Chip
+                key={code}
+                label={code}
+                size="small"
+                onDelete={() => onRemove(code)}
+                sx={isValid(code) ? chipSx : chipDangerSx}
+              />
+            ))}
+          </Box>
+
+          <Box sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 1.5, mb: 2 }}>
+            <Box sx={{ bgcolor: COLORS.successBg, borderRadius: "8px", px: 1.5, py: 1.25 }}>
+              <Typography sx={{ fontSize: 11, fontWeight: 700, color: COLORS.success }}>VALID</Typography>
+              <Typography sx={{ fontSize: 22, fontWeight: 800, color: COLORS.success }}>
+                {validScannedCodes.length}
+              </Typography>
+            </Box>
+            <Box sx={{ bgcolor: COLORS.dangerBg, borderRadius: "8px", px: 1.5, py: 1.25 }}>
+              <Typography sx={{ fontSize: 11, fontWeight: 700, color: COLORS.danger }}>INVALID</Typography>
+              <Typography sx={{ fontSize: 22, fontWeight: 800, color: COLORS.danger }}>
+                {invalidScannedCodes.length}
+              </Typography>
+            </Box>
+          </Box>
+
+          <Button
+            fullWidth
+            variant="contained"
+            startIcon={<QrCodeScannerIcon />}
+            sx={primaryBtnSx}
+            onClick={onScan}
+            disabled={validScannedCodes.length === 0}
+          >
+            Scan
+          </Button>
+        </>
+      )}
+    </Box>
+  );
+}
+
+/* ========================================================================
    COMPONENT
    ===================================================================== */
 export default function MaterialStockReconciliation() {
   /* ---- top-level mode:
-     'initial' -> landing page (System Data / Scan Barcode / tolerance settings)
-     'filter'  -> System Data view, driven by the Filters drawer
-     'scan'    -> driven by scanned Job No.'s (filters disabled)
+     'initial' -> landing page (Criteria Wise / Scan RM Bag / tolerance settings)
+     'filter'  -> Criteria Wise view, driven by the Filters drawer
+     'scan'    -> Scan RM Bag view, driven by the Scan drawer
      'history' -> just the Reconciliation History table ---- */
   const [mode, setMode] = useState("initial");
 
-  /* ---- filters (draft state) ---- */
+  /* ---- filters (draft state) — Criteria Wise flow, UNCHANGED ---- */
   const [locker, setLocker] = useState("");
   const [material, setMaterial] = useState("");
   const [subFilters, setSubFilters] = useState({});
 
-  /* ---- filter drawer (System Data mode only) ---- */
+  /* ---- filter drawer (Criteria Wise mode only) ---- */
   const [filterOpen, setFilterOpen] = useState(false);
 
   /* ---- stock summary snapshot: null until either a filter search or a
      scan selection populates it ---- */
   const [stockSummary, setStockSummary] = useState(null);
 
-  /* ---- scan flow ---- */
-  const [scanDialogOpen, setScanDialogOpen] = useState(false);
-  const [scanSource, setScanSource] = useState("barcode"); // 'barcode' | 'camera'
+  /* ---- scan flow (now drawer-based, not a modal) ---- */
+  const [scanDrawerOpen, setScanDrawerOpen] = useState(false);
   const [scanInput, setScanInput] = useState("");
   const [scannedCodes, setScannedCodes] = useState([]);
 
@@ -716,7 +808,8 @@ export default function MaterialStockReconciliation() {
     setSubFilters((prev) => ({ ...prev, [key]: val }));
   };
 
-  /* Filters drive the page ONLY when the user explicitly clicks Search. */
+  /* Filters drive the page ONLY when the user explicitly clicks Search.
+     ---- CRITERIA WISE FLOW — UNCHANGED ---- */
   const handleSearchSummary = () => {
     setStockSummary(buildSummary(locker, material, subFilters));
     setResult(null);
@@ -733,36 +826,28 @@ export default function MaterialStockReconciliation() {
   const activeFilterCount =
     (locker ? 1 : 0) + (material ? 1 : 0) + Object.values(subFilters).filter(Boolean).length;
 
-  /* Landing → "System Data": enter the filter view with ALL data loaded
-     and the filter drawer closed. The user can then open Filters and
-     narrow the data down. */
-  // const handleOpenSystemData = () => {
-  //   handleClearFilters();
-  //   setStockSummary(buildSummary("", "", {}));
-  //   setResult(null);
-  //   setFilterOpen(false);
-  //   setMode("filter");
-  // };
-
+  /* Landing → "Criteria Wise": enter the filter view with the filter
+     drawer opened right away. ---- UNCHANGED ---- */
   const handleOpenSystemData = () => {
     handleClearFilters();
-    setStockSummary(null);      // <-- no default data
+    setStockSummary(null);
     setResult(null);
-    setFilterOpen(true);        // <-- open the filter drawer right away
+    setFilterOpen(true);
     setMode("filter");
   };
 
-  /* ---- scan flow handlers ---- */
-  const openScanDialog = (source) => {
-    setScanSource(source);
+  /* ---- scan flow handlers (drawer-based) ---- */
+
+  /* Landing → "Scan RM Bag to Reconciliation": enter scan mode with the
+     scan drawer opened right away, exactly like Criteria Wise opens the
+     filter drawer. */
+  const handleOpenScanFlow = () => {
     setScanInput("");
     setScannedCodes([]);
-    setScanDialogOpen(true);
-  };
-
-  const closeScanDialog = () => {
-    setScanDialogOpen(false);
-    setScanInput("");
+    setStockSummary(null);
+    setResult(null);
+    setScanDrawerOpen(true);
+    setMode("scan");
   };
 
   /* A physical barcode scanner behaves like a fast keyboard, ending each
@@ -796,14 +881,14 @@ export default function MaterialStockReconciliation() {
     setScannedCodes((prev) => prev.filter((c) => c !== code));
   };
 
-  /* Clicking "Scan" loads the data for every Job No. in the list,
-     combined into one summary. */
+  /* Clicking "Scan" loads the data for every valid Job No. in the list,
+     combined into one summary, and closes the drawer. */
   const handleScanAndView = () => {
-    if (scannedCodes.length === 0) return;
-    setStockSummary(buildSummaryFromScanCodes(scannedCodes));
+    const validCodes = scannedCodes.filter((code) => RAW_DATA.some((r) => r.rfbag === code));
+    if (validCodes.length === 0) return;
+    setStockSummary(buildSummaryFromScanCodes(validCodes));
     setResult(null);
-    setMode("scan");
-    setScanDialogOpen(false);
+    setScanDrawerOpen(false);
   };
 
   const goToStart = () => {
@@ -811,6 +896,7 @@ export default function MaterialStockReconciliation() {
     setStockSummary(null);
     setResult(null);
     setFilterOpen(false);
+    setScanDrawerOpen(false);
   };
 
   /* ---- physical measurement calculations ---- */
@@ -938,12 +1024,9 @@ export default function MaterialStockReconciliation() {
     return chips;
   }, [stockSummary]);
 
-  // const showWorkspace = mode === "filter" || mode === "scan";
-  // const showSummaryBlock = showWorkspace; // Summary + Measurement + Result
-  // const showHistoryBlock = mode === "filter" || mode === "scan" || mode === "history";
   const showWorkspace = mode === "filter" || mode === "scan";
-  // In filter mode, show the summary/measurement/result only after Search is clicked
-  const showSummaryBlock = mode === "scan" || (mode === "filter" && !!stockSummary);
+  // Summary/measurement/result show only after Search (filter mode) or Scan (scan mode) is clicked
+  const showSummaryBlock = showWorkspace && !!stockSummary;
   const showHistoryBlock = mode === "filter" || mode === "scan" || mode === "history";
 
   /* ----------------------------------------------------------------- */
@@ -959,8 +1042,7 @@ export default function MaterialStockReconciliation() {
           "*": { boxSizing: "border-box" },
         }}
       >
-        {/* ================= FILTER DRAWER (left side) ================= */}
-        {/* Only used in System Data mode. The landing page has no filters. */}
+        {/* ================= FILTER DRAWER (Criteria Wise mode) — UNCHANGED ================= */}
         {mode === "filter" && (
           <Drawer
             anchor="left"
@@ -987,94 +1069,29 @@ export default function MaterialStockReconciliation() {
           </Drawer>
         )}
 
-        {/* ================= SCAN DIALOG ================= */}
-        <Dialog open={scanDialogOpen} onClose={closeScanDialog} maxWidth="xs" fullWidth>
-          <DialogTitle sx={{ fontWeight: 600, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-            {scanSource === "camera" ? "Camera Scan" : "Scan Barcode"}
-            <IconButton size="small" onClick={closeScanDialog}>
-              <CloseIcon fontSize="small" />
-            </IconButton>
-          </DialogTitle>
-          <DialogContent dividers>
-            <TextField
-              autoFocus
-              fullWidth
-              multiline
-              minRows={3}
-              size="small"
-              placeholder="Scan or type Job No.'s, separated by commas — e.g. 1/1254, 2/3464"
-              value={scanInput}
-              onChange={(e) => setScanInput(e.target.value)}
+        {/* ================= SCAN DRAWER (Scan RM Bag mode) ================= */}
+        {mode === "scan" && (
+          <Drawer
+            anchor="left"
+            open={scanDrawerOpen}
+            onClose={() => setScanDrawerOpen(false)}
+            PaperProps={{ sx: { width: 320, bgcolor: COLORS.bg } }}
+          >
+            <ScanPanelContent
+              scanInput={scanInput}
+              setScanInput={setScanInput}
               onKeyDown={handleScanKeyDown}
-              sx={{ mb: 1, mt: 1 }}
+              onAdd={parseAndAddScannedCodes}
+              scannedCodes={scannedCodes}
+              validScannedCodes={validScannedCodes}
+              invalidScannedCodes={invalidScannedCodes}
+              onRemove={handleRemoveScanned}
+              onClearAll={() => setScannedCodes([])}
+              onScan={handleScanAndView}
+              onClose={() => setScanDrawerOpen(false)}
             />
-            <Button
-              size="small"
-              variant="outlined"
-              sx={{ ...outlineBtnSx, py: 0.5, mb: 2 }}
-              onClick={parseAndAddScannedCodes}
-              disabled={!scanInput.trim()}
-            >
-              Add
-            </Button>
-
-           
-
-            <Typography sx={{ fontSize: 12, fontWeight: 700, color: COLORS.textMuted, mb: 1 }}>
-              Scanned Job ({scannedCodes.length})
-            </Typography>
-
-            {scannedCodes.length === 0 ? (
-              <Typography sx={hintInlineSx}>No items scanned yet.</Typography>
-            ) : (
-              <>
-                <Box sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 1.5, mb: 2 }}>
-                  <Box sx={{ bgcolor: COLORS.successBg, borderRadius: "8px", px: 1.5, py: 1.25 }}>
-                    <Typography sx={{ fontSize: 11, fontWeight: 700, color: COLORS.success }}>VALID</Typography>
-                    <Typography sx={{ fontSize: 22, fontWeight: 800, color: COLORS.success }}>
-                      {validScannedCodes.length}
-                    </Typography>
-                  </Box>
-                  <Box sx={{ bgcolor: COLORS.dangerBg, borderRadius: "8px", px: 1.5, py: 1.25 }}>
-                    <Typography sx={{ fontSize: 11, fontWeight: 700, color: COLORS.danger }}>INVALID</Typography>
-                    <Typography sx={{ fontSize: 22, fontWeight: 800, color: COLORS.danger }}>
-                      {invalidScannedCodes.length}
-                    </Typography>
-                  </Box>
-                </Box>
-
-                <Box sx={{ display: "flex", gap: 1, mb: 2 }}>
-                  <Button
-                    size="small"
-                    variant="outlined"
-                    startIcon={<DeleteOutlineIcon />}
-                    sx={{ ...outlineBtnSx, py: 0.5 }}
-                    onClick={() => setScannedCodes([])}
-                  >
-                    Clear All
-                  </Button>
-                 
-                </Box>
-
-                <Button
-                  fullWidth
-                  variant="contained"
-                  startIcon={<QrCodeScannerIcon />}
-                  sx={primaryBtnSx}
-                  onClick={handleScanAndView}
-                  disabled={validScannedCodes.length === 0}
-                >
-                  Scan
-                </Button>
-              </>
-            )}
-          </DialogContent>
-          <DialogActions>
-            <Button onClick={closeScanDialog} sx={{ textTransform: "none", color: COLORS.textMuted }}>
-              Close
-            </Button>
-          </DialogActions>
-        </Dialog>
+          </Drawer>
+        )}
 
         {/* ================= MAIN CONTENT ================= */}
         <Box sx={{ flex: 1, minWidth: 0, p: 1.5, pt: 1 }}>
@@ -1082,13 +1099,14 @@ export default function MaterialStockReconciliation() {
           {mode === "initial" && (
             <LandingPage
               onSystemData={handleOpenSystemData}
-              onScanBarcode={() => openScanDialog("barcode")}
+              onScanBarcode={handleOpenScanFlow}
               toleranceMetal={toleranceMetal}
               setToleranceMetal={setToleranceMetal}
               toleranceOther={toleranceOther}
               setToleranceOther={setToleranceOther}
             />
           )}
+
           {/* Back button — filter/scan/history modes only */}
           {mode !== "initial" && (
             <Tooltip title="Back" arrow>
@@ -1111,9 +1129,10 @@ export default function MaterialStockReconciliation() {
               </IconButton>
             </Tooltip>
           )}
+
           {/* Page header — content changes with mode */}
           {mode !== "initial" && (
-            <Box sx={{ display: "flex", alignItems: "center", justifyContent: "flex-start", mb: 1, gap: 1.5, marginLeft: "6px" }}>
+            <Box sx={{ display: "flex", alignItems: "center", justifyContent: "flex-start", mb: 1, gap: 1.5, marginLeft: "6px", flexWrap: "wrap" }}>
               {mode === "filter" && (
                 <Badge color="error" badgeContent={activeFilterCount} invisible={activeFilterCount === 0}>
                   <Button
@@ -1128,21 +1147,35 @@ export default function MaterialStockReconciliation() {
               )}
 
               {mode === "scan" && (
-                <Button
-                  variant="outlined"
-                  startIcon={<QrCodeScannerIcon />}
-                  sx={outlineBtnSx}
-                  onClick={() => openScanDialog("barcode")}
-                >
-                  New Scan
-                </Button>
+                <Badge color="error" badgeContent={scannedCodes.length} invisible={scannedCodes.length === 0}>
+                  <Button
+                    variant="outlined"
+                    startIcon={<QrCodeScannerIcon />}
+                    sx={outlineBtnSx}
+                    onClick={() => setScanDrawerOpen(true)}
+                  >
+                    Scan Jobs
+                  </Button>
+                </Badge>
               )}
 
               <Typography sx={{ fontSize: 18, fontWeight: 700 }}>
-                {mode === "scan"
-                  ? ""
-                  : "Material Stock Reconciliation"}
+                {mode === "scan" ? "" : "Material Stock Reconciliation"}
               </Typography>
+
+              {mode === "scan" && scannedCodes.length > 0 && (
+                <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.75 }}>
+                  {scannedCodes.map((code) => (
+                    <Chip
+                      key={code}
+                      label={code}
+                      size="small"
+                      onDelete={() => handleRemoveScanned(code)}
+                      sx={validScannedCodes.includes(code) ? chipSx : chipDangerSx}
+                    />
+                  ))}
+                </Box>
+              )}
             </Box>
           )}
 
