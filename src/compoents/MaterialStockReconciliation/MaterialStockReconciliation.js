@@ -637,7 +637,7 @@ function ScanPanelContent({
   const isValid = (code) => validScannedCodes.includes(code);
 
   return (
-    <Box sx={{ p: 2.5, width: 320 }}>
+    <Box sx={{ p: 2.5, width: 520 }}>
       <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 2 }}>
         <Typography sx={{ ...panelTitleSx, mb: 0 }}>Scan RM Bag</Typography>
         {onClose && (
@@ -1075,7 +1075,7 @@ export default function MaterialStockReconciliation() {
             anchor="left"
             open={scanDrawerOpen}
             onClose={() => setScanDrawerOpen(false)}
-            PaperProps={{ sx: { width: 320, bgcolor: COLORS.bg } }}
+            PaperProps={{ sx: { width: 520, bgcolor: COLORS.bg } }}
           >
             <ScanPanelContent
               scanInput={scanInput}
