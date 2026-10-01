@@ -127,13 +127,28 @@ const formatDate = (iso) => {
   return d.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
 };
 
-const formatDateTime = (iso) => {
-  if (!iso) return "-";
-  const d = new Date(iso);
-  if (isNaN(d.getTime())) return iso;
-  const datePart = d.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
-  const timePart = d.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", hour12: true });
-  return `${datePart}, ${timePart}`;
+const formatDateTime = (d) => {
+  if (!d) return "";
+  const dt = new Date(d);
+  if (isNaN(dt.getTime())) return "";
+
+  const date = dt.toLocaleDateString("en-GB", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+    timeZone: "UTC", // no +5:30 shift
+  });
+
+  const time = dt
+    .toLocaleTimeString("en-US", {
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: true,
+      timeZone: "UTC", // no +5:30 shift
+    })
+    .toLowerCase();
+
+  return `${date}, ${time}`;
 };
 
 const statusColor = (status) => {
@@ -601,6 +616,7 @@ const CrmReport = () => {
   const displayPaymentBehaviour = apiPaymentBehaviour;
   const displayCustomerNotes = apiCustomerNotes;
   const displayCallLogs = apiCallLogs;
+  console.log('displayCallLogs: ', displayCallLogs);
 
   /* ══════════════════════════════════════════════
      API CALL — CustomerSearch (sp=215)
