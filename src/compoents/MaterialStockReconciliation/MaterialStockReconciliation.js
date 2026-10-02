@@ -1309,11 +1309,15 @@ export default function MaterialStockReconciliation() {
                   <Typography sx={{ fontSize: 16, fontWeight: 600, color: "#6c3fc5" }}>
                     System Stock Summary
                   </Typography>
-                  <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.75, justifyContent: "flex-end" }}>
-                    {summaryChips.map((c, i) => (
-                      <Chip key={i} label={c} size="small" sx={{ ...chipSx, backgroundColor: "#f3f4f6", fontWeight: 500 }} />
-                    ))}
-                  </Box>
+                  {mode !== "scan" &&(
+                     <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.75, justifyContent: "flex-end" }}>
+                     {summaryChips.map((c, i) => (
+                       <Chip key={i} label={c} size="small" sx={{ ...chipSx, backgroundColor: "#f3f4f6", fontWeight: 500 }} />
+                     ))}
+                   </Box>
+
+                  )}
+                 
                 </Box>
 
                 <Box
