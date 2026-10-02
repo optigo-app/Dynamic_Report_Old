@@ -1,5 +1,5 @@
 // http://localhost:3000/testreport/?sp=9&ifid=AdvanceCRM&pid=18618
-import React, { useMemo, useState, useCallback } from "react";
+import React, { useMemo, useState, useCallback, useEffect } from "react";
 import {
   Box,
   Paper,
@@ -292,8 +292,12 @@ function buildSummary(loc, mat, subs) {
    mode" shows once the user clicks the "Scan" button, instead of the
    filter-built summary. */
 function buildSummaryFromScanCodes(codes) {
-  const rows = RAW_DATA.filter((r) => codes.includes(r.rfbag));
-  const bags = rows.length;
+  const uniqueCodes = uniq(codes);
+  const rows = RAW_DATA.filter((r) => uniqueCodes.includes(r.rfbag));
+  // One scanned Job/Lot No. = one bag, even if that bag's rfbag appears on
+  // several item rows (e.g. Metal + Mount + Finding under the same bag).
+  // Pieces/weight still sum every matching row; bags counts scanned jobs.
+  const bags = uniqueCodes.length;
   const pieces = rows.reduce((s, r) => s + (Number(r.TotalRemainingPcs) || 0), 0);
   const weight = rows.reduce((s, r) => s + (Number(r.TotalRemainingWeight) || 0), 0);
   const materials = uniq(rows.map((r) => r.itemname));
@@ -304,7 +308,7 @@ function buildSummaryFromScanCodes(codes) {
     rows,
     material: materials.length === 1 ? materials[0] : "Scanned Items",
     locker: rows[0]?.Locker || "",
-    subFilters: { lotno: codes.join(", ") },
+    subFilters: { lotno: uniqueCodes.join(", ") },
   };
 }
 
@@ -881,15 +885,42 @@ export default function MaterialStockReconciliation() {
     setScannedCodes((prev) => prev.filter((c) => c !== code));
   };
 
+  const validScannedCodes = useMemo(
+    () => scannedCodes.filter((code) => RAW_DATA.some((r) => r.rfbag === code)),
+    [scannedCodes]
+  );
+  const invalidScannedCodes = useMemo(
+    () => scannedCodes.filter((code) => !RAW_DATA.some((r) => r.rfbag === code)),
+    [scannedCodes]
+  );
+
   /* Clicking "Scan" loads the data for every valid Job No. in the list,
      combined into one summary, and closes the drawer. */
   const handleScanAndView = () => {
-    const validCodes = scannedCodes.filter((code) => RAW_DATA.some((r) => r.rfbag === code));
-    if (validCodes.length === 0) return;
-    setStockSummary(buildSummaryFromScanCodes(validCodes));
+    if (validScannedCodes.length === 0) return;
+    setStockSummary(buildSummaryFromScanCodes(validScannedCodes));
     setResult(null);
     setScanDrawerOpen(false);
   };
+
+  /* BUG FIX: once a scan summary is already on screen, removing (or
+     adding) a scanned chip — whether from the drawer or the header row —
+     must keep "TOTAL RM BAGS / PIECES / SYSTEM WEIGHT" in sync with only
+     the currently VALID scanned codes. Previously the summary stayed
+     frozen at whatever it was when "Scan" was last clicked, so removing
+     2 of 4 valid jobs still showed the old totals. This effect re-builds
+     the summary straight from validScannedCodes whenever the scanned
+     list changes, as long as we're in scan mode and a summary already
+     exists (i.e. the user has clicked "Scan" at least once). */
+  useEffect(() => {
+    if (mode !== "scan") return;
+    setStockSummary((prevSummary) => {
+      if (!prevSummary) return prevSummary; // no scan done yet — nothing to sync
+      if (validScannedCodes.length === 0) return null; // nothing valid left — clear the summary
+      return buildSummaryFromScanCodes(validScannedCodes);
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [scannedCodes]);
 
   const goToStart = () => {
     setMode("initial");
@@ -1003,15 +1034,6 @@ export default function MaterialStockReconciliation() {
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
   };
-
-  const validScannedCodes = useMemo(
-    () => scannedCodes.filter((code) => RAW_DATA.some((r) => r.rfbag === code)),
-    [scannedCodes]
-  );
-  const invalidScannedCodes = useMemo(
-    () => scannedCodes.filter((code) => !RAW_DATA.some((r) => r.rfbag === code)),
-    [scannedCodes]
-  );
 
   const summaryChips = useMemo(() => {
     if (!stockSummary) return [];
@@ -1165,13 +1187,14 @@ export default function MaterialStockReconciliation() {
 
               {mode === "scan" && scannedCodes.length > 0 && (
                 <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.75 }}>
-                  {scannedCodes.map((code) => (
+                  {validScannedCodes.map((code) => (
                     <Chip
                       key={code}
                       label={code}
                       size="small"
                       onDelete={() => handleRemoveScanned(code)}
-                      sx={validScannedCodes.includes(code) ? chipSx : chipDangerSx}
+                      // sx={validScannedCodes.includes(code) ? chipSx : chipDangerSx}
+                      sx={ chipSx  }
                     />
                   ))}
                 </Box>
