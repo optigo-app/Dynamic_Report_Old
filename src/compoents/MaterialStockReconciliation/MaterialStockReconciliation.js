@@ -653,7 +653,7 @@ function ScanPanelContent({
         multiline
         minRows={3}
         size="small"
-        placeholder="Scan or type Job No.'s, separated by commas — e.g. 1/1254, 2/3464"
+        placeholder="Scan or type Job No.'s, separated by commas — e.g. 0000005845, 0000005846"
         value={scanInput}
         onChange={(e) => setScanInput(e.target.value)}
         onKeyDown={onKeyDown}
