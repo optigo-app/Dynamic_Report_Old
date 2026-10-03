@@ -1,5 +1,5 @@
 // http://localhost:3000/testreport/?sp=9&ifid=AdvanceCRM&pid=18618
-import React, { useMemo, useState, useCallback } from "react";
+import React, { useMemo, useState, useCallback, useEffect } from "react";
 import {
   Box,
   Paper,
@@ -22,6 +22,7 @@ import {
   IconButton,
   Popover,
   Drawer,
+  Dialog,
   Badge,
   ThemeProvider,
   Tooltip,
@@ -292,8 +293,12 @@ function buildSummary(loc, mat, subs) {
    mode" shows once the user clicks the "Scan" button, instead of the
    filter-built summary. */
 function buildSummaryFromScanCodes(codes) {
-  const rows = RAW_DATA.filter((r) => codes.includes(r.rfbag));
-  const bags = rows.length;
+  const uniqueCodes = uniq(codes);
+  const rows = RAW_DATA.filter((r) => uniqueCodes.includes(r.rfbag));
+  // One scanned Job/Lot No. = one bag, even if that bag's rfbag appears on
+  // several item rows (e.g. Metal + Mount + Finding under the same bag).
+  // Pieces/weight still sum every matching row; bags counts scanned jobs.
+  const bags = uniqueCodes.length;
   const pieces = rows.reduce((s, r) => s + (Number(r.TotalRemainingPcs) || 0), 0);
   const weight = rows.reduce((s, r) => s + (Number(r.TotalRemainingWeight) || 0), 0);
   const materials = uniq(rows.map((r) => r.itemname));
@@ -304,7 +309,7 @@ function buildSummaryFromScanCodes(codes) {
     rows,
     material: materials.length === 1 ? materials[0] : "Scanned Items",
     locker: rows[0]?.Locker || "",
-    subFilters: { lotno: codes.join(", ") },
+    subFilters: { lotno: uniqueCodes.join(", ") },
   };
 }
 
@@ -637,7 +642,7 @@ function ScanPanelContent({
   const isValid = (code) => validScannedCodes.includes(code);
 
   return (
-    <Box sx={{ p: 2.5, width: 320 }}>
+    <Box sx={{ p: 2.5, width: 520 }}>
       <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 2 }}>
         <Typography sx={{ ...panelTitleSx, mb: 0 }}>Scan RM Bag</Typography>
         {onClose && (
@@ -653,7 +658,7 @@ function ScanPanelContent({
         multiline
         minRows={3}
         size="small"
-        placeholder="Scan or type Job No.'s, separated by commas — e.g. 1/1254, 2/3464"
+        placeholder="Scan or type RM Bag No.'s — e.g. 0000005845 0000005846"
         value={scanInput}
         onChange={(e) => setScanInput(e.target.value)}
         onKeyDown={onKeyDown}
@@ -762,6 +767,9 @@ export default function MaterialStockReconciliation() {
   const [scanInput, setScanInput] = useState("");
   const [scannedCodes, setScannedCodes] = useState([]);
 
+  /* ---- NEW: info modal that lists all scanned Job No.'s (scan mode) ---- */
+  const [scanInfoOpen, setScanInfoOpen] = useState(false);
+
   /* ---- physical measurement ---- */
   const [grossWeight, setGrossWeight] = useState("");
   const [trayWeight, setTrayWeight] = useState("");
@@ -846,6 +854,7 @@ export default function MaterialStockReconciliation() {
     setScannedCodes([]);
     setStockSummary(null);
     setResult(null);
+    setScanInfoOpen(false);
     setScanDrawerOpen(true);
     setMode("scan");
   };
@@ -881,15 +890,47 @@ export default function MaterialStockReconciliation() {
     setScannedCodes((prev) => prev.filter((c) => c !== code));
   };
 
+  const validScannedCodes = useMemo(
+    () => scannedCodes.filter((code) => RAW_DATA.some((r) => r.rfbag === code)),
+    [scannedCodes]
+  );
+  const invalidScannedCodes = useMemo(
+    () => scannedCodes.filter((code) => !RAW_DATA.some((r) => r.rfbag === code)),
+    [scannedCodes]
+  );
+
   /* Clicking "Scan" loads the data for every valid Job No. in the list,
      combined into one summary, and closes the drawer. */
   const handleScanAndView = () => {
-    const validCodes = scannedCodes.filter((code) => RAW_DATA.some((r) => r.rfbag === code));
-    if (validCodes.length === 0) return;
-    setStockSummary(buildSummaryFromScanCodes(validCodes));
+    if (validScannedCodes.length === 0) return;
+    setStockSummary(buildSummaryFromScanCodes(validScannedCodes));
     setResult(null);
     setScanDrawerOpen(false);
   };
+
+  /* BUG FIX: once a scan summary is already on screen, removing (or
+     adding) a scanned chip — whether from the drawer or the header row —
+     must keep "TOTAL RM BAGS / PIECES / SYSTEM WEIGHT" in sync with only
+     the currently VALID scanned codes. Previously the summary stayed
+     frozen at whatever it was when "Scan" was last clicked, so removing
+     2 of 4 valid jobs still showed the old totals. This effect re-builds
+     the summary straight from validScannedCodes whenever the scanned
+     list changes, as long as we're in scan mode and a summary already
+     exists (i.e. the user has clicked "Scan" at least once). */
+  useEffect(() => {
+    if (mode !== "scan") return;
+    setStockSummary((prevSummary) => {
+      if (!prevSummary) return prevSummary; // no scan done yet — nothing to sync
+      if (validScannedCodes.length === 0) return null; // nothing valid left — clear the summary
+      return buildSummaryFromScanCodes(validScannedCodes);
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [scannedCodes]);
+
+  /* Auto-close the info modal when there are no valid scanned jobs left. */
+  useEffect(() => {
+    if (validScannedCodes.length === 0) setScanInfoOpen(false);
+  }, [validScannedCodes.length]);
 
   const goToStart = () => {
     setMode("initial");
@@ -897,6 +938,7 @@ export default function MaterialStockReconciliation() {
     setResult(null);
     setFilterOpen(false);
     setScanDrawerOpen(false);
+    setScanInfoOpen(false);
   };
 
   /* ---- physical measurement calculations ---- */
@@ -1004,15 +1046,6 @@ export default function MaterialStockReconciliation() {
     URL.revokeObjectURL(url);
   };
 
-  const validScannedCodes = useMemo(
-    () => scannedCodes.filter((code) => RAW_DATA.some((r) => r.rfbag === code)),
-    [scannedCodes]
-  );
-  const invalidScannedCodes = useMemo(
-    () => scannedCodes.filter((code) => !RAW_DATA.some((r) => r.rfbag === code)),
-    [scannedCodes]
-  );
-
   const summaryChips = useMemo(() => {
     if (!stockSummary) return [];
     const chips = [];
@@ -1075,7 +1108,7 @@ export default function MaterialStockReconciliation() {
             anchor="left"
             open={scanDrawerOpen}
             onClose={() => setScanDrawerOpen(false)}
-            PaperProps={{ sx: { width: 320, bgcolor: COLORS.bg } }}
+            PaperProps={{ sx: { width: 520, bgcolor: COLORS.bg } }}
           >
             <ScanPanelContent
               scanInput={scanInput}
@@ -1091,6 +1124,76 @@ export default function MaterialStockReconciliation() {
               onClose={() => setScanDrawerOpen(false)}
             />
           </Drawer>
+        )}
+
+        {/* ================= SCANNED JOBS INFO MODAL (Scan RM Bag mode) =================
+            Fixed 300px x 500px. Content scrolls inside when there are many jobs. */}
+        {mode === "scan" && (
+          <Dialog
+            open={scanInfoOpen}
+            onClose={() => setScanInfoOpen(false)}
+            maxWidth={false}
+            PaperProps={{
+              sx: {
+                width: 500,
+                height: 300,
+                maxWidth: "calc(100vw - 32px)",
+                maxHeight: "calc(100vh - 32px)",
+                m: 2,
+                display: "flex",
+                flexDirection: "column",
+                overflow: "hidden",
+              },
+            }}
+          >
+            <Box
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                px: 2,
+                py: 1.25,
+                borderBottom: `1px solid ${COLORS.border}`,
+                flexShrink: 0,
+              }}
+            >
+              <Typography sx={{ fontSize: 15, fontWeight: 600, color: "#6c3fc5" }}>
+                Scanned RM Bag No. ({validScannedCodes.length})
+              </Typography>
+              <IconButton size="small" onClick={() => setScanInfoOpen(false)}>
+                <CloseIcon fontSize="small" />
+              </IconButton>
+            </Box>
+
+            <Box
+              sx={{
+                flex: 1,
+                minHeight: 0,
+                overflow: "auto", // scrolls (horizontal + vertical) when content is larger than the fixed modal
+                p: 2,
+              }}
+            >
+              <Box
+                sx={{
+                  display: "flex",
+                  flexDirection: "row",
+                  alignItems: "flex-start",
+                  flexWrap: "wrap",
+                  gap: 1,
+                  width: "100%",
+                }}
+              >
+                {validScannedCodes.map((code) => (
+                  <Chip
+                    key={code}
+                    label={code}
+                    size="small"
+                    sx={{ ...chipSx, flexShrink: 0 }}
+                  />
+                ))}
+              </Box>
+            </Box>
+          </Dialog>
         )}
 
         {/* ================= MAIN CONTENT ================= */}
@@ -1163,18 +1266,28 @@ export default function MaterialStockReconciliation() {
                 {mode === "scan" ? "" : "Material Stock Reconciliation"}
               </Typography>
 
-              {mode === "scan" && scannedCodes.length > 0 && (
-                <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.75 }}>
-                  {scannedCodes.map((code) => (
-                    <Chip
-                      key={code}
-                      label={code}
-                      size="small"
-                      onDelete={() => handleRemoveScanned(code)}
-                      sx={validScannedCodes.includes(code) ? chipSx : chipDangerSx}
-                    />
-                  ))}
-                </Box>
+              {/* Scan mode: instead of listing every scanned Job No. inline, show an
+                  info icon — clicking it opens a fixed-size modal with the full list. */}
+              {mode === "scan" && validScannedCodes.length > 0 && (
+                <Tooltip title="View scanned Job No.'s" arrow>
+                  <IconButton
+                    onClick={() => setScanInfoOpen(true)}
+                    aria-label="View scanned Job No.'s"
+                    sx={{
+                      width: 38,
+                      height: 38,
+                      color: COLORS.purple,
+                      bgcolor: COLORS.surface,
+                      border: `1px solid ${COLORS.border}`,
+                      boxShadow: "0 2px 6px rgba(30,27,46,0.06)",
+                      "&:hover": { bgcolor: COLORS.purpleLight, borderColor: COLORS.purple },
+                    }}
+                  >
+                    <Badge color="primary" badgeContent={validScannedCodes.length} max={999}>
+                      <InfoOutlinedIcon fontSize="small" />
+                    </Badge>
+                  </IconButton>
+                </Tooltip>
               )}
             </Box>
           )}
@@ -1196,11 +1309,15 @@ export default function MaterialStockReconciliation() {
                   <Typography sx={{ fontSize: 16, fontWeight: 600, color: "#6c3fc5" }}>
                     System Stock Summary
                   </Typography>
-                  <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.75, justifyContent: "flex-end" }}>
-                    {summaryChips.map((c, i) => (
-                      <Chip key={i} label={c} size="small" sx={{ ...chipSx, backgroundColor: "#f3f4f6", fontWeight: 500 }} />
-                    ))}
-                  </Box>
+                  {mode !== "scan" &&(
+                     <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.75, justifyContent: "flex-end" }}>
+                     {summaryChips.map((c, i) => (
+                       <Chip key={i} label={c} size="small" sx={{ ...chipSx, backgroundColor: "#f3f4f6", fontWeight: 500 }} />
+                     ))}
+                   </Box>
+
+                  )}
+                 
                 </Box>
 
                 <Box
