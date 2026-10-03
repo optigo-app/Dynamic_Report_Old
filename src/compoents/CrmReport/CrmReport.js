@@ -658,6 +658,17 @@ const CrmReport = () => {
     }
   };
 
+  useEffect(() => {
+    const onMessage = (e) => {
+      if (e?.data?.type === "CLOSE_MODAL") {
+        handleCloseModal();
+        if (selectedCustomer?.customercode) handleRefresh();
+      }
+    };
+    window.addEventListener("message", onMessage);
+    return () => window.removeEventListener("message", onMessage);
+  }, [selectedCustomer, reportLoading]);
+
   /* ══════════════════════════════════════════════
    EvoRemarks -> grouped by SalesRepName
    ══════════════════════════════════════════════ */
