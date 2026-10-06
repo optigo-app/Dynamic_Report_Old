@@ -43,6 +43,8 @@ import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import Inventory2OutlinedIcon from "@mui/icons-material/Inventory2Outlined";
 import TuneIcon from "@mui/icons-material/Tune";
+import { keyframes } from "@emotion/react";
+ 
 
 /* ========================================================================
    COLOR TOKENS  (single source of truth — used everywhere via sx)
@@ -64,6 +66,23 @@ const COLORS = {
   warningBg: "#FBF0E2",
   border: "#E7E5F0",
 };
+const scanLineMove = keyframes`
+  0%   { top: 6%; opacity: 0; }
+  10%  { opacity: 1; }
+  50%  { top: 94%; opacity: 1; }
+  60%  { opacity: 0; }
+  100% { top: 6%; opacity: 0; }
+`;
+
+const iconPulse = keyframes`
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50%      { transform: scale(1.08); opacity: 0.85; }
+`;
+
+const framePulse = (color) => keyframes`
+  0%, 100% { box-shadow: 0 0 0 0 ${color}55; }
+  50%      { box-shadow: 0 0 0 8px ${color}00; }
+`;
 
 const theme = createTheme({
   palette: {
@@ -334,7 +353,7 @@ function ResultLine({ label, value }) {
    LANDING PAGE
    Two entry points (Criteria Wise / Scan RM Bag) + tolerance settings.
    ===================================================================== */
-function LandingActionCard({ icon, title, description, onClick, variant }) {
+function LandingActionCard({ icon, title, description, onClick, variant="primary" }) {
   const isPrimary = variant === "primary";
   return (
     <ButtonBase
@@ -437,7 +456,7 @@ function LandingPage({
         </Typography>
         <Typography sx={{ fontSize: 14, color: COLORS.textMuted, lineHeight: 1.7 }}>
           Choose how you want to start — browse system stock using filters, or scan
-          barcodes to reconcile specific jobs.
+          barcodes to reconcile specific RM Bag.
         </Typography>
       </Box>
 
@@ -460,10 +479,10 @@ function LandingPage({
           onClick={onSystemData}
         />
         <LandingActionCard
-          variant="primary"
+          variant="outline"
           icon={<QrCodeScannerIcon sx={{ fontSize: 30 }} />}
           title="Scan RM Bag to Reconciliation"
-          description="Scan or paste one or many Job numbers and reconcile them together in one go."
+          description="Scan or paste one or many Bag numbers and reconcile them together in one go."
           onClick={onScanBarcode}
         />
       </Box>
@@ -651,6 +670,61 @@ function ScanPanelContent({
           </IconButton>
         )}
       </Box>
+      <Box
+  sx={{
+    position: "relative",
+    width: 90,
+    height: 90,
+    mx: "auto",          // centered
+    mb: 2.5,             // space before the input field
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+  }}
+>
+  {/* corner brackets — only the outer corner is rounded */}
+  {[
+    { top: 0, left: 0, borderWidth: "3px 0 0 3px", borderTopLeftRadius: "8px" },
+    { top: 0, right: 0, borderWidth: "3px 3px 0 0", borderTopRightRadius: "8px" },
+    { bottom: 0, left: 0, borderWidth: "0 0 3px 3px", borderBottomLeftRadius: "8px" },
+    { bottom: 0, right: 0, borderWidth: "0 3px 3px 0", borderBottomRightRadius: "8px" },
+  ].map((pos, i) => (
+    <Box
+      key={i}
+      sx={{
+        position: "absolute",
+        width: 22,
+        height: 22,
+        borderStyle: "solid",
+        borderColor: "#6d5efc",
+        ...pos,
+      }}
+    />
+  ))}
+
+  {/* moving scan line — gradient with faded ends, kept inside the brackets */}
+  <Box
+    sx={{
+      position: "absolute",
+      left: "14%",
+      width: "72%",
+      height: 2,
+      borderRadius: 1,
+      background:
+        "linear-gradient(90deg, transparent 0%, #6d5efc 20%, #6d5efc 80%, transparent 100%)",
+      boxShadow: "0 0 8px 2px rgba(109,94,252,0.45)",
+      animation: `${scanLineMove} 1.8s ease-in-out infinite`,
+    }}
+  />
+
+  <QrCodeScannerIcon
+    sx={{
+      fontSize: 42,
+      color: "#6d5efc",
+      animation: `${iconPulse} 1.8s ease-in-out infinite`,
+    }}
+  />
+</Box>
 
       <TextField
         autoFocus
@@ -678,7 +752,7 @@ function ScanPanelContent({
 
       <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 1 }}>
         <Typography sx={{ fontSize: 12, fontWeight: 700, color: COLORS.textMuted }}>
-          Scanned Job ({scannedCodes.length})
+          Scanned RM Bag ({scannedCodes.length})
         </Typography>
         {scannedCodes.length > 0 && (
           <Button
@@ -726,12 +800,12 @@ function ScanPanelContent({
           <Button
             fullWidth
             variant="contained"
-            startIcon={<QrCodeScannerIcon />}
+            // startIcon={<QrCodeScannerIcon />}
             sx={primaryBtnSx}
             onClick={onScan}
             disabled={validScannedCodes.length === 0}
           >
-            Scan
+            Proceed to Reconciliation
           </Button>
         </>
       )}
@@ -1257,7 +1331,7 @@ export default function MaterialStockReconciliation() {
                     sx={outlineBtnSx}
                     onClick={() => setScanDrawerOpen(true)}
                   >
-                    Scan Jobs
+                    Scan RM Bags
                   </Button>
                 </Badge>
               )}
@@ -1563,7 +1637,7 @@ export default function MaterialStockReconciliation() {
                       <TableCell sx={theadCellSx} align="right">Difference</TableCell>
                       <TableCell sx={theadCellSx}>Status</TableCell>
                       <TableCell sx={theadCellSx}>Remarks</TableCell>
-                      <TableCell sx={theadCellSx} align="center">Action</TableCell>
+                      <TableCell sx={theadCellSx} align="center">Reconciliation By</TableCell> 
                     </TableRow>
                   </TableHead>
                   <TableBody>
