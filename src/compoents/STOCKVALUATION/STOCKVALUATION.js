@@ -969,7 +969,7 @@ const StockValuation = () => {
         </div>
       )}
 
-      {/* ── Product Type wise table ── */}
+      {/* ── Product Type wise table ──    */}
       <div style={{ height: "45vh", overflow: "auto", marginTop: 0 }}>
         <table className="valuation-table">
           <thead>
