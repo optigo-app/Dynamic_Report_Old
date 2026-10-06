@@ -1,0 +1,4739 @@
+
+[
+    {
+        "materialtypeid": 819,
+        "materialtypename": "16A 3 Pin Top"
+    },
+    {
+        "materialtypeid": 385,
+        "materialtypename": "1C Brush"
+    },
+    {
+        "materialtypeid": 386,
+        "materialtypename": "2C Brush"
+    },
+    {
+        "materialtypeid": 655,
+        "materialtypename": "43 Inch Tv"
+    },
+    {
+        "materialtypeid": 818,
+        "materialtypename": "6A 3 Pin Top"
+    },
+    {
+        "materialtypeid": 1075,
+        "materialtypename": "A4 Paper 100GSM"
+    },
+    {
+        "materialtypeid": 416,
+        "materialtypename": "A4 size Colour Paper"
+    },
+    {
+        "materialtypeid": 417,
+        "materialtypename": "A4 size Printing Paper"
+    },
+    {
+        "materialtypeid": 735,
+        "materialtypename": "Abro Tape"
+    },
+    {
+        "materialtypeid": 1158,
+        "materialtypename": "AC Gas Refill"
+    },
+    {
+        "materialtypeid": 823,
+        "materialtypename": "AC Stand"
+    },
+    {
+        "materialtypeid": 79,
+        "materialtypename": "Acetone"
+    },
+    {
+        "materialtypeid": 989,
+        "materialtypename": "Acrylic Sheet"
+    },
+    {
+        "materialtypeid": 1031,
+        "materialtypename": "Acrylic Stand Paper Holder"
+    },
+    {
+        "materialtypeid": 592,
+        "materialtypename": "Adaptor"
+    },
+    {
+        "materialtypeid": 1096,
+        "materialtypename": "Adhesive Round Foil"
+    },
+    {
+        "materialtypeid": 91,
+        "materialtypename": "Adhesive(bostik)"
+    },
+    {
+        "materialtypeid": 888,
+        "materialtypename": "Advertisement"
+    },
+    {
+        "materialtypeid": 427,
+        "materialtypename": "Air Compressor"
+    },
+    {
+        "materialtypeid": 519,
+        "materialtypename": "Air Conditioner"
+    },
+    {
+        "materialtypeid": 688,
+        "materialtypename": "Air Ducting"
+    },
+    {
+        "materialtypeid": 472,
+        "materialtypename": "Air Filter"
+    },
+    {
+        "materialtypeid": 852,
+        "materialtypename": "Air Freshener Liquid"
+    },
+    {
+        "materialtypeid": 804,
+        "materialtypename": "Air Pocket"
+    },
+    {
+        "materialtypeid": 708,
+        "materialtypename": "Air Release Valve"
+    },
+    {
+        "materialtypeid": 925,
+        "materialtypename": "Air Transport"
+    },
+    {
+        "materialtypeid": 1045,
+        "materialtypename": "Airscape Kilomatte Charcoal - Black"
+    },
+    {
+        "materialtypeid": 832,
+        "materialtypename": "AIVID Central Operation Software"
+    },
+    {
+        "materialtypeid": 1189,
+        "materialtypename": "Alidor 185 Repleniser R1"
+    },
+    {
+        "materialtypeid": 1188,
+        "materialtypename": "Alinorme 18k"
+    },
+    {
+        "materialtypeid": 1190,
+        "materialtypename": "Alinorme 18k Replenisher R2"
+    },
+    {
+        "materialtypeid": 1191,
+        "materialtypename": "Alinorme 18k Replenisher R3"
+    },
+    {
+        "materialtypeid": 1210,
+        "materialtypename": "Allem Stone"
+    },
+    {
+        "materialtypeid": 76,
+        "materialtypename": "ALLOY"
+    },
+    {
+        "materialtypeid": 1195,
+        "materialtypename": "ALLOY-W/O-S"
+    },
+    {
+        "materialtypeid": 77,
+        "materialtypename": "Alum"
+    },
+    {
+        "materialtypeid": 469,
+        "materialtypename": "Alum Stone"
+    },
+    {
+        "materialtypeid": 691,
+        "materialtypename": "Aluminium Collar Damper"
+    },
+    {
+        "materialtypeid": 692,
+        "materialtypename": "Aluminium Collar linear"
+    },
+    {
+        "materialtypeid": 647,
+        "materialtypename": "Aluminium Plate Base 3.5''"
+    },
+    {
+        "materialtypeid": 648,
+        "materialtypename": "Aluminium Plate Base 4''"
+    },
+    {
+        "materialtypeid": 782,
+        "materialtypename": "Anchor Finger Coat"
+    },
+    {
+        "materialtypeid": 155,
+        "materialtypename": "Anemometer"
+    },
+    {
+        "materialtypeid": 939,
+        "materialtypename": "Annual Maintenance Charge"
+    },
+    {
+        "materialtypeid": 807,
+        "materialtypename": "Anode"
+    },
+    {
+        "materialtypeid": 78,
+        "materialtypename": "Anti tarnish Liquid"
+    },
+    {
+        "materialtypeid": 1118,
+        "materialtypename": "Anti Tarnish Paper"
+    },
+    {
+        "materialtypeid": 868,
+        "materialtypename": "Antitarnish 616"
+    },
+    {
+        "materialtypeid": 869,
+        "materialtypename": "Antitarnish 616 Salt"
+    },
+    {
+        "materialtypeid": 1090,
+        "materialtypename": "Antitarnish 618"
+    },
+    {
+        "materialtypeid": 1089,
+        "materialtypename": "Antitarnish 618 Salt"
+    },
+    {
+        "materialtypeid": 831,
+        "materialtypename": "Antivirus Quick Heal"
+    },
+    {
+        "materialtypeid": 1142,
+        "materialtypename": "Apple Sheel"
+    },
+    {
+        "materialtypeid": 1063,
+        "materialtypename": "Application Foam"
+    },
+    {
+        "materialtypeid": 750,
+        "materialtypename": "Aqua Branding Water Bottle"
+    },
+    {
+        "materialtypeid": 339,
+        "materialtypename": "Argon Gas"
+    },
+    {
+        "materialtypeid": 406,
+        "materialtypename": "Armature for Micromotor"
+    },
+    {
+        "materialtypeid": 669,
+        "materialtypename": "Asbestos Sheet"
+    },
+    {
+        "materialtypeid": 943,
+        "materialtypename": "Assistance in Labour Laws"
+    },
+    {
+        "materialtypeid": 944,
+        "materialtypename": "Assitance in Salary Process"
+    },
+    {
+        "materialtypeid": 151,
+        "materialtypename": "Assort Light"
+    },
+    {
+        "materialtypeid": 867,
+        "materialtypename": "Auruna 215"
+    },
+    {
+        "materialtypeid": 865,
+        "materialtypename": "Auruna 556"
+    },
+    {
+        "materialtypeid": 866,
+        "materialtypename": "Auruna 556 Brightner"
+    },
+    {
+        "materialtypeid": 809,
+        "materialtypename": "Automatic Sole Cleaning Machine"
+    },
+    {
+        "materialtypeid": 639,
+        "materialtypename": "AVO 10 KVA UPS"
+    },
+    {
+        "materialtypeid": 485,
+        "materialtypename": "AVO 6KVA UPS"
+    },
+    {
+        "materialtypeid": 124,
+        "materialtypename": "Bagsheet"
+    },
+    {
+        "materialtypeid": 1110,
+        "materialtypename": "Bagsheet - Blue"
+    },
+    {
+        "materialtypeid": 1112,
+        "materialtypename": "Bagsheet - Light Pink"
+    },
+    {
+        "materialtypeid": 1113,
+        "materialtypename": "Bagsheet - Light Red"
+    },
+    {
+        "materialtypeid": 1016,
+        "materialtypename": "Bagsheet - Yellow"
+    },
+    {
+        "materialtypeid": 363,
+        "materialtypename": "Ball Nose tool"
+    },
+    {
+        "materialtypeid": 412,
+        "materialtypename": "Ball pen"
+    },
+    {
+        "materialtypeid": 785,
+        "materialtypename": "Ball Pen Refill"
+    },
+    {
+        "materialtypeid": 1247,
+        "materialtypename": "Bandage"
+    },
+    {
+        "materialtypeid": 897,
+        "materialtypename": "Bangle Concept"
+    },
+    {
+        "materialtypeid": 238,
+        "materialtypename": "Bangle Inside Turning Socket"
+    },
+    {
+        "materialtypeid": 513,
+        "materialtypename": "Bangle Jewellery Box"
+    },
+    {
+        "materialtypeid": 616,
+        "materialtypename": "Bangle Mandrel"
+    },
+    {
+        "materialtypeid": 236,
+        "materialtypename": "Bangle Outside Turning Socket"
+    },
+    {
+        "materialtypeid": 993,
+        "materialtypename": "Banner"
+    },
+    {
+        "materialtypeid": 362,
+        "materialtypename": "Barcode Scanner"
+    },
+    {
+        "materialtypeid": 561,
+        "materialtypename": "Basket"
+    },
+    {
+        "materialtypeid": 1099,
+        "materialtypename": "Bathroom Mug"
+    },
+    {
+        "materialtypeid": 465,
+        "materialtypename": "Battery Cell"
+    },
+    {
+        "materialtypeid": 437,
+        "materialtypename": "Battery Shell"
+    },
+    {
+        "materialtypeid": 166,
+        "materialtypename": "Beaker"
+    },
+    {
+        "materialtypeid": 430,
+        "materialtypename": "Bearing"
+    },
+    {
+        "materialtypeid": 879,
+        "materialtypename": "Bed Sheet"
+    },
+    {
+        "materialtypeid": 870,
+        "materialtypename": "Bed Without Storage"
+    },
+    {
+        "materialtypeid": 1144,
+        "materialtypename": "Bell"
+    },
+    {
+        "materialtypeid": 241,
+        "materialtypename": "Bengal Guage"
+    },
+    {
+        "materialtypeid": 1041,
+        "materialtypename": "Benki Barista Cloth"
+    },
+    {
+        "materialtypeid": 1043,
+        "materialtypename": "Benki Clean Liquid"
+    },
+    {
+        "materialtypeid": 1039,
+        "materialtypename": "Benki Distributor"
+    },
+    {
+        "materialtypeid": 1044,
+        "materialtypename": "Benki Double Spout Shot Glass"
+    },
+    {
+        "materialtypeid": 1042,
+        "materialtypename": "Benki Group Head - Cleaning Brush"
+    },
+    {
+        "materialtypeid": 1036,
+        "materialtypename": "Benki Milk Pitcher"
+    },
+    {
+        "materialtypeid": 1040,
+        "materialtypename": "Benki Tamping"
+    },
+    {
+        "materialtypeid": 1037,
+        "materialtypename": "Benki Tower Knock Box"
+    },
+    {
+        "materialtypeid": 1038,
+        "materialtypename": "Benki Wooden Temper"
+    },
+    {
+        "materialtypeid": 1206,
+        "materialtypename": "Benzotriazole"
+    },
+    {
+        "materialtypeid": 644,
+        "materialtypename": "Biker"
+    },
+    {
+        "materialtypeid": 977,
+        "materialtypename": "Bill Lodgement"
+    },
+    {
+        "materialtypeid": 637,
+        "materialtypename": "Billartd Pool Table"
+    },
+    {
+        "materialtypeid": 632,
+        "materialtypename": "Billiard Table"
+    },
+    {
+        "materialtypeid": 1165,
+        "materialtypename": "Binder Clip"
+    },
+    {
+        "materialtypeid": 173,
+        "materialtypename": "Biometric Attendance machine"
+    },
+    {
+        "materialtypeid": 1122,
+        "materialtypename": "Black Rhodium"
+    },
+    {
+        "materialtypeid": 217,
+        "materialtypename": "Blade Handle"
+    },
+    {
+        "materialtypeid": 1111,
+        "materialtypename": "Blue Rouge"
+    },
+    {
+        "materialtypeid": 1229,
+        "materialtypename": "BMS System"
+    },
+    {
+        "materialtypeid": 387,
+        "materialtypename": "Boric Acid Powder"
+    },
+    {
+        "materialtypeid": 1212,
+        "materialtypename": "Borosil Beaker"
+    },
+    {
+        "materialtypeid": 562,
+        "materialtypename": "Bottle"
+    },
+    {
+        "materialtypeid": 464,
+        "materialtypename": "Bottle Cleaning Brush"
+    },
+    {
+        "materialtypeid": 638,
+        "materialtypename": "Box File"
+    },
+    {
+        "materialtypeid": 1169,
+        "materialtypename": "Branding Panel"
+    },
+    {
+        "materialtypeid": 971,
+        "materialtypename": "Branding Water Bottle"
+    },
+    {
+        "materialtypeid": 783,
+        "materialtypename": "Brass Brush"
+    },
+    {
+        "materialtypeid": 1138,
+        "materialtypename": "Brass Connector"
+    },
+    {
+        "materialtypeid": 774,
+        "materialtypename": "Brass Cupseal"
+    },
+    {
+        "materialtypeid": 402,
+        "materialtypename": "Brass O Ring"
+    },
+    {
+        "materialtypeid": 1108,
+        "materialtypename": "Brass Patti"
+    },
+    {
+        "materialtypeid": 372,
+        "materialtypename": "Brass Rod"
+    },
+    {
+        "materialtypeid": 373,
+        "materialtypename": "Brass Tube"
+    },
+    {
+        "materialtypeid": 910,
+        "materialtypename": "Breakfast"
+    },
+    {
+        "materialtypeid": 838,
+        "materialtypename": "Brightner Liquid"
+    },
+    {
+        "materialtypeid": 542,
+        "materialtypename": "Broom"
+    },
+    {
+        "materialtypeid": 845,
+        "materialtypename": "Broom Stick Jumbo"
+    },
+    {
+        "materialtypeid": 926,
+        "materialtypename": "Brother Toner Refilling"
+    },
+    {
+        "materialtypeid": 646,
+        "materialtypename": "Brown Cello Tape"
+    },
+    {
+        "materialtypeid": 403,
+        "materialtypename": "Brush  Brown (small)"
+    },
+    {
+        "materialtypeid": 141,
+        "materialtypename": "Brush 1 (Black & Brown)"
+    },
+    {
+        "materialtypeid": 138,
+        "materialtypename": "Brush 1 Black"
+    },
+    {
+        "materialtypeid": 143,
+        "materialtypename": "Brush 1 White"
+    },
+    {
+        "materialtypeid": 536,
+        "materialtypename": "Bubble Bag"
+    },
+    {
+        "materialtypeid": 1077,
+        "materialtypename": "Buckner Funnel"
+    },
+    {
+        "materialtypeid": 441,
+        "materialtypename": "Buff Pin"
+    },
+    {
+        "materialtypeid": 719,
+        "materialtypename": "Bulamaz Hand Machine"
+    },
+    {
+        "materialtypeid": 853,
+        "materialtypename": "Bullet Buff Red"
+    },
+    {
+        "materialtypeid": 547,
+        "materialtypename": "Burnisher tool"
+    },
+    {
+        "materialtypeid": 932,
+        "materialtypename": "Bus Book"
+    },
+    {
+        "materialtypeid": 912,
+        "materialtypename": "Bus Service"
+    },
+    {
+        "materialtypeid": 889,
+        "materialtypename": "Business Card"
+    },
+    {
+        "materialtypeid": 706,
+        "materialtypename": "Butterfly"
+    },
+    {
+        "materialtypeid": 786,
+        "materialtypename": "Button Folder"
+    },
+    {
+        "materialtypeid": 1248,
+        "materialtypename": "Buyer's Visit"
+    },
+    {
+        "materialtypeid": 933,
+        "materialtypename": "Cab Book"
+    },
+    {
+        "materialtypeid": 496,
+        "materialtypename": "Cabinet Closed Loop"
+    },
+    {
+        "materialtypeid": 482,
+        "materialtypename": "Cabinet Without SMPS"
+    },
+    {
+        "materialtypeid": 488,
+        "materialtypename": "Cable Tie"
+    },
+    {
+        "materialtypeid": 170,
+        "materialtypename": "Cable(Fire)"
+    },
+    {
+        "materialtypeid": 682,
+        "materialtypename": "Cabling Laid In Hard PVC Conduit"
+    },
+    {
+        "materialtypeid": 594,
+        "materialtypename": "Calculator"
+    },
+    {
+        "materialtypeid": 160,
+        "materialtypename": "Caliper"
+    },
+    {
+        "materialtypeid": 633,
+        "materialtypename": "CAM Machine"
+    },
+    {
+        "materialtypeid": 893,
+        "materialtypename": "Cam Process"
+    },
+    {
+        "materialtypeid": 185,
+        "materialtypename": "Camera Stand"
+    },
+    {
+        "materialtypeid": 693,
+        "materialtypename": "Canvass Connection"
+    },
+    {
+        "materialtypeid": 773,
+        "materialtypename": "Capcing"
+    },
+    {
+        "materialtypeid": 604,
+        "materialtypename": "Carbide Jantry Black"
+    },
+    {
+        "materialtypeid": 429,
+        "materialtypename": "Carbon Brush"
+    },
+    {
+        "materialtypeid": 895,
+        "materialtypename": "Cargo Handling Service"
+    },
+    {
+        "materialtypeid": 1055,
+        "materialtypename": "Carpet"
+    },
+    {
+        "materialtypeid": 837,
+        "materialtypename": "Carrier Additive"
+    },
+    {
+        "materialtypeid": 1131,
+        "materialtypename": "Cartage"
+    },
+    {
+        "materialtypeid": 755,
+        "materialtypename": "Cartridge Filter"
+    },
+    {
+        "materialtypeid": 757,
+        "materialtypename": "Cartridge Filter Bowl (Vessel)"
+    },
+    {
+        "materialtypeid": 813,
+        "materialtypename": "Cast Crucible"
+    },
+    {
+        "materialtypeid": 95,
+        "materialtypename": "Casting Powder"
+    },
+    {
+        "materialtypeid": 448,
+        "materialtypename": "Caustic Soda"
+    },
+    {
+        "materialtypeid": 193,
+        "materialtypename": "CCTV Camera"
+    },
+    {
+        "materialtypeid": 191,
+        "materialtypename": "CCTV Camera accessories"
+    },
+    {
+        "materialtypeid": 189,
+        "materialtypename": "CCTV Camera Bullet"
+    },
+    {
+        "materialtypeid": 187,
+        "materialtypename": "CCTV Camera Dome"
+    },
+    {
+        "materialtypeid": 727,
+        "materialtypename": "Celling Brush"
+    },
+    {
+        "materialtypeid": 428,
+        "materialtypename": "Cello Tape"
+    },
+    {
+        "materialtypeid": 1132,
+        "materialtypename": "cement"
+    },
+    {
+        "materialtypeid": 564,
+        "materialtypename": "Centrifugal Bag"
+    },
+    {
+        "materialtypeid": 1125,
+        "materialtypename": "Centrifugal Finishing Machine"
+    },
+    {
+        "materialtypeid": 1010,
+        "materialtypename": "Centrifuge Hydro Extractor"
+    },
+    {
+        "materialtypeid": 347,
+        "materialtypename": "CER"
+    },
+    {
+        "materialtypeid": 393,
+        "materialtypename": "Ceramic"
+    },
+    {
+        "materialtypeid": 1230,
+        "materialtypename": "Ceramic pipe"
+    },
+    {
+        "materialtypeid": 1220,
+        "materialtypename": "Ceramix"
+    },
+    {
+        "materialtypeid": 966,
+        "materialtypename": "Certificate Card Change"
+    },
+    {
+        "materialtypeid": 1173,
+        "materialtypename": "Certificate change"
+    },
+    {
+        "materialtypeid": 1175,
+        "materialtypename": "Certificate To Certificate"
+    },
+    {
+        "materialtypeid": 508,
+        "materialtypename": "Certification & Hallmark"
+    },
+    {
+        "materialtypeid": 634,
+        "materialtypename": "Chain Jewellery Box"
+    },
+    {
+        "materialtypeid": 900,
+        "materialtypename": "Chain Necklace Concept"
+    },
+    {
+        "materialtypeid": 1050,
+        "materialtypename": "Chair Cover"
+    },
+    {
+        "materialtypeid": 626,
+        "materialtypename": "Chalk"
+    },
+    {
+        "materialtypeid": 753,
+        "materialtypename": "Charcoal Activated"
+    },
+    {
+        "materialtypeid": 748,
+        "materialtypename": "Charcoal Clay"
+    },
+    {
+        "materialtypeid": 798,
+        "materialtypename": "Charger"
+    },
+    {
+        "materialtypeid": 725,
+        "materialtypename": "Chillar"
+    },
+    {
+        "materialtypeid": 652,
+        "materialtypename": "Chloride Hexa Hydrate Powder"
+    },
+    {
+        "materialtypeid": 421,
+        "materialtypename": "Circuit Board(Micro motor)"
+    },
+    {
+        "materialtypeid": 942,
+        "materialtypename": "Cleaning Service"
+    },
+    {
+        "materialtypeid": 435,
+        "materialtypename": "Cloth Brush"
+    },
+    {
+        "materialtypeid": 161,
+        "materialtypename": "Cloth Buff"
+    },
+    {
+        "materialtypeid": 135,
+        "materialtypename": "Cloth Buff 1\""
+    },
+    {
+        "materialtypeid": 137,
+        "materialtypename": "Cloth Buff 4*50 (1 Silai)"
+    },
+    {
+        "materialtypeid": 139,
+        "materialtypename": "Cloth Buff 4*50 (3 Silai)"
+    },
+    {
+        "materialtypeid": 132,
+        "materialtypename": "Cloth Buff 4*50 (Without Silai)"
+    },
+    {
+        "materialtypeid": 643,
+        "materialtypename": "Cloth Buff 6*50 (3 Silai)"
+    },
+    {
+        "materialtypeid": 146,
+        "materialtypename": "Cloth Buff with Shank 1\",Pieces\""
+    },
+    {
+        "materialtypeid": 816,
+        "materialtypename": "Cloth Wash Liquid"
+    },
+    {
+        "materialtypeid": 961,
+        "materialtypename": "CNC Machine Tool"
+    },
+    {
+        "materialtypeid": 949,
+        "materialtypename": "CNG Gas"
+    },
+    {
+        "materialtypeid": 763,
+        "materialtypename": "Cob Light"
+    },
+    {
+        "materialtypeid": 1137,
+        "materialtypename": "Coil Ignition Card"
+    },
+    {
+        "materialtypeid": 405,
+        "materialtypename": "Collate"
+    },
+    {
+        "materialtypeid": 2,
+        "materialtypename": "ColorStone"
+    },
+    {
+        "materialtypeid": 336,
+        "materialtypename": "ColorStone natural"
+    },
+    {
+        "materialtypeid": 131,
+        "materialtypename": "Colour Pencil"
+    },
+    {
+        "materialtypeid": 658,
+        "materialtypename": "Colur Plastic Bag"
+    },
+    {
+        "materialtypeid": 656,
+        "materialtypename": "Colur Plastic Bags"
+    },
+    {
+        "materialtypeid": 880,
+        "materialtypename": "Comforter"
+    },
+    {
+        "materialtypeid": 1085,
+        "materialtypename": "Commission"
+    },
+    {
+        "materialtypeid": 929,
+        "materialtypename": "Compatible"
+    },
+    {
+        "materialtypeid": 617,
+        "materialtypename": "Computer Accessories"
+    },
+    {
+        "materialtypeid": 479,
+        "materialtypename": "Computer Graphic Card"
+    },
+    {
+        "materialtypeid": 478,
+        "materialtypename": "Computer Mother Board"
+    },
+    {
+        "materialtypeid": 484,
+        "materialtypename": "Computer Mouse"
+    },
+    {
+        "materialtypeid": 477,
+        "materialtypename": "Computer Processor"
+    },
+    {
+        "materialtypeid": 480,
+        "materialtypename": "Computer Ram"
+    },
+    {
+        "materialtypeid": 489,
+        "materialtypename": "Computer screen  LED"
+    },
+    {
+        "materialtypeid": 483,
+        "materialtypename": "Computer SMPS"
+    },
+    {
+        "materialtypeid": 481,
+        "materialtypename": "Computer SSD"
+    },
+    {
+        "materialtypeid": 887,
+        "materialtypename": "Computerised Touch Report"
+    },
+    {
+        "materialtypeid": 1019,
+        "materialtypename": "Consolidated Tax"
+    },
+    {
+        "materialtypeid": 1103,
+        "materialtypename": "Construction"
+    },
+    {
+        "materialtypeid": 940,
+        "materialtypename": "Consulting Fees"
+    },
+    {
+        "materialtypeid": 1159,
+        "materialtypename": "Container"
+    },
+    {
+        "materialtypeid": 380,
+        "materialtypename": "Container  no-101"
+    },
+    {
+        "materialtypeid": 376,
+        "materialtypename": "Container  no-11"
+    },
+    {
+        "materialtypeid": 377,
+        "materialtypename": "Container  no-22"
+    },
+    {
+        "materialtypeid": 378,
+        "materialtypename": "Container  no-33"
+    },
+    {
+        "materialtypeid": 379,
+        "materialtypename": "Container  no-55"
+    },
+    {
+        "materialtypeid": 381,
+        "materialtypename": "Container -22"
+    },
+    {
+        "materialtypeid": 803,
+        "materialtypename": "Container Box Hexa"
+    },
+    {
+        "materialtypeid": 1139,
+        "materialtypename": "Container no-100"
+    },
+    {
+        "materialtypeid": 1179,
+        "materialtypename": "Container no-102"
+    },
+    {
+        "materialtypeid": 1100,
+        "materialtypename": "Container no-1100"
+    },
+    {
+        "materialtypeid": 579,
+        "materialtypename": "Container no-333"
+    },
+    {
+        "materialtypeid": 390,
+        "materialtypename": "Container no-44"
+    },
+    {
+        "materialtypeid": 388,
+        "materialtypename": "Container no-66"
+    },
+    {
+        "materialtypeid": 720,
+        "materialtypename": "Container no-750"
+    },
+    {
+        "materialtypeid": 389,
+        "materialtypename": "Container no-77"
+    },
+    {
+        "materialtypeid": 391,
+        "materialtypename": "Container no-88"
+    },
+    {
+        "materialtypeid": 392,
+        "materialtypename": "Container no-888"
+    },
+    {
+        "materialtypeid": 951,
+        "materialtypename": "Contract Worker Salary"
+    },
+    {
+        "materialtypeid": 860,
+        "materialtypename": "Control Box Card"
+    },
+    {
+        "materialtypeid": 179,
+        "materialtypename": "Control panel(fire)"
+    },
+    {
+        "materialtypeid": 1225,
+        "materialtypename": "Conversion Charge"
+    },
+    {
+        "materialtypeid": 815,
+        "materialtypename": "Coolant Ultra"
+    },
+    {
+        "materialtypeid": 1239,
+        "materialtypename": "Copper Bars/Patta"
+    },
+    {
+        "materialtypeid": 681,
+        "materialtypename": "Copper Pipe"
+    },
+    {
+        "materialtypeid": 1226,
+        "materialtypename": "Copper Sulphate"
+    },
+    {
+        "materialtypeid": 368,
+        "materialtypename": "Copper Wire"
+    },
+    {
+        "materialtypeid": 1198,
+        "materialtypename": "Copperlume CNF 103"
+    },
+    {
+        "materialtypeid": 1199,
+        "materialtypename": "Copperlume CNF 103 Maintenance"
+    },
+    {
+        "materialtypeid": 1200,
+        "materialtypename": "Copperlume CNF 103 PH Adjuster"
+    },
+    {
+        "materialtypeid": 420,
+        "materialtypename": "Cord (wire)"
+    },
+    {
+        "materialtypeid": 1141,
+        "materialtypename": "Coreldraw"
+    },
+    {
+        "materialtypeid": 1097,
+        "materialtypename": "Covering Foil"
+    },
+    {
+        "materialtypeid": 672,
+        "materialtypename": "Crevice Nozzle"
+    },
+    {
+        "materialtypeid": 237,
+        "materialtypename": "Cross Bur No 10"
+    },
+    {
+        "materialtypeid": 1235,
+        "materialtypename": "Cross bur No 12"
+    },
+    {
+        "materialtypeid": 304,
+        "materialtypename": "Cross Cut No 06"
+    },
+    {
+        "materialtypeid": 300,
+        "materialtypename": "Cross Cut No 07"
+    },
+    {
+        "materialtypeid": 298,
+        "materialtypename": "Cross Cut No 08"
+    },
+    {
+        "materialtypeid": 444,
+        "materialtypename": "Cross Cut No 09"
+    },
+    {
+        "materialtypeid": 305,
+        "materialtypename": "Cross Cut No 10"
+    },
+    {
+        "materialtypeid": 570,
+        "materialtypename": "Crystal Media"
+    },
+    {
+        "materialtypeid": 295,
+        "materialtypename": "Cup bur No 08"
+    },
+    {
+        "materialtypeid": 303,
+        "materialtypename": "Cup bur No 09"
+    },
+    {
+        "materialtypeid": 323,
+        "materialtypename": "Cup bur No 10"
+    },
+    {
+        "materialtypeid": 270,
+        "materialtypename": "Cup bur No 11"
+    },
+    {
+        "materialtypeid": 321,
+        "materialtypename": "Cup bur No 12"
+    },
+    {
+        "materialtypeid": 319,
+        "materialtypename": "Cup bur No 13"
+    },
+    {
+        "materialtypeid": 317,
+        "materialtypename": "Cup bur No 14"
+    },
+    {
+        "materialtypeid": 314,
+        "materialtypename": "Cup bur No 15"
+    },
+    {
+        "materialtypeid": 1147,
+        "materialtypename": "Cup bur No 16"
+    },
+    {
+        "materialtypeid": 1232,
+        "materialtypename": "Cup bur No 17"
+    },
+    {
+        "materialtypeid": 274,
+        "materialtypename": "Cup bur No 18"
+    },
+    {
+        "materialtypeid": 1233,
+        "materialtypename": "Cup bur No 19"
+    },
+    {
+        "materialtypeid": 1234,
+        "materialtypename": "Cup bur No 20"
+    },
+    {
+        "materialtypeid": 1205,
+        "materialtypename": "Cupracid Leveller Additive"
+    },
+    {
+        "materialtypeid": 1201,
+        "materialtypename": "Cupracid Ultra A"
+    },
+    {
+        "materialtypeid": 1202,
+        "materialtypename": "Cupracid Ultra B"
+    },
+    {
+        "materialtypeid": 1203,
+        "materialtypename": "Cupracid Ultra Makeup"
+    },
+    {
+        "materialtypeid": 1204,
+        "materialtypename": "Cupracid Ultra Wetting Agent"
+    },
+    {
+        "materialtypeid": 1068,
+        "materialtypename": "Curtain"
+    },
+    {
+        "materialtypeid": 896,
+        "materialtypename": "Custom Clearance"
+    },
+    {
+        "materialtypeid": 1046,
+        "materialtypename": "Custom Duty"
+    },
+    {
+        "materialtypeid": 255,
+        "materialtypename": "Cut Cup Bur No 07"
+    },
+    {
+        "materialtypeid": 257,
+        "materialtypename": "Cut Cup Bur No 08"
+    },
+    {
+        "materialtypeid": 627,
+        "materialtypename": "Cut Cup Bur No 09"
+    },
+    {
+        "materialtypeid": 453,
+        "materialtypename": "Cutter"
+    },
+    {
+        "materialtypeid": 980,
+        "materialtypename": "Cutter Blade"
+    },
+    {
+        "materialtypeid": 659,
+        "materialtypename": "Data Cable"
+    },
+    {
+        "materialtypeid": 788,
+        "materialtypename": "Date Stamp"
+    },
+    {
+        "materialtypeid": 1161,
+        "materialtypename": "Deburring Liquid"
+    },
+    {
+        "materialtypeid": 384,
+        "materialtypename": "Degreasing powder"
+    },
+    {
+        "materialtypeid": 590,
+        "materialtypename": "Design Gold"
+    },
+    {
+        "materialtypeid": 546,
+        "materialtypename": "Desktop Computer"
+    },
+    {
+        "materialtypeid": 476,
+        "materialtypename": "Detachable Brush"
+    },
+    {
+        "materialtypeid": 1,
+        "materialtypename": "Diamond"
+    },
+    {
+        "materialtypeid": 1124,
+        "materialtypename": "Diamond Assort"
+    },
+    {
+        "materialtypeid": 458,
+        "materialtypename": "Diamond Box"
+    },
+    {
+        "materialtypeid": 962,
+        "materialtypename": "Diamond Certificate"
+    },
+    {
+        "materialtypeid": 595,
+        "materialtypename": "Diamond Luster"
+    },
+    {
+        "materialtypeid": 328,
+        "materialtypename": "Diamond Studded Platinum"
+    },
+    {
+        "materialtypeid": 329,
+        "materialtypename": "Diamond Studded Silver"
+    },
+    {
+        "materialtypeid": 436,
+        "materialtypename": "Diamond Tool"
+    },
+    {
+        "materialtypeid": 1213,
+        "materialtypename": "Diapharam Vaccum Pump"
+    },
+    {
+        "materialtypeid": 415,
+        "materialtypename": "Diary"
+    },
+    {
+        "materialtypeid": 1067,
+        "materialtypename": "Diasynth XL"
+    },
+    {
+        "materialtypeid": 697,
+        "materialtypename": "Diesel Pump"
+    },
+    {
+        "materialtypeid": 844,
+        "materialtypename": "Digital Hot Air Oven"
+    },
+    {
+        "materialtypeid": 911,
+        "materialtypename": "Dinner"
+    },
+    {
+        "materialtypeid": 999,
+        "materialtypename": "Discount"
+    },
+    {
+        "materialtypeid": 165,
+        "materialtypename": "Disk Paper"
+    },
+    {
+        "materialtypeid": 731,
+        "materialtypename": "Dispensing Gun Kit"
+    },
+    {
+        "materialtypeid": 1245,
+        "materialtypename": "Dispersion DYE"
+    },
+    {
+        "materialtypeid": 1194,
+        "materialtypename": "DM water Plant"
+    },
+    {
+        "materialtypeid": 981,
+        "materialtypename": "Dog Food"
+    },
+    {
+        "materialtypeid": 982,
+        "materialtypename": "Dog Medicine & Other Material"
+    },
+    {
+        "materialtypeid": 1126,
+        "materialtypename": "Doit Antitarnish Machine"
+    },
+    {
+        "materialtypeid": 1109,
+        "materialtypename": "Domain Registration"
+    },
+    {
+        "materialtypeid": 1069,
+        "materialtypename": "Donation"
+    },
+    {
+        "materialtypeid": 1129,
+        "materialtypename": "Door"
+    },
+    {
+        "materialtypeid": 210,
+        "materialtypename": "Drill Bur No 07"
+    },
+    {
+        "materialtypeid": 208,
+        "materialtypename": "Drill Bur No 08"
+    },
+    {
+        "materialtypeid": 206,
+        "materialtypename": "Drill Bur No 09"
+    },
+    {
+        "materialtypeid": 443,
+        "materialtypename": "Drill Collate"
+    },
+    {
+        "materialtypeid": 1160,
+        "materialtypename": "Drum"
+    },
+    {
+        "materialtypeid": 928,
+        "materialtypename": "Drum Unit"
+    },
+    {
+        "materialtypeid": 794,
+        "materialtypename": "Dryer Machine"
+    },
+    {
+        "materialtypeid": 434,
+        "materialtypename": "Dust Bean"
+    },
+    {
+        "materialtypeid": 822,
+        "materialtypename": "Dust Collector Bag"
+    },
+    {
+        "materialtypeid": 1098,
+        "materialtypename": "Dust Pan"
+    },
+    {
+        "materialtypeid": 537,
+        "materialtypename": "Dustbean Bag 40*50"
+    },
+    {
+        "materialtypeid": 1024,
+        "materialtypename": "Dustbin Bag Big"
+    },
+    {
+        "materialtypeid": 1025,
+        "materialtypename": "Dustbin Bag Medium"
+    },
+    {
+        "materialtypeid": 791,
+        "materialtypename": "Earbuds"
+    },
+    {
+        "materialtypeid": 518,
+        "materialtypename": "Earpods"
+    },
+    {
+        "materialtypeid": 1057,
+        "materialtypename": "Earring Back bush"
+    },
+    {
+        "materialtypeid": 898,
+        "materialtypename": "Earring Concept"
+    },
+    {
+        "materialtypeid": 514,
+        "materialtypename": "Earring Jewellery Box"
+    },
+    {
+        "materialtypeid": 1140,
+        "materialtypename": "Earser"
+    },
+    {
+        "materialtypeid": 1018,
+        "materialtypename": "Eco VL"
+    },
+    {
+        "materialtypeid": 532,
+        "materialtypename": "Edge Switch"
+    },
+    {
+        "materialtypeid": 848,
+        "materialtypename": "E-Jewels ERP"
+    },
+    {
+        "materialtypeid": 1073,
+        "materialtypename": "Electric Motor 1000 W"
+    },
+    {
+        "materialtypeid": 618,
+        "materialtypename": "Electric Motor 1200 W"
+    },
+    {
+        "materialtypeid": 593,
+        "materialtypename": "Electric scooter"
+    },
+    {
+        "materialtypeid": 1154,
+        "materialtypename": "Electric Stove"
+    },
+    {
+        "materialtypeid": 211,
+        "materialtypename": "Electric Transformer"
+    },
+    {
+        "materialtypeid": 696,
+        "materialtypename": "Electrical Auto Panel"
+    },
+    {
+        "materialtypeid": 520,
+        "materialtypename": "Electrical Material"
+    },
+    {
+        "materialtypeid": 695,
+        "materialtypename": "Electrical Mono Block Pump"
+    },
+    {
+        "materialtypeid": 902,
+        "materialtypename": "Electricity"
+    },
+    {
+        "materialtypeid": 345,
+        "materialtypename": "Electrolyte"
+    },
+    {
+        "materialtypeid": 374,
+        "materialtypename": "Electronic Balance"
+    },
+    {
+        "materialtypeid": 549,
+        "materialtypename": "Electropolishing Solution"
+    },
+    {
+        "materialtypeid": 890,
+        "materialtypename": "Elvee Logo"
+    },
+    {
+        "materialtypeid": 369,
+        "materialtypename": "Emery Belt"
+    },
+    {
+        "materialtypeid": 724,
+        "materialtypename": "Emery Disk"
+    },
+    {
+        "materialtypeid": 162,
+        "materialtypename": "Emery paper"
+    },
+    {
+        "materialtypeid": 883,
+        "materialtypename": "Emery Paper White No.320"
+    },
+    {
+        "materialtypeid": 136,
+        "materialtypename": "End Brush Black (Thubi)"
+    },
+    {
+        "materialtypeid": 133,
+        "materialtypename": "End Brush White (Thubi)"
+    },
+    {
+        "materialtypeid": 344,
+        "materialtypename": "End Mill Tool"
+    },
+    {
+        "materialtypeid": 1062,
+        "materialtypename": "Envelops"
+    },
+    {
+        "materialtypeid": 560,
+        "materialtypename": "Eraser"
+    },
+    {
+        "materialtypeid": 699,
+        "materialtypename": "Eraser Pencil"
+    },
+    {
+        "materialtypeid": 685,
+        "materialtypename": "Erection Charges"
+    },
+    {
+        "materialtypeid": 825,
+        "materialtypename": "Erection Installation Service Of Solar system"
+    },
+    {
+        "materialtypeid": 126,
+        "materialtypename": "Ethanol"
+    },
+    {
+        "materialtypeid": 1034,
+        "materialtypename": "Eureka Mignon Bravo white"
+    },
+    {
+        "materialtypeid": 1187,
+        "materialtypename": "Event Helper"
+    },
+    {
+        "materialtypeid": 1048,
+        "materialtypename": "Exhibition - Accessory For Stall"
+    },
+    {
+        "materialtypeid": 1047,
+        "materialtypename": "Exhibition Additional Badge"
+    },
+    {
+        "materialtypeid": 1120,
+        "materialtypename": "Exhibition Bag"
+    },
+    {
+        "materialtypeid": 892,
+        "materialtypename": "Exhibition Food"
+    },
+    {
+        "materialtypeid": 891,
+        "materialtypename": "Exhibition Printing"
+    },
+    {
+        "materialtypeid": 916,
+        "materialtypename": "Exhibition Stall"
+    },
+    {
+        "materialtypeid": 935,
+        "materialtypename": "Export Logistic"
+    },
+    {
+        "materialtypeid": 474,
+        "materialtypename": "Extension Tube"
+    },
+    {
+        "materialtypeid": 1087,
+        "materialtypename": "Extinguisher Refilling"
+    },
+    {
+        "materialtypeid": 431,
+        "materialtypename": "Eye Loop"
+    },
+    {
+        "materialtypeid": 666,
+        "materialtypename": "Eye Piece"
+    },
+    {
+        "materialtypeid": 747,
+        "materialtypename": "Face Cleanup"
+    },
+    {
+        "materialtypeid": 529,
+        "materialtypename": "Face Plate Single Port"
+    },
+    {
+        "materialtypeid": 758,
+        "materialtypename": "Face Ring Housing"
+    },
+    {
+        "materialtypeid": 1222,
+        "materialtypename": "Face Shield"
+    },
+    {
+        "materialtypeid": 408,
+        "materialtypename": "Fan"
+    },
+    {
+        "materialtypeid": 142,
+        "materialtypename": "Felt Ring 3(W/O wood)"
+    },
+    {
+        "materialtypeid": 145,
+        "materialtypename": "Felt Ring 3(With wood)"
+    },
+    {
+        "materialtypeid": 140,
+        "materialtypename": "Felt Ring 4(W/O wood)"
+    },
+    {
+        "materialtypeid": 144,
+        "materialtypename": "Felt Ring 4(With wood)"
+    },
+    {
+        "materialtypeid": 1146,
+        "materialtypename": "Ferrous Sulphate"
+    },
+    {
+        "materialtypeid": 454,
+        "materialtypename": "Fevikwick"
+    },
+    {
+        "materialtypeid": 677,
+        "materialtypename": "FF510 Red Wax"
+    },
+    {
+        "materialtypeid": 678,
+        "materialtypename": "FF510 Support Wax"
+    },
+    {
+        "materialtypeid": 555,
+        "materialtypename": "File Lace"
+    },
+    {
+        "materialtypeid": 348,
+        "materialtypename": "Filing Machine"
+    },
+    {
+        "materialtypeid": 152,
+        "materialtypename": "Filing machine Bag"
+    },
+    {
+        "materialtypeid": 776,
+        "materialtypename": "Filing Machine Filter"
+    },
+    {
+        "materialtypeid": 723,
+        "materialtypename": "Filing Media"
+    },
+    {
+        "materialtypeid": 979,
+        "materialtypename": "Film - Blackout"
+    },
+    {
+        "materialtypeid": 445,
+        "materialtypename": "Filter"
+    },
+    {
+        "materialtypeid": 694,
+        "materialtypename": "Filter Aid Powder"
+    },
+    {
+        "materialtypeid": 674,
+        "materialtypename": "Filter Bag"
+    },
+    {
+        "materialtypeid": 573,
+        "materialtypename": "Filter Pad Sheet"
+    },
+    {
+        "materialtypeid": 1215,
+        "materialtypename": "Filter Paper Fabrics"
+    },
+    {
+        "materialtypeid": 5,
+        "materialtypename": "Finding"
+    },
+    {
+        "materialtypeid": 1219,
+        "materialtypename": "Finger Bowl"
+    },
+    {
+        "materialtypeid": 116,
+        "materialtypename": "Finger Guard"
+    },
+    {
+        "materialtypeid": 404,
+        "materialtypename": "Finger Guard(Cotton)"
+    },
+    {
+        "materialtypeid": 886,
+        "materialtypename": "Fire Assay"
+    },
+    {
+        "materialtypeid": 714,
+        "materialtypename": "Fire Retardent Coating"
+    },
+    {
+        "materialtypeid": 174,
+        "materialtypename": "Flask 2x6"
+    },
+    {
+        "materialtypeid": 171,
+        "materialtypename": "Flask 2x7"
+    },
+    {
+        "materialtypeid": 599,
+        "materialtypename": "Flask 3.5*7"
+    },
+    {
+        "materialtypeid": 176,
+        "materialtypename": "Flask 3.5x8"
+    },
+    {
+        "materialtypeid": 600,
+        "materialtypename": "Flask 4*7"
+    },
+    {
+        "materialtypeid": 172,
+        "materialtypename": "Flask 4x8"
+    },
+    {
+        "materialtypeid": 219,
+        "materialtypename": "Flate Graver"
+    },
+    {
+        "materialtypeid": 843,
+        "materialtypename": "Fleece Filter Bag"
+    },
+    {
+        "materialtypeid": 930,
+        "materialtypename": "Flight Book"
+    },
+    {
+        "materialtypeid": 535,
+        "materialtypename": "Flour mill"
+    },
+    {
+        "materialtypeid": 673,
+        "materialtypename": "Foam Sheet"
+    },
+    {
+        "materialtypeid": 709,
+        "materialtypename": "Foot Valve"
+    },
+    {
+        "materialtypeid": 340,
+        "materialtypename": "Freight Charge"
+    },
+    {
+        "materialtypeid": 509,
+        "materialtypename": "Fresh Water Pearl"
+    },
+    {
+        "materialtypeid": 1093,
+        "materialtypename": "FRP Cover"
+    },
+    {
+        "materialtypeid": 1002,
+        "materialtypename": "Fruit Juice"
+    },
+    {
+        "materialtypeid": 1049,
+        "materialtypename": "Fugalite Eco"
+    },
+    {
+        "materialtypeid": 834,
+        "materialtypename": "Fume Extraction System"
+    },
+    {
+        "materialtypeid": 521,
+        "materialtypename": "Furniture Material"
+    },
+    {
+        "materialtypeid": 690,
+        "materialtypename": "G.I Machine Dumpers"
+    },
+    {
+        "materialtypeid": 689,
+        "materialtypename": "G.I. Duct Damper"
+    },
+    {
+        "materialtypeid": 597,
+        "materialtypename": "Garbage Dust Collector"
+    },
+    {
+        "materialtypeid": 936,
+        "materialtypename": "Gardening"
+    },
+    {
+        "materialtypeid": 906,
+        "materialtypename": "Gas Consumption Charges"
+    },
+    {
+        "materialtypeid": 338,
+        "materialtypename": "Gas lighter"
+    },
+    {
+        "materialtypeid": 978,
+        "materialtypename": "Gas Lighter Refilling"
+    },
+    {
+        "materialtypeid": 769,
+        "materialtypename": "Gate Light"
+    },
+    {
+        "materialtypeid": 817,
+        "materialtypename": "Gear Set"
+    },
+    {
+        "materialtypeid": 330,
+        "materialtypename": "Gemstone/ Synthetic Stones Studded Gold"
+    },
+    {
+        "materialtypeid": 717,
+        "materialtypename": "GI Pipe Heavy"
+    },
+    {
+        "materialtypeid": 968,
+        "materialtypename": "GIA Card"
+    },
+    {
+        "materialtypeid": 1056,
+        "materialtypename": "Glass"
+    },
+    {
+        "materialtypeid": 581,
+        "materialtypename": "Glass Road"
+    },
+    {
+        "materialtypeid": 1214,
+        "materialtypename": "Glass Rod"
+    },
+    {
+        "materialtypeid": 551,
+        "materialtypename": "Glass(FURNITURE)"
+    },
+    {
+        "materialtypeid": 71,
+        "materialtypename": "GOLD"
+    },
+    {
+        "materialtypeid": 1074,
+        "materialtypename": "Gold Jewellery"
+    },
+    {
+        "materialtypeid": 401,
+        "materialtypename": "Gold Plating Solution"
+    },
+    {
+        "materialtypeid": 739,
+        "materialtypename": "Gold Plating Solution Yellow"
+    },
+    {
+        "materialtypeid": 922,
+        "materialtypename": "Gold Processing"
+    },
+    {
+        "materialtypeid": 987,
+        "materialtypename": "Gold Processing Casting Powder"
+    },
+    {
+        "materialtypeid": 1218,
+        "materialtypename": "Gold Reagent"
+    },
+    {
+        "materialtypeid": 159,
+        "materialtypename": "Gold Testing Machine"
+    },
+    {
+        "materialtypeid": 425,
+        "materialtypename": "GPC Powder"
+    },
+    {
+        "materialtypeid": 247,
+        "materialtypename": "Grain Tool No 03"
+    },
+    {
+        "materialtypeid": 231,
+        "materialtypename": "Grain Tool No 04"
+    },
+    {
+        "materialtypeid": 233,
+        "materialtypename": "Grain Tool No 05"
+    },
+    {
+        "materialtypeid": 235,
+        "materialtypename": "Grain Tool No 06"
+    },
+    {
+        "materialtypeid": 249,
+        "materialtypename": "Grain Tool No 07"
+    },
+    {
+        "materialtypeid": 251,
+        "materialtypename": "Grain Tool No 08"
+    },
+    {
+        "materialtypeid": 253,
+        "materialtypename": "Grain Tool No 09"
+    },
+    {
+        "materialtypeid": 225,
+        "materialtypename": "Grain Tool No 10"
+    },
+    {
+        "materialtypeid": 226,
+        "materialtypename": "Grain Tool No 11"
+    },
+    {
+        "materialtypeid": 228,
+        "materialtypename": "Grain Tool No 12"
+    },
+    {
+        "materialtypeid": 229,
+        "materialtypename": "Grain Tool No 13"
+    },
+    {
+        "materialtypeid": 92,
+        "materialtypename": "Graphite Base Plate"
+    },
+    {
+        "materialtypeid": 350,
+        "materialtypename": "Graphite Crucible"
+    },
+    {
+        "materialtypeid": 580,
+        "materialtypename": "Graphite Ring"
+    },
+    {
+        "materialtypeid": 375,
+        "materialtypename": "Graphite Ring 4''"
+    },
+    {
+        "materialtypeid": 307,
+        "materialtypename": "Graver (HSS)"
+    },
+    {
+        "materialtypeid": 269,
+        "materialtypename": "Graver No.02 (Flat)"
+    },
+    {
+        "materialtypeid": 271,
+        "materialtypename": "Graver No.04 (Flat)"
+    },
+    {
+        "materialtypeid": 273,
+        "materialtypename": "Graver No.06 (Flat)"
+    },
+    {
+        "materialtypeid": 275,
+        "materialtypename": "Graver No.08 (Flat)"
+    },
+    {
+        "materialtypeid": 1088,
+        "materialtypename": "Graver No.10 (Flat)"
+    },
+    {
+        "materialtypeid": 203,
+        "materialtypename": "Green Handle Plier"
+    },
+    {
+        "materialtypeid": 197,
+        "materialtypename": "Green Handle Plier (Bend)"
+    },
+    {
+        "materialtypeid": 201,
+        "materialtypename": "Green Handle Plier (Flat)"
+    },
+    {
+        "materialtypeid": 199,
+        "materialtypename": "Green Handle Plier (Half-Round)"
+    },
+    {
+        "materialtypeid": 88,
+        "materialtypename": "Green Rouge"
+    },
+    {
+        "materialtypeid": 675,
+        "materialtypename": "Grid Connected Solar PV Rooftop Syatem"
+    },
+    {
+        "materialtypeid": 824,
+        "materialtypename": "Grid Connected Solar PV Rooftop System"
+    },
+    {
+        "materialtypeid": 828,
+        "materialtypename": "Growclear Powder"
+    },
+    {
+        "materialtypeid": 722,
+        "materialtypename": "GRP Gigabyte"
+    },
+    {
+        "materialtypeid": 1115,
+        "materialtypename": "GST Appeal"
+    },
+    {
+        "materialtypeid": 908,
+        "materialtypename": "Gujarat Gas AMC"
+    },
+    {
+        "materialtypeid": 651,
+        "materialtypename": "Gypsum Plaster Sc D45 KG"
+    },
+    {
+        "materialtypeid": 995,
+        "materialtypename": "H 40 Gel"
+    },
+    {
+        "materialtypeid": 1143,
+        "materialtypename": "Haidrolic"
+    },
+    {
+        "materialtypeid": 660,
+        "materialtypename": "Hair Dryer"
+    },
+    {
+        "materialtypeid": 745,
+        "materialtypename": "Hair Moisture"
+    },
+    {
+        "materialtypeid": 190,
+        "materialtypename": "Half Round FILE 14cm"
+    },
+    {
+        "materialtypeid": 884,
+        "materialtypename": "Hallmarking"
+    },
+    {
+        "materialtypeid": 574,
+        "materialtypename": "Hand gloves (Nitrile)"
+    },
+    {
+        "materialtypeid": 1009,
+        "materialtypename": "Hand Gloves For Filing"
+    },
+    {
+        "materialtypeid": 355,
+        "materialtypename": "Hand Glows"
+    },
+    {
+        "materialtypeid": 356,
+        "materialtypename": "Hand Glows(casting)"
+    },
+    {
+        "materialtypeid": 507,
+        "materialtypename": "Hand Glows(cotton)"
+    },
+    {
+        "materialtypeid": 1054,
+        "materialtypename": "Hand Rest"
+    },
+    {
+        "materialtypeid": 361,
+        "materialtypename": "Handpiece(Micro Motor)"
+    },
+    {
+        "materialtypeid": 619,
+        "materialtypename": "Handwash Liquid"
+    },
+    {
+        "materialtypeid": 790,
+        "materialtypename": "Handwash Soap"
+    },
+    {
+        "materialtypeid": 764,
+        "materialtypename": "Hanging Light"
+    },
+    {
+        "materialtypeid": 134,
+        "materialtypename": "Hard buff(Yellow)"
+    },
+    {
+        "materialtypeid": 194,
+        "materialtypename": "Hard Disk"
+    },
+    {
+        "materialtypeid": 713,
+        "materialtypename": "Harden Spring"
+    },
+    {
+        "materialtypeid": 463,
+        "materialtypename": "Harpic (Blue)"
+    },
+    {
+        "materialtypeid": 462,
+        "materialtypename": "Harpic (Red)"
+    },
+    {
+        "materialtypeid": 282,
+        "materialtypename": "Hart Bur No 07"
+    },
+    {
+        "materialtypeid": 290,
+        "materialtypename": "Hart Bur No 08"
+    },
+    {
+        "materialtypeid": 263,
+        "materialtypename": "Hart Bur No 09"
+    },
+    {
+        "materialtypeid": 312,
+        "materialtypename": "Hart Bur No 10"
+    },
+    {
+        "materialtypeid": 272,
+        "materialtypename": "Hart Bur No 11"
+    },
+    {
+        "materialtypeid": 167,
+        "materialtypename": "Hart Bur No 12"
+    },
+    {
+        "materialtypeid": 301,
+        "materialtypename": "Hart Bur No 13"
+    },
+    {
+        "materialtypeid": 302,
+        "materialtypename": "Hart Bur No 14"
+    },
+    {
+        "materialtypeid": 283,
+        "materialtypename": "Hart Bur No 15"
+    },
+    {
+        "materialtypeid": 285,
+        "materialtypename": "Hart Bur No 16"
+    },
+    {
+        "materialtypeid": 280,
+        "materialtypename": "Hart Bur No 17"
+    },
+    {
+        "materialtypeid": 260,
+        "materialtypename": "Hart Bur No 18"
+    },
+    {
+        "materialtypeid": 279,
+        "materialtypename": "Hart Bur No 19"
+    },
+    {
+        "materialtypeid": 265,
+        "materialtypename": "Hart Bur No 20"
+    },
+    {
+        "materialtypeid": 276,
+        "materialtypename": "Hart Bur No 21"
+    },
+    {
+        "materialtypeid": 258,
+        "materialtypename": "Hart Bur No 22"
+    },
+    {
+        "materialtypeid": 268,
+        "materialtypename": "Hart Bur No 23"
+    },
+    {
+        "materialtypeid": 266,
+        "materialtypename": "Hart Bur No 24"
+    },
+    {
+        "materialtypeid": 264,
+        "materialtypename": "Hart Bur No 25"
+    },
+    {
+        "materialtypeid": 261,
+        "materialtypename": "Hart Bur No 26"
+    },
+    {
+        "materialtypeid": 772,
+        "materialtypename": "HDD Sata Hardware"
+    },
+    {
+        "materialtypeid": 830,
+        "materialtypename": "HDMI Cable"
+    },
+    {
+        "materialtypeid": 204,
+        "materialtypename": "Heater"
+    },
+    {
+        "materialtypeid": 959,
+        "materialtypename": "Heera Zhaveraat Magazine"
+    },
+    {
+        "materialtypeid": 502,
+        "materialtypename": "Highlighter"
+    },
+    {
+        "materialtypeid": 864,
+        "materialtypename": "Hit"
+    },
+    {
+        "materialtypeid": 701,
+        "materialtypename": "Hose Box With Set"
+    },
+    {
+        "materialtypeid": 1092,
+        "materialtypename": "Hose Clamp Nutbolt"
+    },
+    {
+        "materialtypeid": 475,
+        "materialtypename": "Hose for vacuum"
+    },
+    {
+        "materialtypeid": 1176,
+        "materialtypename": "Hose Pipe"
+    },
+    {
+        "materialtypeid": 700,
+        "materialtypename": "Hose reel"
+    },
+    {
+        "materialtypeid": 1167,
+        "materialtypename": "Hot Plate"
+    },
+    {
+        "materialtypeid": 934,
+        "materialtypename": "Hotel Book"
+    },
+    {
+        "materialtypeid": 842,
+        "materialtypename": "HP Latex Print"
+    },
+    {
+        "materialtypeid": 698,
+        "materialtypename": "Hydrent Valve"
+    },
+    {
+        "materialtypeid": 609,
+        "materialtypename": "Hydro extractor machine"
+    },
+    {
+        "materialtypeid": 351,
+        "materialtypename": "Hydrochloric Acid"
+    },
+    {
+        "materialtypeid": 1209,
+        "materialtypename": "Hydrocloric Acid (HCL)"
+    },
+    {
+        "materialtypeid": 1145,
+        "materialtypename": "Hydrogen Sulphide Solution"
+    },
+    {
+        "materialtypeid": 862,
+        "materialtypename": "Hypodermic Needle"
+    },
+    {
+        "materialtypeid": 517,
+        "materialtypename": "I Mac computer"
+    },
+    {
+        "materialtypeid": 998,
+        "materialtypename": "Implementation Cost"
+    },
+    {
+        "materialtypeid": 1180,
+        "materialtypename": "Imported Fab"
+    },
+    {
+        "materialtypeid": 762,
+        "materialtypename": "Inner Ring Housing"
+    },
+    {
+        "materialtypeid": 676,
+        "materialtypename": "Installation Services"
+    },
+    {
+        "materialtypeid": 905,
+        "materialtypename": "Insulation Wire"
+    },
+    {
+        "materialtypeid": 918,
+        "materialtypename": "Insurance"
+    },
+    {
+        "materialtypeid": 1148,
+        "materialtypename": "Interest"
+    },
+    {
+        "materialtypeid": 855,
+        "materialtypename": "Interest Payable"
+    },
+    {
+        "materialtypeid": 919,
+        "materialtypename": "Internet Service"
+    },
+    {
+        "materialtypeid": 449,
+        "materialtypename": "IR Coil"
+    },
+    {
+        "materialtypeid": 3,
+        "materialtypename": "Jewellery"
+    },
+    {
+        "materialtypeid": 501,
+        "materialtypename": "Jewellery Box"
+    },
+    {
+        "materialtypeid": 1238,
+        "materialtypename": "Jewellery R"
+    },
+    {
+        "materialtypeid": 1004,
+        "materialtypename": "Jig"
+    },
+    {
+        "materialtypeid": 510,
+        "materialtypename": "Jilasan"
+    },
+    {
+        "materialtypeid": 524,
+        "materialtypename": "Jillasan"
+    },
+    {
+        "materialtypeid": 1001,
+        "materialtypename": "Jute Bag"
+    },
+    {
+        "materialtypeid": 743,
+        "materialtypename": "Keartin Smoothing Hair"
+    },
+    {
+        "materialtypeid": 1005,
+        "materialtypename": "Kettle"
+    },
+    {
+        "materialtypeid": 1223,
+        "materialtypename": "Kevlar Apron"
+    },
+    {
+        "materialtypeid": 1181,
+        "materialtypename": "Kew 25mm-Edly Buff"
+    },
+    {
+        "materialtypeid": 565,
+        "materialtypename": "Keyboard"
+    },
+    {
+        "materialtypeid": 123,
+        "materialtypename": "kneadable eraser"
+    },
+    {
+        "materialtypeid": 243,
+        "materialtypename": "Krause Bur No 07"
+    },
+    {
+        "materialtypeid": 310,
+        "materialtypename": "Krause Bur No 10"
+    },
+    {
+        "materialtypeid": 292,
+        "materialtypename": "Krause Bur No 12"
+    },
+    {
+        "materialtypeid": 578,
+        "materialtypename": "Kupi"
+    },
+    {
+        "materialtypeid": 10,
+        "materialtypename": "LAB GROWN"
+    },
+    {
+        "materialtypeid": 1086,
+        "materialtypename": "Lab Grown Diamond"
+    },
+    {
+        "materialtypeid": 331,
+        "materialtypename": "Lab grown Studded Silver"
+    },
+    {
+        "materialtypeid": 1193,
+        "materialtypename": "Lab-Grown Diamond"
+    },
+    {
+        "materialtypeid": 326,
+        "materialtypename": "Labgrown Studded Gold"
+    },
+    {
+        "materialtypeid": 332,
+        "materialtypename": "Labgrown Studded Platinum"
+    },
+    {
+        "materialtypeid": 4,
+        "materialtypename": "Labour"
+    },
+    {
+        "materialtypeid": 917,
+        "materialtypename": "Labour For Gold Refinnery"
+    },
+    {
+        "materialtypeid": 874,
+        "materialtypename": "Laggauge Rack"
+    },
+    {
+        "materialtypeid": 466,
+        "materialtypename": "Lamination Card"
+    },
+    {
+        "materialtypeid": 410,
+        "materialtypename": "Lamination Machine"
+    },
+    {
+        "materialtypeid": 1084,
+        "materialtypename": "Lamination Sheet"
+    },
+    {
+        "materialtypeid": 654,
+        "materialtypename": "Lamp"
+    },
+    {
+        "materialtypeid": 177,
+        "materialtypename": "Lan connector"
+    },
+    {
+        "materialtypeid": 202,
+        "materialtypename": "Lan Switch"
+    },
+    {
+        "materialtypeid": 924,
+        "materialtypename": "Land Transport"
+    },
+    {
+        "materialtypeid": 548,
+        "materialtypename": "Lapping Machine"
+    },
+    {
+        "materialtypeid": 130,
+        "materialtypename": "Lapping Wheel 6"
+    },
+    {
+        "materialtypeid": 752,
+        "materialtypename": "Lapping Wheel 6 (Hard)"
+    },
+    {
+        "materialtypeid": 994,
+        "materialtypename": "Laptop"
+    },
+    {
+        "materialtypeid": 370,
+        "materialtypename": "Laser Machine Lamp"
+    },
+    {
+        "materialtypeid": 885,
+        "materialtypename": "Laser Marking"
+    },
+    {
+        "materialtypeid": 847,
+        "materialtypename": "Laser Marking Machine"
+    },
+    {
+        "materialtypeid": 846,
+        "materialtypename": "Laser Soldering Machine"
+    },
+    {
+        "materialtypeid": 451,
+        "materialtypename": "Laser Welding Machine"
+    },
+    {
+        "materialtypeid": 1072,
+        "materialtypename": "Lease Rent Plot"
+    },
+    {
+        "materialtypeid": 821,
+        "materialtypename": "Led Bulb 9 Watt"
+    },
+    {
+        "materialtypeid": 760,
+        "materialtypename": "LED Driver"
+    },
+    {
+        "materialtypeid": 761,
+        "materialtypename": "LED Panel Light"
+    },
+    {
+        "materialtypeid": 759,
+        "materialtypename": "LED Strip"
+    },
+    {
+        "materialtypeid": 1061,
+        "materialtypename": "Letterhead"
+    },
+    {
+        "materialtypeid": 736,
+        "materialtypename": "Lighted Drawing Tracing Board"
+    },
+    {
+        "materialtypeid": 572,
+        "materialtypename": "Liquid Media."
+    },
+    {
+        "materialtypeid": 686,
+        "materialtypename": "Loading and Unloading"
+    },
+    {
+        "materialtypeid": 603,
+        "materialtypename": "Lock"
+    },
+    {
+        "materialtypeid": 397,
+        "materialtypename": "Lock for Bur"
+    },
+    {
+        "materialtypeid": 642,
+        "materialtypename": "Loctite EA E-30CL"
+    },
+    {
+        "materialtypeid": 83,
+        "materialtypename": "Lube Stick"
+    },
+    {
+        "materialtypeid": 423,
+        "materialtypename": "Lubricating Oil"
+    },
+    {
+        "materialtypeid": 909,
+        "materialtypename": "Lunch"
+    },
+    {
+        "materialtypeid": 86,
+        "materialtypename": "Luster Black"
+    },
+    {
+        "materialtypeid": 1151,
+        "materialtypename": "Luster Blue"
+    },
+    {
+        "materialtypeid": 89,
+        "materialtypename": "Luster Brown"
+    },
+    {
+        "materialtypeid": 1150,
+        "materialtypename": "Luster Green"
+    },
+    {
+        "materialtypeid": 1152,
+        "materialtypename": "Luster Orange"
+    },
+    {
+        "materialtypeid": 1153,
+        "materialtypename": "Luster White"
+    },
+    {
+        "materialtypeid": 1156,
+        "materialtypename": "Luster Yellow"
+    },
+    {
+        "materialtypeid": 433,
+        "materialtypename": "M2 Cast Real Wax"
+    },
+    {
+        "materialtypeid": 432,
+        "materialtypename": "M2 Support  Material"
+    },
+    {
+        "materialtypeid": 937,
+        "materialtypename": "Machinery & Equipment Maintenance"
+    },
+    {
+        "materialtypeid": 967,
+        "materialtypename": "Magazine"
+    },
+    {
+        "materialtypeid": 1236,
+        "materialtypename": "Magnet"
+    },
+    {
+        "materialtypeid": 568,
+        "materialtypename": "Magnet Jewellery Padding"
+    },
+    {
+        "materialtypeid": 81,
+        "materialtypename": "Magnetic Liquid"
+    },
+    {
+        "materialtypeid": 294,
+        "materialtypename": "Magnetic Pin"
+    },
+    {
+        "materialtypeid": 607,
+        "materialtypename": "Magnetic Polishing Machine"
+    },
+    {
+        "materialtypeid": 1011,
+        "materialtypename": "Maintenance - Plot Area"
+    },
+    {
+        "materialtypeid": 1003,
+        "materialtypename": "Maintenance Box For Printer"
+    },
+    {
+        "materialtypeid": 945,
+        "materialtypename": "Maintenance Vehicles"
+    },
+    {
+        "materialtypeid": 178,
+        "materialtypename": "Manual Call Point"
+    },
+    {
+        "materialtypeid": 418,
+        "materialtypename": "Marker Pen"
+    },
+    {
+        "materialtypeid": 737,
+        "materialtypename": "Marker Pen Blue"
+    },
+    {
+        "materialtypeid": 986,
+        "materialtypename": "Marker Red"
+    },
+    {
+        "materialtypeid": 148,
+        "materialtypename": "Mask"
+    },
+    {
+        "materialtypeid": 726,
+        "materialtypename": "Mat"
+    },
+    {
+        "materialtypeid": 613,
+        "materialtypename": "Mattress"
+    },
+    {
+        "materialtypeid": 614,
+        "materialtypename": "Mattress Cover"
+    },
+    {
+        "materialtypeid": 878,
+        "materialtypename": "Mattress Protectors"
+    },
+    {
+        "materialtypeid": 877,
+        "materialtypename": "Mattress With Pillow"
+    },
+    {
+        "materialtypeid": 904,
+        "materialtypename": "MCB"
+    },
+    {
+        "materialtypeid": 903,
+        "materialtypename": "MCB TP 63A"
+    },
+    {
+        "materialtypeid": 1216,
+        "materialtypename": "Measuring Jug"
+    },
+    {
+        "materialtypeid": 954,
+        "materialtypename": "Medicine"
+    },
+    {
+        "materialtypeid": 920,
+        "materialtypename": "Meena Work"
+    },
+    {
+        "materialtypeid": 858,
+        "materialtypename": "Menzerna 456G Grey"
+    },
+    {
+        "materialtypeid": 1022,
+        "materialtypename": "Menzerna Luster Blue"
+    },
+    {
+        "materialtypeid": 857,
+        "materialtypename": "Menzerna M5 Luster White"
+    },
+    {
+        "materialtypeid": 882,
+        "materialtypename": "Menzerna P164"
+    },
+    {
+        "materialtypeid": 859,
+        "materialtypename": "Menzerna P175 Yellow"
+    },
+    {
+        "materialtypeid": 7,
+        "materialtypename": "Metal"
+    },
+    {
+        "materialtypeid": 591,
+        "materialtypename": "Metal Detector"
+    },
+    {
+        "materialtypeid": 921,
+        "materialtypename": "Metal Processing"
+    },
+    {
+        "materialtypeid": 450,
+        "materialtypename": "Methanol"
+    },
+    {
+        "materialtypeid": 781,
+        "materialtypename": "Micro Fiber Cloth"
+    },
+    {
+        "materialtypeid": 360,
+        "materialtypename": "Micro Motor Set"
+    },
+    {
+        "materialtypeid": 1106,
+        "materialtypename": "micro setting vati"
+    },
+    {
+        "materialtypeid": 1107,
+        "materialtypename": "Micro Vati Rubber Base"
+    },
+    {
+        "materialtypeid": 729,
+        "materialtypename": "Micron Gold Planting Solution"
+    },
+    {
+        "materialtypeid": 598,
+        "materialtypename": "Micron pen"
+    },
+    {
+        "materialtypeid": 452,
+        "materialtypename": "Microscope"
+    },
+    {
+        "materialtypeid": 668,
+        "materialtypename": "Microscope Stand"
+    },
+    {
+        "materialtypeid": 938,
+        "materialtypename": "Microsoft 365"
+    },
+    {
+        "materialtypeid": 894,
+        "materialtypename": "Milk"
+    },
+    {
+        "materialtypeid": 1020,
+        "materialtypename": "Mino"
+    },
+    {
+        "materialtypeid": 653,
+        "materialtypename": "Mirror"
+    },
+    {
+        "materialtypeid": 8,
+        "materialtypename": "MISC"
+    },
+    {
+        "materialtypeid": 220,
+        "materialtypename": "Mixture"
+    },
+    {
+        "materialtypeid": 470,
+        "materialtypename": "Mobile Accessories"
+    },
+    {
+        "materialtypeid": 200,
+        "materialtypename": "Mobile Phone"
+    },
+    {
+        "materialtypeid": 850,
+        "materialtypename": "Mobile Phone or Tablet Holder"
+    },
+    {
+        "materialtypeid": 947,
+        "materialtypename": "Mobile Service"
+    },
+    {
+        "materialtypeid": 789,
+        "materialtypename": "Mop with Bucket"
+    },
+    {
+        "materialtypeid": 577,
+        "materialtypename": "MOP With Stick"
+    },
+    {
+        "materialtypeid": 1174,
+        "materialtypename": "Mother Of Pearl"
+    },
+    {
+        "materialtypeid": 183,
+        "materialtypename": "Motion Sensor"
+    },
+    {
+        "materialtypeid": 6,
+        "materialtypename": "Mount"
+    },
+    {
+        "materialtypeid": 829,
+        "materialtypename": "Mouse Pad"
+    },
+    {
+        "materialtypeid": 756,
+        "materialtypename": "Mud Pump"
+    },
+    {
+        "materialtypeid": 1032,
+        "materialtypename": "Musician"
+    },
+    {
+        "materialtypeid": 395,
+        "materialtypename": "Napkin"
+    },
+    {
+        "materialtypeid": 1192,
+        "materialtypename": "Natural Diamond"
+    },
+    {
+        "materialtypeid": 327,
+        "materialtypename": "Natural Diamond Studded Gold"
+    },
+    {
+        "materialtypeid": 1231,
+        "materialtypename": "Natural Diamond Studded Silver"
+    },
+    {
+        "materialtypeid": 636,
+        "materialtypename": "Neck Jewellery Box"
+    },
+    {
+        "materialtypeid": 899,
+        "materialtypename": "Necklace Concept"
+    },
+    {
+        "materialtypeid": 589,
+        "materialtypename": "Necklace Stand"
+    },
+    {
+        "materialtypeid": 810,
+        "materialtypename": "Necklace Trey"
+    },
+    {
+        "materialtypeid": 730,
+        "materialtypename": "Nickel Plating Solution"
+    },
+    {
+        "materialtypeid": 826,
+        "materialtypename": "Nitric Acid"
+    },
+    {
+        "materialtypeid": 1051,
+        "materialtypename": "Nitrogen"
+    },
+    {
+        "materialtypeid": 1166,
+        "materialtypename": "No Pak"
+    },
+    {
+        "materialtypeid": 558,
+        "materialtypename": "Note Book"
+    },
+    {
+        "materialtypeid": 1171,
+        "materialtypename": "Nozzle"
+    },
+    {
+        "materialtypeid": 707,
+        "materialtypename": "NRV"
+    },
+    {
+        "materialtypeid": 209,
+        "materialtypename": "Nut & Post Die"
+    },
+    {
+        "materialtypeid": 531,
+        "materialtypename": "NVR"
+    },
+    {
+        "materialtypeid": 601,
+        "materialtypename": "Nylon Fabric"
+    },
+    {
+        "materialtypeid": 605,
+        "materialtypename": "Nylon Fabrics"
+    },
+    {
+        "materialtypeid": 1127,
+        "materialtypename": "Nylon Rods"
+    },
+    {
+        "materialtypeid": 1076,
+        "materialtypename": "Office File Small"
+    },
+    {
+        "materialtypeid": 814,
+        "materialtypename": "Oil Filter"
+    },
+    {
+        "materialtypeid": 1023,
+        "materialtypename": "Oil For Vacuum Pump"
+    },
+    {
+        "materialtypeid": 997,
+        "materialtypename": "Optigo Cloud Charge"
+    },
+    {
+        "materialtypeid": 163,
+        "materialtypename": "Optivision 10X"
+    },
+    {
+        "materialtypeid": 1029,
+        "materialtypename": "Ornaglo"
+    },
+    {
+        "materialtypeid": 1116,
+        "materialtypename": "Ortho Phosphoric Acid"
+    },
+    {
+        "materialtypeid": 248,
+        "materialtypename": "P P Spun Wound 10''"
+    },
+    {
+        "materialtypeid": 250,
+        "materialtypename": "P P Spun Wound 20''"
+    },
+    {
+        "materialtypeid": 1117,
+        "materialtypename": "Pad Machine"
+    },
+    {
+        "materialtypeid": 147,
+        "materialtypename": "Painting Brush"
+    },
+    {
+        "materialtypeid": 352,
+        "materialtypename": "Paisa Brush Black(small)"
+    },
+    {
+        "materialtypeid": 353,
+        "materialtypename": "Paisa Brush White(small)"
+    },
+    {
+        "materialtypeid": 1221,
+        "materialtypename": "Palluna 459"
+    },
+    {
+        "materialtypeid": 856,
+        "materialtypename": "Pancil"
+    },
+    {
+        "materialtypeid": 770,
+        "materialtypename": "Pandent Light"
+    },
+    {
+        "materialtypeid": 424,
+        "materialtypename": "Paper Folder(A4 size)"
+    },
+    {
+        "materialtypeid": 610,
+        "materialtypename": "Paraffin Liquid"
+    },
+    {
+        "materialtypeid": 527,
+        "materialtypename": "Patch Max I/O"
+    },
+    {
+        "materialtypeid": 526,
+        "materialtypename": "Patch Max Panel"
+    },
+    {
+        "materialtypeid": 779,
+        "materialtypename": "Payton Perry Dog (Belt)"
+    },
+    {
+        "materialtypeid": 333,
+        "materialtypename": "Pearl Studded Gold"
+    },
+    {
+        "materialtypeid": 334,
+        "materialtypename": "Pearl Studded Platinum"
+    },
+    {
+        "materialtypeid": 606,
+        "materialtypename": "Pedal Wire"
+    },
+    {
+        "materialtypeid": 740,
+        "materialtypename": "Pen Black"
+    },
+    {
+        "materialtypeid": 741,
+        "materialtypename": "Pen Green"
+    },
+    {
+        "materialtypeid": 455,
+        "materialtypename": "Pen Stand"
+    },
+    {
+        "materialtypeid": 168,
+        "materialtypename": "Pencil"
+    },
+    {
+        "materialtypeid": 99,
+        "materialtypename": "Pencil 0.3 mm"
+    },
+    {
+        "materialtypeid": 100,
+        "materialtypename": "Pencil 0.5 mm"
+    },
+    {
+        "materialtypeid": 157,
+        "materialtypename": "Pencil Buff 2mm Brown"
+    },
+    {
+        "materialtypeid": 156,
+        "materialtypename": "Pencil Buff 3mm Brown"
+    },
+    {
+        "materialtypeid": 158,
+        "materialtypename": "Pencil Buff 3mm Green"
+    },
+    {
+        "materialtypeid": 154,
+        "materialtypename": "Pencil Buff 3mm Red"
+    },
+    {
+        "materialtypeid": 516,
+        "materialtypename": "Pencil Lead"
+    },
+    {
+        "materialtypeid": 214,
+        "materialtypename": "Pencil Mendrill (2mm)"
+    },
+    {
+        "materialtypeid": 212,
+        "materialtypename": "Pencil Mendrill (3mm)"
+    },
+    {
+        "materialtypeid": 364,
+        "materialtypename": "Pencil Tool(Diamond)"
+    },
+    {
+        "materialtypeid": 901,
+        "materialtypename": "Pendant Concept"
+    },
+    {
+        "materialtypeid": 1133,
+        "materialtypename": "Perfume Dispenser"
+    },
+    {
+        "materialtypeid": 746,
+        "materialtypename": "Perfume Spray"
+    },
+    {
+        "materialtypeid": 792,
+        "materialtypename": "Perfumercy"
+    },
+    {
+        "materialtypeid": 1027,
+        "materialtypename": "Pet Scooper"
+    },
+    {
+        "materialtypeid": 950,
+        "materialtypename": "Petrol"
+    },
+    {
+        "materialtypeid": 1168,
+        "materialtypename": "PH Paper"
+    },
+    {
+        "materialtypeid": 460,
+        "materialtypename": "Phenyl"
+    },
+    {
+        "materialtypeid": 468,
+        "materialtypename": "Phenyle Liquid"
+    },
+    {
+        "materialtypeid": 1134,
+        "materialtypename": "Photo Frame Stand"
+    },
+    {
+        "materialtypeid": 414,
+        "materialtypename": "Photo Paper"
+    },
+    {
+        "materialtypeid": 630,
+        "materialtypename": "Pickling Solution"
+    },
+    {
+        "materialtypeid": 1164,
+        "materialtypename": "Picnic"
+    },
+    {
+        "materialtypeid": 768,
+        "materialtypename": "Picture Light"
+    },
+    {
+        "materialtypeid": 615,
+        "materialtypename": "Pillow"
+    },
+    {
+        "materialtypeid": 956,
+        "materialtypename": "Pin"
+    },
+    {
+        "materialtypeid": 473,
+        "materialtypename": "Pin Plug"
+    },
+    {
+        "materialtypeid": 523,
+        "materialtypename": "Pink Stone"
+    },
+    {
+        "materialtypeid": 503,
+        "materialtypename": "Pinton"
+    },
+    {
+        "materialtypeid": 841,
+        "materialtypename": "Pipe Anneling Wooden"
+    },
+    {
+        "materialtypeid": 839,
+        "materialtypename": "Pipe Finishing Rod"
+    },
+    {
+        "materialtypeid": 1170,
+        "materialtypename": "Plash"
+    },
+    {
+        "materialtypeid": 94,
+        "materialtypename": "Plaster powder"
+    },
+    {
+        "materialtypeid": 101,
+        "materialtypename": "Plastic Bag  1.5x2"
+    },
+    {
+        "materialtypeid": 104,
+        "materialtypename": "Plastic Bag  3x4"
+    },
+    {
+        "materialtypeid": 105,
+        "materialtypename": "Plastic Bag  4x5"
+    },
+    {
+        "materialtypeid": 107,
+        "materialtypename": "Plastic Bag  5x6"
+    },
+    {
+        "materialtypeid": 103,
+        "materialtypename": "Plastic Bag  5x7"
+    },
+    {
+        "materialtypeid": 109,
+        "materialtypename": "Plastic Bag  6x8"
+    },
+    {
+        "materialtypeid": 108,
+        "materialtypename": "Plastic Bag  7x10"
+    },
+    {
+        "materialtypeid": 106,
+        "materialtypename": "Plastic Bag  8x12"
+    },
+    {
+        "materialtypeid": 110,
+        "materialtypename": "Plastic Bag 10x14"
+    },
+    {
+        "materialtypeid": 1000,
+        "materialtypename": "Plastic Bag 16x12"
+    },
+    {
+        "materialtypeid": 438,
+        "materialtypename": "Plastic Bag 25x30"
+    },
+    {
+        "materialtypeid": 111,
+        "materialtypename": "Plastic Bag 4x5 Line 350Gauge"
+    },
+    {
+        "materialtypeid": 970,
+        "materialtypename": "Plastic Bag 8*11"
+    },
+    {
+        "materialtypeid": 112,
+        "materialtypename": "Plastic Bag Pkt 2*3 250 Gauge"
+    },
+    {
+        "materialtypeid": 349,
+        "materialtypename": "Plastic Chair"
+    },
+    {
+        "materialtypeid": 515,
+        "materialtypename": "Plastic Strainer"
+    },
+    {
+        "materialtypeid": 407,
+        "materialtypename": "Plastic Tag"
+    },
+    {
+        "materialtypeid": 73,
+        "materialtypename": "PLATINUM"
+    },
+    {
+        "materialtypeid": 623,
+        "materialtypename": "Plier"
+    },
+    {
+        "materialtypeid": 1119,
+        "materialtypename": "Plumbing Material"
+    },
+    {
+        "materialtypeid": 575,
+        "materialtypename": "Pneumatic Hammer"
+    },
+    {
+        "materialtypeid": 799,
+        "materialtypename": "Pneumatic Hammer Tip"
+    },
+    {
+        "materialtypeid": 413,
+        "materialtypename": "Pocket Diary"
+    },
+    {
+        "materialtypeid": 534,
+        "materialtypename": "POD Bags"
+    },
+    {
+        "materialtypeid": 93,
+        "materialtypename": "Polishing Compound"
+    },
+    {
+        "materialtypeid": 90,
+        "materialtypename": "Polishing Luster White"
+    },
+    {
+        "materialtypeid": 337,
+        "materialtypename": "Polishing Machine"
+    },
+    {
+        "materialtypeid": 150,
+        "materialtypename": "Polishing machine Bag"
+    },
+    {
+        "materialtypeid": 216,
+        "materialtypename": "Polishing Machine Filter"
+    },
+    {
+        "materialtypeid": 1162,
+        "materialtypename": "Polishing Paste"
+    },
+    {
+        "materialtypeid": 426,
+        "materialtypename": "Polishing Tread"
+    },
+    {
+        "materialtypeid": 97,
+        "materialtypename": "Poly Powder"
+    },
+    {
+        "materialtypeid": 854,
+        "materialtypename": "Porosity Bur"
+    },
+    {
+        "materialtypeid": 227,
+        "materialtypename": "Post Threding Machine"
+    },
+    {
+        "materialtypeid": 728,
+        "materialtypename": "Posulux Tool (Diamond Tool)"
+    },
+    {
+        "materialtypeid": 827,
+        "materialtypename": "Potassium Carbonate"
+    },
+    {
+        "materialtypeid": 1114,
+        "materialtypename": "Pouch"
+    },
+    {
+        "materialtypeid": 1128,
+        "materialtypename": "Power Bi"
+    },
+    {
+        "materialtypeid": 797,
+        "materialtypename": "Power Cable"
+    },
+    {
+        "materialtypeid": 1241,
+        "materialtypename": "PP 9933"
+    },
+    {
+        "materialtypeid": 254,
+        "materialtypename": "PP Fume Hood"
+    },
+    {
+        "materialtypeid": 710,
+        "materialtypename": "Pressure Guage"
+    },
+    {
+        "materialtypeid": 712,
+        "materialtypename": "Pressure Switch"
+    },
+    {
+        "materialtypeid": 861,
+        "materialtypename": "Prestige Shield Powder"
+    },
+    {
+        "materialtypeid": 244,
+        "materialtypename": "Printer"
+    },
+    {
+        "materialtypeid": 557,
+        "materialtypename": "Printer Adaptor"
+    },
+    {
+        "materialtypeid": 1157,
+        "materialtypename": "Printer Carriiage"
+    },
+    {
+        "materialtypeid": 80,
+        "materialtypename": "Printer ink"
+    },
+    {
+        "materialtypeid": 1070,
+        "materialtypename": "Printer Ink Black (003 Epson)"
+    },
+    {
+        "materialtypeid": 808,
+        "materialtypename": "Printer Ink Black (664 Epson)"
+    },
+    {
+        "materialtypeid": 1028,
+        "materialtypename": "Printer Roller"
+    },
+    {
+        "materialtypeid": 1033,
+        "materialtypename": "Profitec go Matt Blue"
+    },
+    {
+        "materialtypeid": 1058,
+        "materialtypename": "Projector Benq"
+    },
+    {
+        "materialtypeid": 1053,
+        "materialtypename": "Projector Screen"
+    },
+    {
+        "materialtypeid": 245,
+        "materialtypename": "Prong cutter"
+    },
+    {
+        "materialtypeid": 341,
+        "materialtypename": "Propanol"
+    },
+    {
+        "materialtypeid": 583,
+        "materialtypename": "Props(Earring)"
+    },
+    {
+        "materialtypeid": 586,
+        "materialtypename": "Props(KadaBracelet)"
+    },
+    {
+        "materialtypeid": 584,
+        "materialtypename": "Props(Pendant Set)"
+    },
+    {
+        "materialtypeid": 582,
+        "materialtypename": "Props(Ring)"
+    },
+    {
+        "materialtypeid": 585,
+        "materialtypename": "Props(Tennis Bracelet)"
+    },
+    {
+        "materialtypeid": 777,
+        "materialtypename": "Protective Film (Lens)"
+    },
+    {
+        "materialtypeid": 1186,
+        "materialtypename": "PT BATH"
+    },
+    {
+        "materialtypeid": 1246,
+        "materialtypename": "PU Lacquer"
+    },
+    {
+        "materialtypeid": 805,
+        "materialtypename": "Pump"
+    },
+    {
+        "materialtypeid": 1136,
+        "materialtypename": "Purity"
+    },
+    {
+        "materialtypeid": 687,
+        "materialtypename": "PVC Drain Piping"
+    },
+    {
+        "materialtypeid": 1091,
+        "materialtypename": "PVC Suction Pipe"
+    },
+    {
+        "materialtypeid": 624,
+        "materialtypename": "PVC Tape Roll"
+    },
+    {
+        "materialtypeid": 771,
+        "materialtypename": "QNAP TS 473A NAS"
+    },
+    {
+        "materialtypeid": 835,
+        "materialtypename": "Quartez Rod"
+    },
+    {
+        "materialtypeid": 525,
+        "materialtypename": "Rack"
+    },
+    {
+        "materialtypeid": 222,
+        "materialtypename": "Ram(8GB)"
+    },
+    {
+        "materialtypeid": 1211,
+        "materialtypename": "Rankem 2 Propanol"
+    },
+    {
+        "materialtypeid": 335,
+        "materialtypename": "Raw / Finish - Gold"
+    },
+    {
+        "materialtypeid": 953,
+        "materialtypename": "RBI Application Fee"
+    },
+    {
+        "materialtypeid": 205,
+        "materialtypename": "Red Handle Plier 5"
+    },
+    {
+        "materialtypeid": 87,
+        "materialtypename": "Red rouge"
+    },
+    {
+        "materialtypeid": 122,
+        "materialtypename": "Red Rubber Wheel Big"
+    },
+    {
+        "materialtypeid": 117,
+        "materialtypename": "Red Rubber Wheel Small"
+    },
+    {
+        "materialtypeid": 680,
+        "materialtypename": "Refnets Distribution Joints"
+    },
+    {
+        "materialtypeid": 683,
+        "materialtypename": "Refrigerant GAS"
+    },
+    {
+        "materialtypeid": 252,
+        "materialtypename": "Refrigerator"
+    },
+    {
+        "materialtypeid": 566,
+        "materialtypename": "Register  Book"
+    },
+    {
+        "materialtypeid": 499,
+        "materialtypename": "Regulator(micro motor)"
+    },
+    {
+        "materialtypeid": 941,
+        "materialtypename": "Reimbursement of Salary"
+    },
+    {
+        "materialtypeid": 964,
+        "materialtypename": "Rejection"
+    },
+    {
+        "materialtypeid": 9,
+        "materialtypename": "Repair"
+    },
+    {
+        "materialtypeid": 667,
+        "materialtypename": "Reversible Stage Plate"
+    },
+    {
+        "materialtypeid": 153,
+        "materialtypename": "Revolving Chair"
+    },
+    {
+        "materialtypeid": 504,
+        "materialtypename": "Revolving Pinton"
+    },
+    {
+        "materialtypeid": 1163,
+        "materialtypename": "Rewise"
+    },
+    {
+        "materialtypeid": 383,
+        "materialtypename": "Rhodium"
+    },
+    {
+        "materialtypeid": 992,
+        "materialtypename": "Rhodium 271"
+    },
+    {
+        "materialtypeid": 400,
+        "materialtypename": "Rhodium Clip"
+    },
+    {
+        "materialtypeid": 1021,
+        "materialtypename": "Rhodium J1"
+    },
+    {
+        "materialtypeid": 1121,
+        "materialtypename": "Rhodium Pen"
+    },
+    {
+        "materialtypeid": 128,
+        "materialtypename": "Rhodium Tips"
+    },
+    {
+        "materialtypeid": 716,
+        "materialtypename": "Rhodium Wire"
+    },
+    {
+        "materialtypeid": 1104,
+        "materialtypename": "Ring Buff Hard 3"
+    },
+    {
+        "materialtypeid": 1105,
+        "materialtypename": "Ring Buff Hard 4"
+    },
+    {
+        "materialtypeid": 1071,
+        "materialtypename": "Ring Concept"
+    },
+    {
+        "materialtypeid": 223,
+        "materialtypename": "Ring Expanding Machine"
+    },
+    {
+        "materialtypeid": 234,
+        "materialtypename": "Ring Inside Collet"
+    },
+    {
+        "materialtypeid": 511,
+        "materialtypename": "Ring Jewellery Box"
+    },
+    {
+        "materialtypeid": 505,
+        "materialtypename": "Ring Sizer"
+    },
+    {
+        "materialtypeid": 495,
+        "materialtypename": "Ring Tool"
+    },
+    {
+        "materialtypeid": 1242,
+        "materialtypename": "Rinse-AID"
+    },
+    {
+        "materialtypeid": 530,
+        "materialtypename": "RJ 45 Connector"
+    },
+    {
+        "materialtypeid": 711,
+        "materialtypename": "Rod"
+    },
+    {
+        "materialtypeid": 457,
+        "materialtypename": "Rod (ovel)"
+    },
+    {
+        "materialtypeid": 1184,
+        "materialtypename": "Rod Sensor -N"
+    },
+    {
+        "materialtypeid": 1135,
+        "materialtypename": "Roller"
+    },
+    {
+        "materialtypeid": 491,
+        "materialtypename": "Room Spray"
+    },
+    {
+        "materialtypeid": 960,
+        "materialtypename": "Rootz Magazine"
+    },
+    {
+        "materialtypeid": 571,
+        "materialtypename": "Rotary Cam Switch"
+    },
+    {
+        "materialtypeid": 85,
+        "materialtypename": "Roudge(Blue)"
+    },
+    {
+        "materialtypeid": 293,
+        "materialtypename": "Round Bur No 04"
+    },
+    {
+        "materialtypeid": 296,
+        "materialtypename": "Round Bur No 05"
+    },
+    {
+        "materialtypeid": 297,
+        "materialtypename": "Round Bur No 06"
+    },
+    {
+        "materialtypeid": 289,
+        "materialtypename": "Round Bur No 07"
+    },
+    {
+        "materialtypeid": 306,
+        "materialtypename": "Round Bur No 08"
+    },
+    {
+        "materialtypeid": 308,
+        "materialtypename": "Round Bur No 09"
+    },
+    {
+        "materialtypeid": 299,
+        "materialtypename": "Round Bur No 10"
+    },
+    {
+        "materialtypeid": 309,
+        "materialtypename": "Round Bur No 11"
+    },
+    {
+        "materialtypeid": 325,
+        "materialtypename": "Round Bur No 12"
+    },
+    {
+        "materialtypeid": 287,
+        "materialtypename": "Round Bur No 13"
+    },
+    {
+        "materialtypeid": 311,
+        "materialtypename": "Round Bur No 14"
+    },
+    {
+        "materialtypeid": 291,
+        "materialtypename": "Round Bur No 15"
+    },
+    {
+        "materialtypeid": 313,
+        "materialtypename": "Round Bur No 16"
+    },
+    {
+        "materialtypeid": 239,
+        "materialtypename": "Round Bur No 17"
+    },
+    {
+        "materialtypeid": 315,
+        "materialtypename": "Round Bur No 18"
+    },
+    {
+        "materialtypeid": 316,
+        "materialtypename": "Round Bur No 20"
+    },
+    {
+        "materialtypeid": 318,
+        "materialtypename": "Round Bur No 22"
+    },
+    {
+        "materialtypeid": 540,
+        "materialtypename": "Round Bur No 26"
+    },
+    {
+        "materialtypeid": 541,
+        "materialtypename": "Round Bur No 28"
+    },
+    {
+        "materialtypeid": 497,
+        "materialtypename": "Round Die"
+    },
+    {
+        "materialtypeid": 149,
+        "materialtypename": "Round LED"
+    },
+    {
+        "materialtypeid": 1207,
+        "materialtypename": "Rubber Adeptor"
+    },
+    {
+        "materialtypeid": 456,
+        "materialtypename": "Rubber Band"
+    },
+    {
+        "materialtypeid": 120,
+        "materialtypename": "Rubber Base 2\""
+    },
+    {
+        "materialtypeid": 649,
+        "materialtypename": "Rubber Base 3.5''"
+    },
+    {
+        "materialtypeid": 650,
+        "materialtypename": "Rubber Base 4''"
+    },
+    {
+        "materialtypeid": 1208,
+        "materialtypename": "Rubber Cone"
+    },
+    {
+        "materialtypeid": 1149,
+        "materialtypename": "Ruby Wax"
+    },
+    {
+        "materialtypeid": 1183,
+        "materialtypename": "S.S Ballvalve-N"
+    },
+    {
+        "materialtypeid": 1182,
+        "materialtypename": "Safety Valve -N"
+    },
+    {
+        "materialtypeid": 576,
+        "materialtypename": "Sand (Master Blaster)"
+    },
+    {
+        "materialtypeid": 358,
+        "materialtypename": "Sand (Sand Blasting Machine)"
+    },
+    {
+        "materialtypeid": 196,
+        "materialtypename": "Sata NVR Cable"
+    },
+    {
+        "materialtypeid": 440,
+        "materialtypename": "Saw Blade"
+    },
+    {
+        "materialtypeid": 742,
+        "materialtypename": "Scale Apsara"
+    },
+    {
+        "materialtypeid": 559,
+        "materialtypename": "SCI 5.1 Purple"
+    },
+    {
+        "materialtypeid": 620,
+        "materialtypename": "Scissor"
+    },
+    {
+        "materialtypeid": 1094,
+        "materialtypename": "Scotch-Brite"
+    },
+    {
+        "materialtypeid": 115,
+        "materialtypename": "Scoup"
+    },
+    {
+        "materialtypeid": 622,
+        "materialtypename": "Screw Driver"
+    },
+    {
+        "materialtypeid": 663,
+        "materialtypename": "Scrubber"
+    },
+    {
+        "materialtypeid": 354,
+        "materialtypename": "Sealing Wax"
+    },
+    {
+        "materialtypeid": 181,
+        "materialtypename": "Security Panel"
+    },
+    {
+        "materialtypeid": 662,
+        "materialtypename": "Selector Switch 1 pole"
+    },
+    {
+        "materialtypeid": 661,
+        "materialtypename": "Selector Switch 3 pole"
+    },
+    {
+        "materialtypeid": 164,
+        "materialtypename": "Selvet"
+    },
+    {
+        "materialtypeid": 500,
+        "materialtypename": "Sensor"
+    },
+    {
+        "materialtypeid": 975,
+        "materialtypename": "Service Charge"
+    },
+    {
+        "materialtypeid": 512,
+        "materialtypename": "Set Jewellery Box"
+    },
+    {
+        "materialtypeid": 1249,
+        "materialtypename": "Setting Machine"
+    },
+    {
+        "materialtypeid": 256,
+        "materialtypename": "Settling Tank"
+    },
+    {
+        "materialtypeid": 801,
+        "materialtypename": "Shaft for Collet"
+    },
+    {
+        "materialtypeid": 851,
+        "materialtypename": "Sharpner"
+    },
+    {
+        "materialtypeid": 640,
+        "materialtypename": "Sheet 150mm*120mm"
+    },
+    {
+        "materialtypeid": 641,
+        "materialtypename": "Sheet 150mm*200mm"
+    },
+    {
+        "materialtypeid": 543,
+        "materialtypename": "Shelf organizer Rack"
+    },
+    {
+        "materialtypeid": 744,
+        "materialtypename": "SHP Keartin Smoothing"
+    },
+    {
+        "materialtypeid": 872,
+        "materialtypename": "Side Table"
+    },
+    {
+        "materialtypeid": 621,
+        "materialtypename": "sieve for filter media"
+    },
+    {
+        "materialtypeid": 121,
+        "materialtypename": "Silicon Buff"
+    },
+    {
+        "materialtypeid": 119,
+        "materialtypename": "Silicon Ring 3"
+    },
+    {
+        "materialtypeid": 118,
+        "materialtypename": "Silicon Ring 3.5"
+    },
+    {
+        "materialtypeid": 72,
+        "materialtypename": "SILVER"
+    },
+    {
+        "materialtypeid": 983,
+        "materialtypename": "Silver Jewellery"
+    },
+    {
+        "materialtypeid": 923,
+        "materialtypename": "Silver Metal Processing"
+    },
+    {
+        "materialtypeid": 734,
+        "materialtypename": "Silver Paper"
+    },
+    {
+        "materialtypeid": 863,
+        "materialtypename": "Silver Plating Powder"
+    },
+    {
+        "materialtypeid": 952,
+        "materialtypename": "Sim Card"
+    },
+    {
+        "materialtypeid": 873,
+        "materialtypename": "Sliding Wardrobe"
+    },
+    {
+        "materialtypeid": 419,
+        "materialtypename": "Slip Pad"
+    },
+    {
+        "materialtypeid": 382,
+        "materialtypename": "Slipper"
+    },
+    {
+        "materialtypeid": 398,
+        "materialtypename": "Small Washer"
+    },
+    {
+        "materialtypeid": 969,
+        "materialtypename": "Snacks"
+    },
+    {
+        "materialtypeid": 1227,
+        "materialtypename": "Sodium Chloride"
+    },
+    {
+        "materialtypeid": 612,
+        "materialtypename": "Sofa Set"
+    },
+    {
+        "materialtypeid": 1177,
+        "materialtypename": "Soft Buff"
+    },
+    {
+        "materialtypeid": 442,
+        "materialtypename": "Solder Kapus"
+    },
+    {
+        "materialtypeid": 371,
+        "materialtypename": "Solder Lighter"
+    },
+    {
+        "materialtypeid": 732,
+        "materialtypename": "Solder Machine"
+    },
+    {
+        "materialtypeid": 608,
+        "materialtypename": "Solder Tweezer Band"
+    },
+    {
+        "materialtypeid": 498,
+        "materialtypename": "Soldering Iron"
+    },
+    {
+        "materialtypeid": 965,
+        "materialtypename": "Solitered Diamond"
+    },
+    {
+        "materialtypeid": 1078,
+        "materialtypename": "Solnoide Valve"
+    },
+    {
+        "materialtypeid": 1244,
+        "materialtypename": "Solvant PM"
+    },
+    {
+        "materialtypeid": 881,
+        "materialtypename": "Solvent Recovery Unit K-10"
+    },
+    {
+        "materialtypeid": 1065,
+        "materialtypename": "Sophos - Security Appliance"
+    },
+    {
+        "materialtypeid": 1066,
+        "materialtypename": "Sophos XGS 2100 Xstream"
+    },
+    {
+        "materialtypeid": 1080,
+        "materialtypename": "Sparkle Bowl"
+    },
+    {
+        "materialtypeid": 1079,
+        "materialtypename": "Sparkle Machine Digital"
+    },
+    {
+        "materialtypeid": 175,
+        "materialtypename": "Spike Guard"
+    },
+    {
+        "materialtypeid": 366,
+        "materialtypename": "Spindle for Paisa brush"
+    },
+    {
+        "materialtypeid": 780,
+        "materialtypename": "Spoon"
+    },
+    {
+        "materialtypeid": 766,
+        "materialtypename": "Spot Light"
+    },
+    {
+        "materialtypeid": 784,
+        "materialtypename": "Spring"
+    },
+    {
+        "materialtypeid": 180,
+        "materialtypename": "Spring Cutter"
+    },
+    {
+        "materialtypeid": 715,
+        "materialtypename": "Sprinkler"
+    },
+    {
+        "materialtypeid": 207,
+        "materialtypename": "Sprue Cutter"
+    },
+    {
+        "materialtypeid": 778,
+        "materialtypename": "Square Tower Ladder"
+    },
+    {
+        "materialtypeid": 645,
+        "materialtypename": "SSD Crucible 240 GB"
+    },
+    {
+        "materialtypeid": 1243,
+        "materialtypename": "Stabilizer"
+    },
+    {
+        "materialtypeid": 811,
+        "materialtypename": "Stackable Trey"
+    },
+    {
+        "materialtypeid": 793,
+        "materialtypename": "Stainer"
+    },
+    {
+        "materialtypeid": 75,
+        "materialtypename": "STAINLESS STEEL"
+    },
+    {
+        "materialtypeid": 849,
+        "materialtypename": "Stamp Pad"
+    },
+    {
+        "materialtypeid": 963,
+        "materialtypename": "Stamping"
+    },
+    {
+        "materialtypeid": 394,
+        "materialtypename": "Stamping Machine"
+    },
+    {
+        "materialtypeid": 955,
+        "materialtypename": "Stamping Punch"
+    },
+    {
+        "materialtypeid": 487,
+        "materialtypename": "Stand For UPS"
+    },
+    {
+        "materialtypeid": 1102,
+        "materialtypename": "Steam Heater"
+    },
+    {
+        "materialtypeid": 1101,
+        "materialtypename": "Steam Machine"
+    },
+    {
+        "materialtypeid": 267,
+        "materialtypename": "Steel Bur"
+    },
+    {
+        "materialtypeid": 733,
+        "materialtypename": "Steel Scale"
+    },
+    {
+        "materialtypeid": 493,
+        "materialtypename": "Steel Strainer"
+    },
+    {
+        "materialtypeid": 506,
+        "materialtypename": "Stencil"
+    },
+    {
+        "materialtypeid": 554,
+        "materialtypename": "Stepler"
+    },
+    {
+        "materialtypeid": 552,
+        "materialtypename": "Stepler Pin"
+    },
+    {
+        "materialtypeid": 973,
+        "materialtypename": "Sticker"
+    },
+    {
+        "materialtypeid": 411,
+        "materialtypename": "Sticky Note"
+    },
+    {
+        "materialtypeid": 1052,
+        "materialtypename": "Stone Finish"
+    },
+    {
+        "materialtypeid": 494,
+        "materialtypename": "Stopper Rod"
+    },
+    {
+        "materialtypeid": 1095,
+        "materialtypename": "Straight Blade"
+    },
+    {
+        "materialtypeid": 765,
+        "materialtypename": "Street Light"
+    },
+    {
+        "materialtypeid": 628,
+        "materialtypename": "Stripping Solution"
+    },
+    {
+        "materialtypeid": 875,
+        "materialtypename": "Study Table"
+    },
+    {
+        "materialtypeid": 946,
+        "materialtypename": "Subscription"
+    },
+    {
+        "materialtypeid": 1081,
+        "materialtypename": "Subscription - E-Invoice"
+    },
+    {
+        "materialtypeid": 1082,
+        "materialtypename": "Subscription - SSL - elvee.in"
+    },
+    {
+        "materialtypeid": 990,
+        "materialtypename": "Subscription Plan - ECX Design"
+    },
+    {
+        "materialtypeid": 991,
+        "materialtypename": "Subscription Plan - Factory"
+    },
+    {
+        "materialtypeid": 596,
+        "materialtypename": "Sugar"
+    },
+    {
+        "materialtypeid": 629,
+        "materialtypename": "Suhaga"
+    },
+    {
+        "materialtypeid": 342,
+        "materialtypename": "Sulfuric Acid"
+    },
+    {
+        "materialtypeid": 795,
+        "materialtypename": "Sulphuric Acid Merck"
+    },
+    {
+        "materialtypeid": 704,
+        "materialtypename": "Supply Of ABC Type Extinguisher"
+    },
+    {
+        "materialtypeid": 703,
+        "materialtypename": "Supply Of ABC Type Moduler Exiting"
+    },
+    {
+        "materialtypeid": 705,
+        "materialtypename": "Supply Of CO2 Type Extinguisher"
+    },
+    {
+        "materialtypeid": 820,
+        "materialtypename": "Surface Box 8 Mod."
+    },
+    {
+        "materialtypeid": 1123,
+        "materialtypename": "Surfacto"
+    },
+    {
+        "materialtypeid": 611,
+        "materialtypename": "Surgical Blade"
+    },
+    {
+        "materialtypeid": 1017,
+        "materialtypename": "Table"
+    },
+    {
+        "materialtypeid": 602,
+        "materialtypename": "Table Brush"
+    },
+    {
+        "materialtypeid": 471,
+        "materialtypename": "Table Tennis"
+    },
+    {
+        "materialtypeid": 492,
+        "materialtypename": "Table Tennis Set Rack"
+    },
+    {
+        "materialtypeid": 833,
+        "materialtypename": "Tablet"
+    },
+    {
+        "materialtypeid": 357,
+        "materialtypename": "Tag Ink Roll"
+    },
+    {
+        "materialtypeid": 98,
+        "materialtypename": "Tag Roll"
+    },
+    {
+        "materialtypeid": 1059,
+        "materialtypename": "Tally Prime Silver"
+    },
+    {
+        "materialtypeid": 1060,
+        "materialtypename": "Tally Primer Silver To Gold"
+    },
+    {
+        "materialtypeid": 567,
+        "materialtypename": "Tea"
+    },
+    {
+        "materialtypeid": 984,
+        "materialtypename": "Tea & Coffee"
+    },
+    {
+        "materialtypeid": 461,
+        "materialtypename": "Tea Cup"
+    },
+    {
+        "materialtypeid": 1008,
+        "materialtypename": "Tea Fuel"
+    },
+    {
+        "materialtypeid": 948,
+        "materialtypename": "Telephone Service"
+    },
+    {
+        "materialtypeid": 625,
+        "materialtypename": "Tester"
+    },
+    {
+        "materialtypeid": 446,
+        "materialtypename": "Testing and Installation Charge"
+    },
+    {
+        "materialtypeid": 754,
+        "materialtypename": "Thermo Liquid"
+    },
+    {
+        "materialtypeid": 129,
+        "materialtypename": "Thread"
+    },
+    {
+        "materialtypeid": 409,
+        "materialtypename": "Threading Die"
+    },
+    {
+        "materialtypeid": 367,
+        "materialtypename": "Threading Tape"
+    },
+    {
+        "materialtypeid": 840,
+        "materialtypename": "Tig Welding Gun Nozzle"
+    },
+    {
+        "materialtypeid": 988,
+        "materialtypename": "Tiles"
+    },
+    {
+        "materialtypeid": 1035,
+        "materialtypename": "Timemore Basic 2 White"
+    },
+    {
+        "materialtypeid": 125,
+        "materialtypename": "Tissue"
+    },
+    {
+        "materialtypeid": 1006,
+        "materialtypename": "Tissue Paper Hold"
+    },
+    {
+        "materialtypeid": 775,
+        "materialtypename": "Tissue Wet"
+    },
+    {
+        "materialtypeid": 74,
+        "materialtypename": "TITANIUM"
+    },
+    {
+        "materialtypeid": 806,
+        "materialtypename": "Titanium Tar"
+    },
+    {
+        "materialtypeid": 1064,
+        "materialtypename": "Toluene"
+    },
+    {
+        "materialtypeid": 1030,
+        "materialtypename": "Tool lapping"
+    },
+    {
+        "materialtypeid": 1012,
+        "materialtypename": "Tooth Brush"
+    },
+    {
+        "materialtypeid": 1172,
+        "materialtypename": "Torch"
+    },
+    {
+        "materialtypeid": 1007,
+        "materialtypename": "Towel Rack"
+    },
+    {
+        "materialtypeid": 1155,
+        "materialtypename": "Track Lights"
+    },
+    {
+        "materialtypeid": 931,
+        "materialtypename": "Train Book"
+    },
+    {
+        "materialtypeid": 422,
+        "materialtypename": "Transformer(micro motor)"
+    },
+    {
+        "materialtypeid": 169,
+        "materialtypename": "Transistor"
+    },
+    {
+        "materialtypeid": 800,
+        "materialtypename": "Transistor with Cord Wire"
+    },
+    {
+        "materialtypeid": 749,
+        "materialtypename": "Traveling Kit"
+    },
+    {
+        "materialtypeid": 985,
+        "materialtypename": "Travelling Other Charges"
+    },
+    {
+        "materialtypeid": 459,
+        "materialtypename": "Tray"
+    },
+    {
+        "materialtypeid": 114,
+        "materialtypename": "Tray (10''X14'')"
+    },
+    {
+        "materialtypeid": 113,
+        "materialtypename": "Tray (6''X9'')"
+    },
+    {
+        "materialtypeid": 635,
+        "materialtypename": "Tray (Box)  Lid"
+    },
+    {
+        "materialtypeid": 556,
+        "materialtypename": "Tray ST-2"
+    },
+    {
+        "materialtypeid": 182,
+        "materialtypename": "Triangle File"
+    },
+    {
+        "materialtypeid": 188,
+        "materialtypename": "Triangle File(12cm)"
+    },
+    {
+        "materialtypeid": 184,
+        "materialtypename": "Triangle File(20cm)"
+    },
+    {
+        "materialtypeid": 490,
+        "materialtypename": "Trigger Switch"
+    },
+    {
+        "materialtypeid": 1130,
+        "materialtypename": "Trolly"
+    },
+    {
+        "materialtypeid": 738,
+        "materialtypename": "Trophy"
+    },
+    {
+        "materialtypeid": 232,
+        "materialtypename": "Tube Forming Die"
+    },
+    {
+        "materialtypeid": 230,
+        "materialtypename": "Tube Forming Spindle"
+    },
+    {
+        "materialtypeid": 224,
+        "materialtypename": "Tube/Pipe Making Machine"
+    },
+    {
+        "materialtypeid": 240,
+        "materialtypename": "Turning Machine"
+    },
+    {
+        "materialtypeid": 876,
+        "materialtypename": "TV Unit"
+    },
+    {
+        "materialtypeid": 192,
+        "materialtypename": "Tweezer 10\""
+    },
+    {
+        "materialtypeid": 195,
+        "materialtypename": "Tweezer 12\""
+    },
+    {
+        "materialtypeid": 186,
+        "materialtypename": "Tweezer No 12"
+    },
+    {
+        "materialtypeid": 702,
+        "materialtypename": "Two Way Inlet"
+    },
+    {
+        "materialtypeid": 553,
+        "materialtypename": "U Pin"
+    },
+    {
+        "materialtypeid": 82,
+        "materialtypename": "Ultra Cleaning liquid"
+    },
+    {
+        "materialtypeid": 1237,
+        "materialtypename": "Ultra Machine Net"
+    },
+    {
+        "materialtypeid": 96,
+        "materialtypename": "Ultra Powder"
+    },
+    {
+        "materialtypeid": 545,
+        "materialtypename": "Ultrasonic Machine"
+    },
+    {
+        "materialtypeid": 1240,
+        "materialtypename": "Umicore Sealing Concnetrate"
+    },
+    {
+        "materialtypeid": 1196,
+        "materialtypename": "Uniclean 151"
+    },
+    {
+        "materialtypeid": 1197,
+        "materialtypename": "Uniclean 675"
+    },
+    {
+        "materialtypeid": 914,
+        "materialtypename": "Uniform Fabric"
+    },
+    {
+        "materialtypeid": 915,
+        "materialtypename": "Uniform Stitching"
+    },
+    {
+        "materialtypeid": 631,
+        "materialtypename": "UPS"
+    },
+    {
+        "materialtypeid": 486,
+        "materialtypename": "UPS Battery"
+    },
+    {
+        "materialtypeid": 1217,
+        "materialtypename": "Urea"
+    },
+    {
+        "materialtypeid": 1224,
+        "materialtypename": "US Dollar"
+    },
+    {
+        "materialtypeid": 665,
+        "materialtypename": "USB"
+    },
+    {
+        "materialtypeid": 528,
+        "materialtypename": "User Side I/O"
+    },
+    {
+        "materialtypeid": 802,
+        "materialtypename": "V Cutter 4mm"
+    },
+    {
+        "materialtypeid": 218,
+        "materialtypename": "Vaccume paper Bag"
+    },
+    {
+        "materialtypeid": 544,
+        "materialtypename": "Vacuum Cleaner"
+    },
+    {
+        "materialtypeid": 670,
+        "materialtypename": "Vacuum Machine"
+    },
+    {
+        "materialtypeid": 563,
+        "materialtypename": "Vacuum Machine Bag"
+    },
+    {
+        "materialtypeid": 671,
+        "materialtypename": "Vacuum Machine Brush"
+    },
+    {
+        "materialtypeid": 913,
+        "materialtypename": "Van Service"
+    },
+    {
+        "materialtypeid": 907,
+        "materialtypename": "VAT on Gas consumption"
+    },
+    {
+        "materialtypeid": 522,
+        "materialtypename": "Vati"
+    },
+    {
+        "materialtypeid": 1185,
+        "materialtypename": "Visa"
+    },
+    {
+        "materialtypeid": 787,
+        "materialtypename": "Visiting Card Folder"
+    },
+    {
+        "materialtypeid": 684,
+        "materialtypename": "Vrf System"
+    },
+    {
+        "materialtypeid": 958,
+        "materialtypename": "Walking Tree"
+    },
+    {
+        "materialtypeid": 871,
+        "materialtypename": "Wall Back Panle"
+    },
+    {
+        "materialtypeid": 796,
+        "materialtypename": "Wall Hook"
+    },
+    {
+        "materialtypeid": 767,
+        "materialtypename": "Wall Light"
+    },
+    {
+        "materialtypeid": 399,
+        "materialtypename": "Washer"
+    },
+    {
+        "materialtypeid": 242,
+        "materialtypename": "Washing Machine"
+    },
+    {
+        "materialtypeid": 972,
+        "materialtypename": "Water Consumption"
+    },
+    {
+        "materialtypeid": 812,
+        "materialtypename": "Water Dispenser"
+    },
+    {
+        "materialtypeid": 213,
+        "materialtypename": "Water motor"
+    },
+    {
+        "materialtypeid": 84,
+        "materialtypename": "Wax"
+    },
+    {
+        "materialtypeid": 974,
+        "materialtypename": "Wax Setting"
+    },
+    {
+        "materialtypeid": 396,
+        "materialtypename": "Wax Solder Pen"
+    },
+    {
+        "materialtypeid": 246,
+        "materialtypename": "Weighing Scale"
+    },
+    {
+        "materialtypeid": 587,
+        "materialtypename": "Welding Hand gloves"
+    },
+    {
+        "materialtypeid": 927,
+        "materialtypename": "West pad"
+    },
+    {
+        "materialtypeid": 836,
+        "materialtypename": "Wheel"
+    },
+    {
+        "materialtypeid": 262,
+        "materialtypename": "Wheel Bur No 06"
+    },
+    {
+        "materialtypeid": 359,
+        "materialtypename": "Wheel Bur No 07"
+    },
+    {
+        "materialtypeid": 277,
+        "materialtypename": "Wheel Bur No 08"
+    },
+    {
+        "materialtypeid": 288,
+        "materialtypename": "Wheel Bur No 09"
+    },
+    {
+        "materialtypeid": 320,
+        "materialtypename": "Wheel Bur No 10"
+    },
+    {
+        "materialtypeid": 322,
+        "materialtypename": "Wheel Bur No 12"
+    },
+    {
+        "materialtypeid": 324,
+        "materialtypename": "Wheel Bur No 14"
+    },
+    {
+        "materialtypeid": 278,
+        "materialtypename": "Wheel Bur No 16"
+    },
+    {
+        "materialtypeid": 286,
+        "materialtypename": "Wheel Bur No 18"
+    },
+    {
+        "materialtypeid": 281,
+        "materialtypename": "Wheel Bur No 21"
+    },
+    {
+        "materialtypeid": 284,
+        "materialtypename": "Wheel Bur No 23"
+    },
+    {
+        "materialtypeid": 1013,
+        "materialtypename": "Wheel Bur No. 11"
+    },
+    {
+        "materialtypeid": 1014,
+        "materialtypename": "Wheel Bur No. 13"
+    },
+    {
+        "materialtypeid": 1015,
+        "materialtypename": "Wheel Bur No.15"
+    },
+    {
+        "materialtypeid": 467,
+        "materialtypename": "White Board"
+    },
+    {
+        "materialtypeid": 439,
+        "materialtypename": "white cloth"
+    },
+    {
+        "materialtypeid": 721,
+        "materialtypename": "White Media"
+    },
+    {
+        "materialtypeid": 657,
+        "materialtypename": "White Plastic Bags"
+    },
+    {
+        "materialtypeid": 1083,
+        "materialtypename": "Whitener Pen"
+    },
+    {
+        "materialtypeid": 259,
+        "materialtypename": "Wire Draw Plate(carbide)"
+    },
+    {
+        "materialtypeid": 221,
+        "materialtypename": "Wire Draw Plate(tungsten)"
+    },
+    {
+        "materialtypeid": 996,
+        "materialtypename": "Wire Drawing Die"
+    },
+    {
+        "materialtypeid": 198,
+        "materialtypename": "Wireless Access Point"
+    },
+    {
+        "materialtypeid": 679,
+        "materialtypename": "Wireless Remote Controller"
+    },
+    {
+        "materialtypeid": 550,
+        "materialtypename": "Wooden Concil"
+    },
+    {
+        "materialtypeid": 533,
+        "materialtypename": "wooden Graver"
+    },
+    {
+        "materialtypeid": 1026,
+        "materialtypename": "Wooden Pallet"
+    },
+    {
+        "materialtypeid": 1228,
+        "materialtypename": "Worker Contractor"
+    },
+    {
+        "materialtypeid": 957,
+        "materialtypename": "Worker Room Rent"
+    },
+    {
+        "materialtypeid": 664,
+        "materialtypename": "Woven Apron"
+    },
+    {
+        "materialtypeid": 588,
+        "materialtypename": "Wrapping Roll"
+    },
+    {
+        "materialtypeid": 976,
+        "materialtypename": "XRF Report"
+    },
+    {
+        "materialtypeid": 751,
+        "materialtypename": "Yamato Cutter"
+    },
+    {
+        "materialtypeid": 365,
+        "materialtypename": "Z Diamond Tool"
+    },
+    {
+        "materialtypeid": 447,
+        "materialtypename": "zinc"
+    },
+    {
+        "materialtypeid": 539,
+        "materialtypename": "Zip Lock - 12*14"
+    },
+    {
+        "materialtypeid": 718,
+        "materialtypename": "Zip Lock - 12*18"
+    },
+    {
+        "materialtypeid": 538,
+        "materialtypename": "Zip Lock - 19*21"
+    },
+    {
+        "materialtypeid": 1178,
+        "materialtypename": "Zip Lock Bag 3*4"
+    },
+    {
+        "materialtypeid": 102,
+        "materialtypename": "Zip lock Bag 3x3"
+    }
+]
