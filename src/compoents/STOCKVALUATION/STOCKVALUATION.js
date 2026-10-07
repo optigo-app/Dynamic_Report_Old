@@ -601,9 +601,10 @@ const StockValuation = () => {
           style={{
             display: "flex",
             alignItems: "center",
+            gap: '5px'
           }}
         >
-          <label>Select Entry Date: </label>
+          <label>Select Entry Date : </label>
           <DatePicker
             selected={entryDate}
             onChange={(date) => setEntryDate(date)}
@@ -630,7 +631,7 @@ const StockValuation = () => {
         </Button>
       </div>
 
-      <div style={{ height: "32vh", overflow: "auto" }}>
+      <div>
         <table className="valuation-table">
           <thead>
             <tr>
