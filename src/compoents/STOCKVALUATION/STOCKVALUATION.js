@@ -6,12 +6,12 @@ import "react-datepicker/dist/react-datepicker.css";
 import "./StockValuation.scss";
 import { GetWorkerData } from "../../API/GetWorkerData/GetWorkerData";
 import { Button, CircularProgress, TextField } from "@mui/material";
-import sampleAllInData from './allInData.json'
-import sampleallOutData from './allOutData.json'
-import sampleitemMaster from './itemMaster.json'
-import samplematerialMaster from './materialMaster.json'
-import samplemetalTypeMaster from './metalTypeMaster.json'
-import sampleopeningData from './openingData.json'
+// import sampleAllInData from './allInData.json'
+// import sampleallOutData from './allOutData.json'
+// import sampleitemMaster from './itemMaster.json'
+// import samplematerialMaster from './materialMaster.json'
+// import samplemetalTypeMaster from './metalTypeMaster.json'
+// import sampleopeningData from './openingData.json'
 
 const StockValuation = () => {
   const [entryDate, setEntryDate] = useState(new Date());
@@ -152,8 +152,8 @@ const StockValuation = () => {
             sp
           ),
         ]);
-        setOpeningData(sampleopeningData);
-        // setOpeningData(Opening?.Data || []);
+        // setOpeningData(sampleopeningData);
+        setOpeningData(Opening?.Data || []);
       } catch (err) {
         console.error("API Error", err);
       }
@@ -630,7 +630,7 @@ const StockValuation = () => {
         </Button>
       </div>
 
-      <div style={{ height: "30vh", overflow: "auto" }}>
+      <div style={{ height: "32vh", overflow: "auto" }}>
         <table className="valuation-table">
           <thead>
             <tr>
@@ -970,7 +970,7 @@ const StockValuation = () => {
       )}
 
       {/* ── Product Type wise table ──    */}
-      <div style={{ height: "45vh", overflow: "auto", marginTop: 0 }}>
+      <div style={{ height: "45vh", overflow: "auto", marginTop: 10 }}>
         <table className="valuation-table">
           <thead>
             <tr>
@@ -1000,7 +1000,27 @@ const StockValuation = () => {
               <>
                 {stockPtRows.map((r, i) => (
                   <tr key={i}>
-                    <td>{r.productType}</td>
+                    <td style={{
+                      textDecoration: 'underline',
+                      color: 'blue',
+                      cursor: 'pointer',
+                    }}
+                      onClick={() => {
+                        if (window?.parent?.postMessage) {
+                          window.parent.postMessage(
+                            {
+                              type: "ADD_TAB",
+                              evt: "DynamicReport",
+                              payload: {
+                                TabName: "Dx Closing Stock Valuation Jewellery Wise",
+                                TabUrl: "http://dxreport.web/beta/?CN=UkRTRF8yMDI2MTAwNzA0MzExNF9kZDMwZTBjMjllN2U0MWI5YjM3YzBkOWVlM2EyMjM2ZA==&pid=18622&Token=89A179EE-07C2-F111-B3D2-F875A496BA9D",
+                              },
+                            },
+                            "*"
+                          );
+                        }
+                      }}
+                    >{r.productType}</td>
                     {renderBucketCells(r.opening)}
                     {renderBucketCells(r.in)}
                     {renderBucketCells(r.out)}
