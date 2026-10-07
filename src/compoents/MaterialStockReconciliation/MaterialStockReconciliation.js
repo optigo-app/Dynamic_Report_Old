@@ -26,6 +26,8 @@ import {
   Badge,
   ThemeProvider,
   Tooltip,
+  Tabs,
+  Tab,
   createTheme,
 } from "@mui/material";
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
@@ -862,6 +864,9 @@ export default function MaterialStockReconciliation() {
   const [history, setHistory] = useState([]);
   const [reconciledIds, setReconciledIds] = useState(new Set());
 
+  /* ---- Reconciliation History tabs: 0 = all history, 1 = today's only ---- */
+  const [historyTab, setHistoryTab] = useState(0);
+
   /* ------------------------------------------------------------------- */
   const lockerOptions = useMemo(() => uniq(RAW_DATA.map((r) => r.Locker)), []);
   const materialOptions = useMemo(() => uniq(RAW_DATA.map((r) => r.itemname)), []);
@@ -1135,6 +1140,24 @@ export default function MaterialStockReconciliation() {
   // Summary/measurement/result show only after Search (filter mode) or Scan (scan mode) is clicked
   const showSummaryBlock = showWorkspace && !!stockSummary;
   const showHistoryBlock = mode === "filter" || mode === "scan" || mode === "history";
+
+  /* Today's date, same "DD Mon YYYY" format nowStamp() starts each
+     record with — used to split the History table into "History" and
+     "Today's Reconciliation" tabs. */
+  const todayDateStr = useMemo(
+    () =>
+      new Date().toLocaleDateString("en-GB", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+      }),
+    []
+  );
+  const todaysHistory = useMemo(
+    () => history.filter((h) => h.dateTime.startsWith(todayDateStr)),
+    [history, todayDateStr]
+  );
+  const historyRowsToShow = historyTab === 0 ? history : todaysHistory;
 
   /* ----------------------------------------------------------------- */
   return (
@@ -1619,48 +1642,89 @@ export default function MaterialStockReconciliation() {
             </>
           )}
 
-          {/* Reconciliation History */}
+          {/* Reconciliation History — tabbed: "History" (all) vs "Today's Reconciliation" */}
           {showHistoryBlock && (
             <Paper sx={cardSx} elevation={0}>
-              <Typography sx={panelTitleSx}>Reconciliation History</Typography>
+              <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 1, mb: 1 }}>
+                <Typography sx={{ ...panelTitleSx, mb: 0 }}>Reconciliation History</Typography>
+              </Box>
+
+              <Tabs
+                value={historyTab}
+                onChange={(e, val) => setHistoryTab(val)}
+                sx={{
+                  minHeight: 36,
+                  mb: 1.5,
+                  borderBottom: `1px solid ${COLORS.border}`,
+                  "& .MuiTabs-indicator": { backgroundColor: COLORS.purple },
+                }}
+              >
+                <Tab
+                  label="History"
+                  sx={{
+                    minHeight: 36,
+                    textTransform: "none",
+                    fontSize: 13,
+                    fontWeight: 600,
+                    color: COLORS.textMuted,
+                    "&.Mui-selected": { color: COLORS.purple },
+                  }}
+                />
+                <Tab
+                  label={`Today's Reconciliation${todaysHistory.length ? ` (${todaysHistory.length})` : ""}`}
+                  sx={{
+                    minHeight: 36,
+                    textTransform: "none",
+                    fontSize: 13,
+                    fontWeight: 600,
+                    color: COLORS.textMuted,
+                    "&.Mui-selected": { color: COLORS.purple },
+                  }}
+                />
+              </Tabs>
+
               <TableContainer sx={tableContainerSx}>
                 <Table size="small">
                   <TableHead>
                     <TableRow>
                       <TableCell sx={theadCellSx}>Date &amp; Time</TableCell>
+                      <TableCell sx={theadCellSx}>RM Bag</TableCell>
                       <TableCell sx={theadCellSx}>Material</TableCell>
                       <TableCell sx={theadCellSx}>Shape</TableCell>
                       <TableCell sx={theadCellSx}>Size</TableCell>
                       <TableCell sx={theadCellSx}>Lot No</TableCell>
                       <TableCell sx={theadCellSx} align="right">System Weight</TableCell>
-                      <TableCell sx={theadCellSx} align="right">Physical Weight</TableCell>
-                      <TableCell sx={theadCellSx} align="right">Difference</TableCell>
+                       
+                 
                       <TableCell sx={theadCellSx}>Status</TableCell>
                       <TableCell sx={theadCellSx}>Remarks</TableCell>
                       <TableCell sx={theadCellSx} align="center">Reconciliation By</TableCell> 
                     </TableRow>
                   </TableHead>
                   <TableBody>
-                    {history.length === 0 && (
+                    {historyRowsToShow.length === 0 && (
                       <TableRow>
                         <TableCell colSpan={11} align="center" sx={{ color: COLORS.textMuted, py: 3 }}>
-                          No reconciliations saved yet.
+                          {historyTab === 0 ? "No reconciliations saved yet." : "No reconciliations done today yet."}
                         </TableCell>
                       </TableRow>
                     )}
-                    {history.map((h) => (
+                    {historyRowsToShow.map((h) => (
+                      
                       <TableRow key={h.id}>
+                        {console.log("TCL: MaterialStockReconciliation ->h ", h)}
                         <TableCell sx={tbodyCellSx}>{h.dateTime}</TableCell>
+                        <TableCell sx={tbodyCellSx}>{h.rmBag}</TableCell>
                         <TableCell sx={linkCellSx}>{h.material}</TableCell>
                         <TableCell sx={tbodyCellSx}>{h.shape}</TableCell>
                         <TableCell sx={tbodyCellSx}>{h.size}</TableCell>
                         <TableCell sx={tbodyCellSx}>{h.lotNo}</TableCell>
                         <TableCell sx={tbodyCellSx} align="right">{fmt(h.systemWeight)}</TableCell>
-                        <TableCell sx={tbodyCellSx} align="right">{fmt(h.physicalNet)}</TableCell>
-                        <TableCell sx={tbodyCellSx} align="right">
+                        {/* <TableCell sx={tbodyCellSx} align="right">{fmt(h.physicalNet)}</TableCell> */}
+                        {/* <TableCell sx={tbodyCellSx} align="right">
                           {h.difference >= 0 ? "+" : ""}
                           {fmt(h.difference)}
-                        </TableCell>
+                        </TableCell> */}
                         <TableCell sx={tbodyCellSx}>
                           <Chip size="small" label={h.status === "ACCEPT" ? "PASS" : "FAIL"} sx={h.status === "ACCEPT" ? chipSuccessSx : chipDangerSx} />
                         </TableCell>
