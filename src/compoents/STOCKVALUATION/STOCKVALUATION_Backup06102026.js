@@ -6,12 +6,6 @@ import "react-datepicker/dist/react-datepicker.css";
 import "./StockValuation.scss";
 import { GetWorkerData } from "../../API/GetWorkerData/GetWorkerData";
 import { Button, CircularProgress, TextField } from "@mui/material";
-// import sampleAllInData from './allInData.json'
-// import sampleallOutData from './allOutData.json'
-// import sampleitemMaster from './itemMaster.json'
-// import samplematerialMaster from './materialMaster.json'
-// import samplemetalTypeMaster from './metalTypeMaster.json'
-// import sampleopeningData from './openingData.json'
 
 const StockValuation = () => {
   const [entryDate, setEntryDate] = useState(new Date());
@@ -27,9 +21,9 @@ const StockValuation = () => {
   const [jobworkDataTotal, setJobworkDataTotal] = useState([]);
   const [modalLoading, setModalLoading] = useState(false);
   const [metalTypeMaster, setMetalTypeMaster] = useState([]);
+  const [stockValPt, setStockValPt] = useState([]);
   const [openingData, setOpeningData] = useState([]);
   const [redirectData, setRedirectData] = useState();
-  const [stockValPt, setStockValPt] = useState([]);
 
   const formatToUTCYYYYMMDD = (dateInput) => {
     const date = new Date(dateInput);
@@ -74,8 +68,16 @@ const StockValuation = () => {
           },
           sp
         ),
+        GetWorkerData(
+          {
+            "con": `{\"id\":\"\",\"mode\":\"CLOSING_STOCK_VALUATION_PT\",\"appuserid\":\"${AllData?.uid}\"}`,
+            "p": "",
+            "f": "Task Management (taskmaster)"
+          },
+          sp
+        ),
       ]);
-
+      setStockValPt(STOCKVALUATIONPT?.Data);
       setAllInData(inRes?.Data?.rd1 || []);
       setAllOutData(outRes?.Data?.rd1 || []);
       setItemMaster(masterRes?.Data?.rd || []);
@@ -89,28 +91,6 @@ const StockValuation = () => {
       setLoading(false);
     }
   };
-
-  // useEffect(() => {
-  //   if (loading) return;
-  //   const targetIds = [8, 10, 25];
-
-  //   // OPENING: item METAL (id 1), shapeid = op["2"]
-  //   const opening = (openingData?.rd1 || []).filter(
-  //     (op) => op["1"] == 1 && targetIds.includes(Number(op["2"]))
-  //   );
-
-  //   // IN / OUT: item METAL (r["17"] == 1), metal type = r["10"]
-  //   const inRows = (allInData || []).filter(
-  //     (r) => r["17"] == 1 && targetIds.includes(Number(r["10"]))
-  //   );
-  //   const outRows = (allOutData || []).filter(
-  //     (r) => r["17"] == 1 && targetIds.includes(Number(r["10"]))
-  //   );
-
-  //   console.log("OPENING rows", opening);
-  //   console.log("IN rows (all dates)", inRows);
-  //   console.log("OUT rows (all dates)", outRows);
-  // }, [loading, openingData, allInData, allOutData]);
 
   useEffect(() => {
     fetchAllData();
@@ -137,10 +117,11 @@ const StockValuation = () => {
             sp
           ),
         ]);
-        // setOpeningData(sampleopeningData);
         setOpeningData(Opening?.Data || []);
       } catch (err) {
         console.error("API Error", err);
+      } finally {
+        setLoading(false);
       }
     };
 
@@ -151,7 +132,7 @@ const StockValuation = () => {
     if (!loading) {
       const selectedDate = formatToUTCYYYYMMDD(entryDate);
 
-      const filteredIn = allInData?.filter(
+      const filteredIn = allInData.filter(
         (x) => formatToUTCYYYYMMDD(x["1"]) === selectedDate
       );
       const filteredOut = allOutData.filter(
@@ -429,68 +410,6 @@ const StockValuation = () => {
     return orderA - orderB;
   });
 
-  // ───── Product Type wise Opening / IN / Out ─────
-  const IN_EVENTS = ["alterationout", "memofrommanu", "memoreturn", "memotosale", "stockpurchase", "salereturnot"];
-  const OUT_EVENTS = ["alterationin", "memoissue", "sale", "stockmelt", "salereturn", "stockpurchasereturn"];
-  const normEvent = (s) => String(s || "").toLowerCase().replace(/[^a-z0-9]/g, "");
-  const pickWt = (v) => {
-    if (v == null) return 0;
-    const s = String(v);
-    return Number(s.includes("/") ? s.split("/")[1] : s) || 0;
-  };
-  const newBucket = () => ({ gross: 0, net: 0, pure: 0, dia: 0, cs: 0, misc: 0, amt: 0 });
-  const addToBucket = (b, r, sign) => {
-    b.gross += sign * Number(r["7"] || 0);
-    b.net += sign * Number(r["8"] || 0);
-    b.pure += sign * Number(r["9"] || 0);
-    b.dia += sign * pickWt(r["10"]);
-    b.cs += sign * pickWt(r["11"]);
-    b.misc += sign * pickWt(r["12"]);
-    b.amt +=
-      sign *
-      (Number(r["13"] || 0) + Number(r["14"] || 0) + Number(r["15"] || 0) + Number(r["16"] || 0));
-  };
-
-  const stockPtRows = (() => {
-    const selectedDate = formatToUTCYYYYMMDD(entryDate);
-    const map = {};
-    (stockValPt?.rd1 || []).forEach((r) => {
-      const ev = normEvent(r["5"]);
-      const isIn = IN_EVENTS.includes(ev);
-      const isOut = OUT_EVENTS.includes(ev);
-      if (!isIn && !isOut) return;
-
-      const pt = r["4"] || "Unknown";
-      if (!map[pt]) map[pt] = { productType: pt, opening: newBucket(), in: newBucket(), out: newBucket() };
-
-      const d = formatToUTCYYYYMMDD(r["1"]);
-      if (d < selectedDate) addToBucket(map[pt].opening, r, isIn ? 1 : -1);
-      else if (d === selectedDate) addToBucket(isIn ? map[pt].in : map[pt].out, r, 1);
-    });
-    return Object.values(map);
-  })();
-
-  const stockPtTotal = stockPtRows.reduce(
-    (t, r) => {
-      ["opening", "in", "out"].forEach((k) =>
-        Object.keys(t[k]).forEach((f) => (t[k][f] += r[k][f]))
-      );
-      return t;
-    },
-    { opening: newBucket(), in: newBucket(), out: newBucket() }
-  );
-
-  const renderBucketCells = (b) => (
-    <>
-      <td>{b.gross.toFixed(3)}</td>
-      <td>{b.net.toFixed(3)}</td>
-      <td>{b.pure.toFixed(3)}</td>
-      <td>{b.dia.toFixed(3)}</td>
-      <td>{b.cs.toFixed(3)}</td>
-      <td>{b.misc.toFixed(3)}</td>
-      <td>{b.amt.toFixed(2)}</td>
-    </>
-  );
 
   const handleStockCal = async () => {
     setModalLoading(true);
@@ -527,7 +446,7 @@ const StockValuation = () => {
       {/* ── Summary Bar ── */}
       {!loading && !modalLoading && (
         <div style={{
-          padding: "5px 0 5px",
+          padding: "12px 0 16px",
           borderBottom: "1px solid #e0e0e0",
           marginBottom: 14
         }}>
@@ -586,10 +505,9 @@ const StockValuation = () => {
           style={{
             display: "flex",
             alignItems: "center",
-            gap: '5px'
           }}
         >
-          <label>Select Entry Date : </label>
+          <label>Select Entry Date: </label>
           <DatePicker
             selected={entryDate}
             onChange={(date) => setEntryDate(date)}
@@ -616,7 +534,7 @@ const StockValuation = () => {
         </Button>
       </div>
 
-      <div>
+      <div style={{ height: "80vh", overflow: "auto" }}>
         <table className="valuation-table">
           <thead>
             <tr>
@@ -744,93 +662,88 @@ const StockValuation = () => {
                     </tr>
 
                     {expandedItemId === row.itemId &&
-                      (() => {
-                        const isMetalLike = ["METAL", "FINDING", "MOUNT", "ALLOY"].includes(
-                          row.itemName
-                        );
-                        const sumOf = (arr = [], fn) =>
-                          arr.reduce((s, r) => s + fn(r), 0);
+                      Object.entries(combinedGroups).map(
+                        ([materialId, group], gIdx) => {
+                          const materialName = [
+                            "METAL",
+                            "FINDING",
+                            "MOUNT",
+                            "ALLOY",
+                          ].includes(row.itemName)
+                            ? materialId > 0
+                              ? getMetalTypeName(materialId)
+                              : row.itemName
+                            : materialId > 0
+                              ? getMaterialName(materialId)
+                              : row.itemName;
 
-                        // 1) merge by name (case-insensitive)
-                        const merged = {};
-                        Object.entries(combinedGroups).forEach(([materialId, group]) => {
-                          const idNum = Number(materialId);
-                          const hasId = idNum > 0;
-                          const materialName = hasId
-                            ? isMetalLike
-                              ? getMetalTypeName(idNum)
-                              : getMaterialName(idNum)
-                            : row.itemName;
-                          const mKey = String(materialName).trim().toUpperCase();
+                          const groupOpeningWeight =
+                            group.opening?.reduce(
+                              (sum, r) => sum + Number(r["6"] || 0),
+                              0
+                            ) || 0;
+                          const groupOpeningAmt =
+                            group.opening?.reduce(
+                              (sum, r) => sum + Number(r["10"] || 0),
+                              0
+                            ) || 0;
+                          const inWeight =
+                            group.in?.reduce(
+                              (sum, r) => sum + Number(r["19"] || r["5"] || 0),
+                              0
+                            ) || 0;
+                          const inAmount =
+                            group.in?.reduce(
+                              (sum, r) => sum + Number(r["8"] || 0),
+                              0
+                            ) || 0;
+                          const outWeight =
+                            group.out?.reduce(
+                              (sum, r) => sum + Number(r["19"] || r["5"] || 0),
+                              0
+                            ) || 0;
+                          const outAmount =
+                            group.out?.reduce(
+                              (sum, r) => sum + Number(r["8"] || 0),
+                              0
+                            ) || 0;
+                          const closingWeight =
+                            groupOpeningWeight + inWeight - outWeight;
 
-                          const opW = sumOf(group.opening, (r) => Number(r["6"] || 0));
-                          const opA = sumOf(group.opening, (r) => Number(r["10"] || 0));
-                          const inW = sumOf(group.in, (r) => Number(r["19"] || r["5"] || 0));
-                          const inA = sumOf(group.in, (r) => Number(r["8"] || 0));
-                          const outW = sumOf(group.out, (r) => Number(r["19"] || r["5"] || 0));
-                          const outA = sumOf(group.out, (r) => Number(r["8"] || 0));
-
-                          if (!merged[mKey]) {
-                            merged[mKey] = {
-                              materialId: hasId ? materialId : 0,
-                              materialName: hasId ? materialName : row.itemName,
-                              opW: 0, opA: 0, inW: 0, inA: 0, outW: 0, outA: 0,
-                            };
-                          }
-                          const m = merged[mKey];
-                          if (!(Number(m.materialId) > 0) && hasId) m.materialId = materialId;
-                          m.opW += opW; m.opA += opA;
-                          m.inW += inW; m.inA += inA;
-                          m.outW += outW; m.outA += outA;
-                        });
-
-                        // 2) remove all-zero rows
-                        const EPS_W = 0.0005;
-                        const EPS_A = 0.005;
-                        const rows = Object.values(merged)
-                          .map((m) => ({
-                            ...m,
-                            clW: m.opW + m.inW - m.outW,
-                            clA: m.opA + m.inA - m.outA,
-                          }))
-                          .filter(
-                            (m) =>
-                              Math.abs(m.opW) >= EPS_W ||
-                              Math.abs(m.inW) >= EPS_W ||
-                              Math.abs(m.outW) >= EPS_W ||
-                              Math.abs(m.clW) >= EPS_W ||
-                              Math.abs(m.opA) >= EPS_A ||
-                              Math.abs(m.inA) >= EPS_A ||
-                              Math.abs(m.outA) >= EPS_A ||
-                              Math.abs(m.clA) >= EPS_A
+                          const closingAmount =
+                            groupOpeningAmt + inAmount - outAmount;
+                          return (
+                            <tr className="expanded-row" key={gIdx}>
+                              <td></td>
+                              <td
+                                style={{
+                                  color: "blue",
+                                  textDecoration: "underline",
+                                  cursor: "pointer",
+                                }}
+                                onClick={() =>
+                                  hanldeNaviagte(
+                                    row.itemName,
+                                    materialName,
+                                    row,
+                                    materialId
+                                  )
+                                }
+                              >
+                                {materialName}
+                              </td>
+                              <td>{groupOpeningWeight.toFixed(3)}</td>
+                              <td>{groupOpeningAmt.toFixed(2)}</td>
+                              <td>{inWeight.toFixed(3)}</td>
+                              <td>{inAmount.toFixed(2)}</td>
+                              <td>{outWeight.toFixed(3)}</td>
+                              <td>{outAmount.toFixed(2)}</td>
+                              <td>{closingWeight.toFixed(3)}</td>
+                              <td>{closingAmount.toFixed(2)}</td>
+                            </tr>
                           );
-
-                        return rows.map((m, gIdx) => (
-                          <tr className="expanded-row" key={gIdx}>
-                            <td></td>
-                            <td
-                              style={{
-                                color: "blue",
-                                textDecoration: "underline",
-                                cursor: "pointer",
-                              }}
-                              onClick={() =>
-                                hanldeNaviagte(row.itemName, m.materialName, row, m.materialId)
-                              }
-                            >
-                              {m.materialName}
-                            </td>
-                            <td>{m.opW.toFixed(3)}</td>
-                            <td>{m.opA.toFixed(2)}</td>
-                            <td>{m.inW.toFixed(3)}</td>
-                            <td>{m.inA.toFixed(2)}</td>
-                            <td>{m.outW.toFixed(3)}</td>
-                            <td>{m.outA.toFixed(2)}</td>
-                            <td>{m.clW.toFixed(3)}</td>
-                            <td>{m.clA.toFixed(2)}</td>
-                          </tr>
-                        ));
-                      })()}
+                        }
+                      )}
                   </React.Fragment>
                 );
               })}
@@ -954,75 +867,6 @@ const StockValuation = () => {
           </div>
         </div>
       )}
-
-      {/* ── Product Type wise table ──    */}
-      <div style={{ height: "45vh", overflow: "auto", marginTop: 10 }}>
-        <table className="valuation-table">
-          <thead>
-            <tr>
-              <th rowSpan={2}>Product Type</th>
-              <th colSpan={7} style={{ textAlign: "center" }}>Opening</th>
-              <th colSpan={7} style={{ textAlign: "center" }}>IN</th>
-              <th colSpan={7} style={{ textAlign: "center" }}>Out</th>
-            </tr>
-            <tr>
-              {["Gross", "Net", "Pure", "Dia", "CS", "Misc", "Amount"].map((h) => (
-                <th key={`o-${h}`}>{h}</th>
-              ))}
-              {["Gross", "Net", "Pure", "Dia", "CS", "Misc", "Amount"].map((h) => (
-                <th key={`i-${h}`}>{h}</th>
-              ))}
-              {["Gross", "Net", "Pure", "Dia", "CS", "Misc", "Amount"].map((h) => (
-                <th key={`u-${h}`}>{h}</th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {stockPtRows.length === 0 ? (
-              <tr>
-                <td colSpan={22} style={{ textAlign: "center" }}>No data available</td>
-              </tr>
-            ) : (
-              <>
-                {stockPtRows.map((r, i) => (
-                  <tr key={i}>
-                    <td style={{
-                      textDecoration: 'underline',
-                      color: 'blue',
-                      cursor: 'pointer',
-                    }}
-                      onClick={() => {
-                        if (window?.parent?.postMessage) {
-                          window.parent.postMessage(
-                            {
-                              type: "ADD_TAB",
-                              evt: "DynamicReport",
-                              payload: {
-                                TabName: "Dx Closing Stock Valuation Jewellery Wise",
-                                TabUrl: "http://dxreport.web/beta/?CN=UkRTRF8yMDI2MTAwNzA0MzExNF9kZDMwZTBjMjllN2U0MWI5YjM3YzBkOWVlM2EyMjM2ZA==&pid=18622&Token=89A179EE-07C2-F111-B3D2-F875A496BA9D",
-                              },
-                            },
-                            "*"
-                          );
-                        }
-                      }}
-                    >{r.productType}</td>
-                    {renderBucketCells(r.opening)}
-                    {renderBucketCells(r.in)}
-                    {renderBucketCells(r.out)}
-                  </tr>
-                ))}
-                <tr style={{ background: "#f3f3f3", fontWeight: 600 }}>
-                  <td>Total</td>
-                  {renderBucketCells(stockPtTotal.opening)}
-                  {renderBucketCells(stockPtTotal.in)}
-                  {renderBucketCells(stockPtTotal.out)}
-                </tr>
-              </>
-            )}
-          </tbody>
-        </table>
-      </div>
     </div>
   );
 };

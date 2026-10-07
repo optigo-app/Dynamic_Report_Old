@@ -22,4 +22,9 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
+<<<<<<< HEAD
 *.sql
+=======
+*.sqlsrc/compoents/STOCKVALUATION/allOutData.json
+src/compoents/STOCKVALUATION/allInData.json
+>>>>>>> 205fc30e787d7406dfc72e70ede92ee31076984c
