@@ -312,10 +312,15 @@ function buildSummary(loc, mat, subs) {
 /* Build one combined summary from EVERY scanned Job / Lot No. (rfbag).
    Rows for all scanned codes are grouped together — this is what "scan
    mode" shows once the user clicks the "Scan" button, instead of the
-   filter-built summary. */
-function buildSummaryFromScanCodes(codes) {
+   filter-built summary.
+
+   CHANGE: rows are now restricted to the material selected on the landing
+   page — a bag number only counts if it belongs to that material. */
+function buildSummaryFromScanCodes(codes, mat) {
   const uniqueCodes = uniq(codes);
-  const rows = RAW_DATA.filter((r) => uniqueCodes.includes(r.rfbag));
+  const rows = RAW_DATA.filter(
+    (r) => uniqueCodes.includes(r.rfbag) && (!mat || r.itemname === mat)
+  );
   // One scanned Job/Lot No. = one bag, even if that bag's rfbag appears on
   // several item rows (e.g. Metal + Mount + Finding under the same bag).
   // Pieces/weight still sum every matching row; bags counts scanned jobs.
@@ -328,7 +333,7 @@ function buildSummaryFromScanCodes(codes) {
     pieces,
     weight,
     rows,
-    material: materials.length === 1 ? materials[0] : "Scanned Items",
+    material: mat || (materials.length === 1 ? materials[0] : "Scanned Items"),
     locker: rows[0]?.Locker || "",
     subFilters: { lotno: uniqueCodes.join(", ") },
   };
@@ -353,13 +358,15 @@ function ResultLine({ label, value }) {
 
 /* ========================================================================
    LANDING PAGE
-   Two entry points (Criteria Wise / Scan RM Bag) + tolerance settings.
+   Material dropdown on top + two entry points (Criteria Wise / Scan RM Bag)
+   + tolerance settings.
    ===================================================================== */
-function LandingActionCard({ icon, title, description, onClick, variant="primary" }) {
+function LandingActionCard({ icon, title, description, onClick, variant="primary", disabled = false }) {
   const isPrimary = variant === "primary";
   return (
     <ButtonBase
       onClick={onClick}
+      disabled={disabled}
       sx={{
         display: "flex",
         flexDirection: "column",
@@ -377,13 +384,16 @@ function LandingActionCard({ icon, title, description, onClick, variant="primary
           ? "0 10px 28px rgba(108,63,197,0.28)"
           : "0 4px 16px rgba(30,27,46,0.06)",
         transition: "transform .18s ease, box-shadow .18s ease, border-color .18s ease",
-        "&:hover": {
-          transform: "translateY(-4px)",
-          boxShadow: isPrimary
-            ? "0 16px 34px rgba(108,63,197,0.38)"
-            : "0 12px 28px rgba(108,63,197,0.16)",
-          borderColor: isPrimary ? "transparent" : COLORS.purple,
-        },
+        opacity: disabled ? 0.5 : 1,
+        "&:hover": disabled
+          ? {}
+          : {
+              transform: "translateY(-4px)",
+              boxShadow: isPrimary
+                ? "0 16px 34px rgba(108,63,197,0.38)"
+                : "0 12px 28px rgba(108,63,197,0.16)",
+              borderColor: isPrimary ? "transparent" : COLORS.purple,
+            },
       }}
     >
       <Box
@@ -436,6 +446,9 @@ function LandingPage({
   setToleranceMetal,
   toleranceOther,
   setToleranceOther,
+  material,
+  onMaterialChange,
+  materialOptions,
 }) {
   return (
     <Box
@@ -462,6 +475,60 @@ function LandingPage({
         </Typography>
       </Box>
 
+      {/* NEW: Material dropdown — sits above the two entry cards */}
+      
+      <Box  
+        sx={{
+          width: "100%",
+          maxWidth: 720,
+          p: 3,
+          borderRadius: "16px",
+          border: `1px solid ${COLORS.border}`,
+          bgcolor: COLORS.surface,
+          boxShadow: "0 4px 16px rgba(30,27,46,0.05)",
+          maxWidth: 720, mb: 3
+        }}
+      
+      
+      >
+         <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, mb: 2.5 }}>
+          <Box
+            sx={{
+              width: 40,
+              height: 40,
+              borderRadius: "10px",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              bgcolor: COLORS.purpleLight,
+              color: COLORS.purple,
+            }}
+          >
+            <FilterListIcon fontSize="small" />
+          </Box>
+          <Box>
+            <Typography sx={{ fontSize: 15, fontWeight: 700, color: COLORS.text }}>
+              Selecet Material
+            </Typography>
+          </Box>
+        </Box>
+        <FormControl fullWidth size="small" sx={{ bgcolor: COLORS.surface, borderRadius: "8px" }}>
+          <InputLabel>Material</InputLabel>
+          <Select
+            label="Material"
+            value={material}
+            onChange={(e) => onMaterialChange(e.target.value)}
+          >
+            {materialOptions.map((opt) => (
+              <MenuItem key={opt} value={opt}>{opt}</MenuItem>
+            ))}
+          </Select>
+        </FormControl>
+        {!material && (
+          <Typography sx={{...hintSx,color:"red"}}>Select a material to continue.</Typography>
+        )}
+      </Box>
+
       {/* Two entry cards */}
       <Box
         sx={{
@@ -475,6 +542,7 @@ function LandingPage({
       >
         <LandingActionCard
           variant="outline"
+          disabled={!material}
           icon={<Inventory2OutlinedIcon sx={{ fontSize: 30 }} />}
           title="Criteria Wise RM Reconciliation "
           description="Browse stock from the system by Locker, Material, Shape, Quality and more, then reconcile."
@@ -482,6 +550,7 @@ function LandingPage({
         />
         <LandingActionCard
           variant="outline"
+          disabled={!material}
           icon={<QrCodeScannerIcon sx={{ fontSize: 30 }} />}
           title="Scan RM Bag to Reconciliation"
           description="Scan or paste one or many Bag numbers and reconcile them together in one go."
@@ -557,7 +626,8 @@ function LandingPage({
 
 /* ========================================================================
    Shared filter fields — used inside the left Drawer (Criteria Wise
-   mode). UNCHANGED.
+   mode). CHANGE: Material is now fixed (selected on the landing page)
+   and shown disabled. The other filters stay material-wise as before.
    ===================================================================== */
 function FilterPanelContent({
   locker,
@@ -596,10 +666,15 @@ function FilterPanelContent({
         </Select>
       </FormControl>
 
-      <FormControl fullWidth size="small" sx={fieldSx}>
+      {/* Material — selected on landing page, locked here */}
+      <FormControl fullWidth size="small" sx={fieldSx} disabled>
         <InputLabel>Material</InputLabel>
-        <Select label="Material" value={material} onChange={(e) => onMaterialChange(e.target.value)}>
-          <MenuItem value="">All</MenuItem>
+        <Select
+          label="Material"
+          value={material}
+          disabled
+          onChange={(e) => onMaterialChange(e.target.value)}
+        >
           {materialOptions.map((opt) => (
             <MenuItem key={opt} value={opt}>{opt}</MenuItem>
           ))}
@@ -646,6 +721,8 @@ function FilterPanelContent({
 /* ========================================================================
    Scan panel — the "Scan RM Bag to Reconciliation" drawer. Scanned Job
    No.'s are shown as small deletable chips instead of a modal list.
+   CHANGE: shows the selected material, and a bag is VALID only if it
+   belongs to that material.
    ===================================================================== */
 function ScanPanelContent({
   scanInput,
@@ -659,6 +736,7 @@ function ScanPanelContent({
   onClearAll,
   onScan,
   onClose,
+  material,
 }) {
   const isValid = (code) => validScannedCodes.includes(code);
 
@@ -728,6 +806,12 @@ function ScanPanelContent({
   />
 </Box>
 
+      {/* Selected material (fixed) */}
+      <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1.5 }}>
+        <Typography sx={{ fontSize: 12, fontWeight: 700, color: COLORS.textMuted }}>Material:</Typography>
+        <Chip label={material} size="small" sx={chipSx} />
+      </Box>
+
       <TextField
         autoFocus
         fullWidth
@@ -772,17 +856,7 @@ function ScanPanelContent({
         <Typography sx={hintInlineSx}>No items scanned yet.</Typography>
       ) : (
         <>
-          <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1, maxHeight: 260, overflowY: "auto", mb: 2 }}>
-            {scannedCodes.map((code) => (
-              <Chip
-                key={code}
-                label={code}
-                size="small"
-                onDelete={() => onRemove(code)}
-                sx={isValid(code) ? chipSx : chipDangerSx}
-              />
-            ))}
-          </Box>
+          
 
           <Box sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 1.5, mb: 2 }}>
             <Box sx={{ bgcolor: COLORS.successBg, borderRadius: "8px", px: 1.5, py: 1.25 }}>
@@ -798,6 +872,12 @@ function ScanPanelContent({
               </Typography>
             </Box>
           </Box>
+
+          {invalidScannedCodes.length > 0 && (
+            <Typography sx={{ ...hintSx, color: COLORS.danger, mb: 1.5 }}>
+              Invalid bags don't exist or don't belong to the selected material ({material}).
+            </Typography>
+          )}
 
           <Button
             fullWidth
@@ -820,13 +900,15 @@ function ScanPanelContent({
    ===================================================================== */
 export default function MaterialStockReconciliation() {
   /* ---- top-level mode:
-     'initial' -> landing page (Criteria Wise / Scan RM Bag / tolerance settings)
+     'initial' -> landing page (Material dropdown / Criteria Wise / Scan RM Bag / tolerance settings)
      'filter'  -> Criteria Wise view, driven by the Filters drawer
      'scan'    -> Scan RM Bag view, driven by the Scan drawer
      'history' -> just the Reconciliation History table ---- */
   const [mode, setMode] = useState("initial");
 
-  /* ---- filters (draft state) — Criteria Wise flow, UNCHANGED ---- */
+  /* ---- filters (draft state) — Criteria Wise flow.
+     `material` is now chosen on the landing page and stays fixed for
+     both the Criteria Wise and the Scan flows. ---- */
   const [locker, setLocker] = useState("");
   const [material, setMaterial] = useState("");
   const [subFilters, setSubFilters] = useState({});
@@ -896,7 +978,7 @@ export default function MaterialStockReconciliation() {
   };
 
   /* Filters drive the page ONLY when the user explicitly clicks Search.
-     ---- CRITERIA WISE FLOW — UNCHANGED ---- */
+     ---- CRITERIA WISE FLOW ---- */
   const handleSearchSummary = () => {
     setStockSummary(buildSummary(locker, material, subFilters));
     setResult(null);
@@ -904,18 +986,22 @@ export default function MaterialStockReconciliation() {
     setMode("filter");
   };
 
+  /* CHANGE: Clear no longer resets Material — it's locked from the
+     landing page. Only Locker + sub filters are cleared. */
   const handleClearFilters = () => {
     setLocker("");
-    setMaterial("");
     setSubFilters({});
   };
 
+  /* CHANGE: material is fixed, so it is no longer counted as an
+     "active" filter. */
   const activeFilterCount =
-    (locker ? 1 : 0) + (material ? 1 : 0) + Object.values(subFilters).filter(Boolean).length;
+    (locker ? 1 : 0) + Object.values(subFilters).filter(Boolean).length;
 
   /* Landing → "Criteria Wise": enter the filter view with the filter
-     drawer opened right away. ---- UNCHANGED ---- */
+     drawer opened right away (selected material stays). */
   const handleOpenSystemData = () => {
+    if (!material) return;
     handleClearFilters();
     setStockSummary(null);
     setResult(null);
@@ -929,6 +1015,7 @@ export default function MaterialStockReconciliation() {
      scan drawer opened right away, exactly like Criteria Wise opens the
      filter drawer. */
   const handleOpenScanFlow = () => {
+    if (!material) return;
     setScanInput("");
     setScannedCodes([]);
     setStockSummary(null);
@@ -969,39 +1056,42 @@ export default function MaterialStockReconciliation() {
     setScannedCodes((prev) => prev.filter((c) => c !== code));
   };
 
+  /* CHANGE: a scanned bag is VALID only if it exists AND belongs to the
+     material selected on the landing page. Anything else is INVALID. */
   const validScannedCodes = useMemo(
-    () => scannedCodes.filter((code) => RAW_DATA.some((r) => r.rfbag === code)),
-    [scannedCodes]
+    () =>
+      scannedCodes.filter((code) =>
+        RAW_DATA.some((r) => r.rfbag === code && r.itemname === material)
+      ),
+    [scannedCodes, material]
   );
   const invalidScannedCodes = useMemo(
-    () => scannedCodes.filter((code) => !RAW_DATA.some((r) => r.rfbag === code)),
-    [scannedCodes]
+    () =>
+      scannedCodes.filter(
+        (code) => !RAW_DATA.some((r) => r.rfbag === code && r.itemname === material)
+      ),
+    [scannedCodes, material]
   );
 
   /* Clicking "Scan" loads the data for every valid Job No. in the list,
      combined into one summary, and closes the drawer. */
   const handleScanAndView = () => {
     if (validScannedCodes.length === 0) return;
-    setStockSummary(buildSummaryFromScanCodes(validScannedCodes));
+    setStockSummary(buildSummaryFromScanCodes(validScannedCodes, material));
     setResult(null);
     setScanDrawerOpen(false);
   };
 
-  /* BUG FIX: once a scan summary is already on screen, removing (or
-     adding) a scanned chip — whether from the drawer or the header row —
-     must keep "TOTAL RM BAGS / PIECES / SYSTEM WEIGHT" in sync with only
-     the currently VALID scanned codes. Previously the summary stayed
-     frozen at whatever it was when "Scan" was last clicked, so removing
-     2 of 4 valid jobs still showed the old totals. This effect re-builds
-     the summary straight from validScannedCodes whenever the scanned
-     list changes, as long as we're in scan mode and a summary already
-     exists (i.e. the user has clicked "Scan" at least once). */
+  /* Keeps "TOTAL RM BAGS / PIECES / SYSTEM WEIGHT" in sync with only the
+     currently VALID scanned codes (for the selected material) whenever the
+     scanned list changes, as long as we're in scan mode and a summary
+     already exists. */
   useEffect(() => {
     if (mode !== "scan") return;
     setStockSummary((prevSummary) => {
       if (!prevSummary) return prevSummary; // no scan done yet — nothing to sync
       if (validScannedCodes.length === 0) return null; // nothing valid left — clear the summary
-      return buildSummaryFromScanCodes(validScannedCodes);
+      return buildSummaryFromScanCodes(validScannedCodes, material);
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [scannedCodes]);
@@ -1172,7 +1262,7 @@ export default function MaterialStockReconciliation() {
           "*": { boxSizing: "border-box" },
         }}
       >
-        {/* ================= FILTER DRAWER (Criteria Wise mode) — UNCHANGED ================= */}
+        {/* ================= FILTER DRAWER (Criteria Wise mode) ================= */}
         {mode === "filter" && (
           <Drawer
             anchor="left"
@@ -1219,6 +1309,7 @@ export default function MaterialStockReconciliation() {
               onClearAll={() => setScannedCodes([])}
               onScan={handleScanAndView}
               onClose={() => setScanDrawerOpen(false)}
+              material={material}
             />
           </Drawer>
         )}
@@ -1304,6 +1395,9 @@ export default function MaterialStockReconciliation() {
               setToleranceMetal={setToleranceMetal}
               toleranceOther={toleranceOther}
               setToleranceOther={setToleranceOther}
+              material={material}
+              onMaterialChange={handleMaterialChange}
+              materialOptions={materialOptions}
             />
           )}
 
