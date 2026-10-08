@@ -524,9 +524,9 @@ function LandingPage({
             ))}
           </Select>
         </FormControl>
-        {!material && (
+        {/* {!material && (
           <Typography sx={{...hintSx,color:"red"}}>Select a material to continue.</Typography>
-        )}
+        )} */}
       </Box>
 
       {/* Two entry cards */}
@@ -1601,7 +1601,7 @@ export default function MaterialStockReconciliation() {
                       InputProps={{ endAdornment: <Typography sx={{ fontSize: 12, color: COLORS.textMuted }}>gm</Typography> }}
                     />
                     <TextField
-                      label=" Singale Sticker Weight"
+                      label=" Single Sticker Weight"
                       required
                       fullWidth
                       size="small"
@@ -1611,7 +1611,7 @@ export default function MaterialStockReconciliation() {
                       InputProps={{ endAdornment: <Typography sx={{ fontSize: 12, color: COLORS.textMuted }}>gm</Typography> }}
                     />
                     <TextField
-                      label="Singale Polythene Weight"
+                      label="Single Polythene Weight"
                       required
                       fullWidth
                       size="small"
