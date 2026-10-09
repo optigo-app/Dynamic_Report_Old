@@ -46,7 +46,7 @@ import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import Inventory2OutlinedIcon from "@mui/icons-material/Inventory2Outlined";
 import TuneIcon from "@mui/icons-material/Tune";
 import { keyframes } from "@emotion/react";
- 
+
 
 /* ========================================================================
    COLOR TOKENS  (single source of truth — used everywhere via sx)
@@ -149,6 +149,7 @@ const outlineBtnSx = {
 const chipSx = { bgcolor: COLORS.purpleLight, color: COLORS.purpleDark, fontWeight: 500 };
 const chipSuccessSx = { bgcolor: COLORS.successBg, color: COLORS.success, fontWeight: 600 };
 const chipDangerSx = { bgcolor: COLORS.dangerBg, color: COLORS.danger, fontWeight: 600 };
+const chipWarningSx = { bgcolor: COLORS.warningBg, color: COLORS.warning, fontWeight: 600 };
 
 const tableContainerSx = {
   border: `1px solid ${COLORS.border}`,
@@ -361,7 +362,7 @@ function ResultLine({ label, value }) {
    Material dropdown on top + two entry points (Criteria Wise / Scan RM Bag)
    + tolerance settings.
    ===================================================================== */
-function LandingActionCard({ icon, title, description, onClick, variant="primary", disabled = false }) {
+function LandingActionCard({ icon, title, description, onClick, variant = "primary", disabled = false }) {
   const isPrimary = variant === "primary";
   return (
     <ButtonBase
@@ -388,12 +389,12 @@ function LandingActionCard({ icon, title, description, onClick, variant="primary
         "&:hover": disabled
           ? {}
           : {
-              transform: "translateY(-4px)",
-              boxShadow: isPrimary
-                ? "0 16px 34px rgba(108,63,197,0.38)"
-                : "0 12px 28px rgba(108,63,197,0.16)",
-              borderColor: isPrimary ? "transparent" : COLORS.purple,
-            },
+            transform: "translateY(-4px)",
+            boxShadow: isPrimary
+              ? "0 16px 34px rgba(108,63,197,0.38)"
+              : "0 12px 28px rgba(108,63,197,0.16)",
+            borderColor: isPrimary ? "transparent" : COLORS.purple,
+          },
       }}
     >
       <Box
@@ -476,8 +477,8 @@ function LandingPage({
       </Box>
 
       {/* NEW: Material dropdown — sits above the two entry cards */}
-      
-      <Box  
+
+      <Box
         sx={{
           width: "100%",
           maxWidth: 720,
@@ -488,10 +489,10 @@ function LandingPage({
           boxShadow: "0 4px 16px rgba(30,27,46,0.05)",
           maxWidth: 720, mb: 3
         }}
-      
-      
+
+
       >
-         <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, mb: 2.5 }}>
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, mb: 2.5 }}>
           <Box
             sx={{
               width: 40,
@@ -751,60 +752,60 @@ function ScanPanelContent({
         )}
       </Box>
       <Box
-  sx={{
-    position: "relative",
-    width: 90,
-    height: 90,
-    mx: "auto",          // centered
-    mb: 2.5,             // space before the input field
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-  }}
->
-  {/* corner brackets — only the outer corner is rounded */}
-  {[
-    { top: 0, left: 0, borderWidth: "3px 0 0 3px", borderTopLeftRadius: "8px" },
-    { top: 0, right: 0, borderWidth: "3px 3px 0 0", borderTopRightRadius: "8px" },
-    { bottom: 0, left: 0, borderWidth: "0 0 3px 3px", borderBottomLeftRadius: "8px" },
-    { bottom: 0, right: 0, borderWidth: "0 3px 3px 0", borderBottomRightRadius: "8px" },
-  ].map((pos, i) => (
-    <Box
-      key={i}
-      sx={{
-        position: "absolute",
-        width: 22,
-        height: 22,
-        borderStyle: "solid",
-        borderColor: "#6d5efc",
-        ...pos,
-      }}
-    />
-  ))}
+        sx={{
+          position: "relative",
+          width: 90,
+          height: 90,
+          mx: "auto",          // centered
+          mb: 2.5,             // space before the input field
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
+        {/* corner brackets — only the outer corner is rounded */}
+        {[
+          { top: 0, left: 0, borderWidth: "3px 0 0 3px", borderTopLeftRadius: "8px" },
+          { top: 0, right: 0, borderWidth: "3px 3px 0 0", borderTopRightRadius: "8px" },
+          { bottom: 0, left: 0, borderWidth: "0 0 3px 3px", borderBottomLeftRadius: "8px" },
+          { bottom: 0, right: 0, borderWidth: "0 3px 3px 0", borderBottomRightRadius: "8px" },
+        ].map((pos, i) => (
+          <Box
+            key={i}
+            sx={{
+              position: "absolute",
+              width: 22,
+              height: 22,
+              borderStyle: "solid",
+              borderColor: "#6d5efc",
+              ...pos,
+            }}
+          />
+        ))}
 
-  {/* moving scan line — gradient with faded ends, kept inside the brackets */}
-  <Box
-    sx={{
-      position: "absolute",
-      left: "14%",
-      width: "72%",
-      height: 2,
-      borderRadius: 1,
-      background:
-        "linear-gradient(90deg, transparent 0%, #6d5efc 20%, #6d5efc 80%, transparent 100%)",
-      boxShadow: "0 0 8px 2px rgba(109,94,252,0.45)",
-      animation: `${scanLineMove} 1.8s ease-in-out infinite`,
-    }}
-  />
+        {/* moving scan line — gradient with faded ends, kept inside the brackets */}
+        <Box
+          sx={{
+            position: "absolute",
+            left: "14%",
+            width: "72%",
+            height: 2,
+            borderRadius: 1,
+            background:
+              "linear-gradient(90deg, transparent 0%, #6d5efc 20%, #6d5efc 80%, transparent 100%)",
+            boxShadow: "0 0 8px 2px rgba(109,94,252,0.45)",
+            animation: `${scanLineMove} 1.8s ease-in-out infinite`,
+          }}
+        />
 
-  <QrCodeScannerIcon
-    sx={{
-      fontSize: 42,
-      color: "#6d5efc",
-      animation: `${iconPulse} 1.8s ease-in-out infinite`,
-    }}
-  />
-</Box>
+        <QrCodeScannerIcon
+          sx={{
+            fontSize: 42,
+            color: "#6d5efc",
+            animation: `${iconPulse} 1.8s ease-in-out infinite`,
+          }}
+        />
+      </Box>
 
       {/* Selected material (fixed) */}
       <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1.5 }}>
@@ -856,7 +857,7 @@ function ScanPanelContent({
         <Typography sx={hintInlineSx}>No items scanned yet.</Typography>
       ) : (
         <>
-          
+
 
           <Box sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 1.5, mb: 2 }}>
             <Box sx={{ bgcolor: COLORS.successBg, borderRadius: "8px", px: 1.5, py: 1.25 }}>
@@ -899,36 +900,22 @@ function ScanPanelContent({
    COMPONENT
    ===================================================================== */
 export default function MaterialStockReconciliation() {
-  /* ---- top-level mode:
-     'initial' -> landing page (Material dropdown / Criteria Wise / Scan RM Bag / tolerance settings)
-     'filter'  -> Criteria Wise view, driven by the Filters drawer
-     'scan'    -> Scan RM Bag view, driven by the Scan drawer
-     'history' -> just the Reconciliation History table ---- */
   const [mode, setMode] = useState("initial");
 
-  /* ---- filters (draft state) — Criteria Wise flow.
-     `material` is now chosen on the landing page and stays fixed for
-     both the Criteria Wise and the Scan flows. ---- */
   const [locker, setLocker] = useState("");
   const [material, setMaterial] = useState("");
   const [subFilters, setSubFilters] = useState({});
 
-  /* ---- filter drawer (Criteria Wise mode only) ---- */
   const [filterOpen, setFilterOpen] = useState(false);
 
-  /* ---- stock summary snapshot: null until either a filter search or a
-     scan selection populates it ---- */
   const [stockSummary, setStockSummary] = useState(null);
 
-  /* ---- scan flow (now drawer-based, not a modal) ---- */
   const [scanDrawerOpen, setScanDrawerOpen] = useState(false);
   const [scanInput, setScanInput] = useState("");
   const [scannedCodes, setScannedCodes] = useState([]);
 
-  /* ---- NEW: info modal that lists all scanned Job No.'s (scan mode) ---- */
   const [scanInfoOpen, setScanInfoOpen] = useState(false);
 
-  /* ---- physical measurement ---- */
   const [grossWeight, setGrossWeight] = useState("");
   const [trayWeight, setTrayWeight] = useState("");
   const [stickerWeight, setStickerWeight] = useState("");
@@ -936,17 +923,13 @@ export default function MaterialStockReconciliation() {
   const [remarks, setRemarks] = useState("");
   const [result, setResult] = useState(null);
 
-  /* ---- tolerance (editable — set from the landing page, also visible
-     via the info icon next to "Reconciliation Result") ---- */
   const [toleranceMetal, setToleranceMetal] = useState(0.02);
   const [toleranceOther, setToleranceOther] = useState(0.01);
   const [tolAnchor, setTolAnchor] = useState(null);
 
-  /* ---- saved reconciliation log ---- */
   const [history, setHistory] = useState([]);
   const [reconciledIds, setReconciledIds] = useState(new Set());
 
-  /* ---- Reconciliation History tabs: 0 = all history, 1 = today's only ---- */
   const [historyTab, setHistoryTab] = useState(0);
 
   /* ------------------------------------------------------------------- */
@@ -977,8 +960,6 @@ export default function MaterialStockReconciliation() {
     setSubFilters((prev) => ({ ...prev, [key]: val }));
   };
 
-  /* Filters drive the page ONLY when the user explicitly clicks Search.
-     ---- CRITERIA WISE FLOW ---- */
   const handleSearchSummary = () => {
     setStockSummary(buildSummary(locker, material, subFilters));
     setResult(null);
@@ -986,20 +967,14 @@ export default function MaterialStockReconciliation() {
     setMode("filter");
   };
 
-  /* CHANGE: Clear no longer resets Material — it's locked from the
-     landing page. Only Locker + sub filters are cleared. */
   const handleClearFilters = () => {
     setLocker("");
     setSubFilters({});
   };
 
-  /* CHANGE: material is fixed, so it is no longer counted as an
-     "active" filter. */
   const activeFilterCount =
     (locker ? 1 : 0) + Object.values(subFilters).filter(Boolean).length;
 
-  /* Landing → "Criteria Wise": enter the filter view with the filter
-     drawer opened right away (selected material stays). */
   const handleOpenSystemData = () => {
     if (!material) return;
     handleClearFilters();
@@ -1009,11 +984,6 @@ export default function MaterialStockReconciliation() {
     setMode("filter");
   };
 
-  /* ---- scan flow handlers (drawer-based) ---- */
-
-  /* Landing → "Scan RM Bag to Reconciliation": enter scan mode with the
-     scan drawer opened right away, exactly like Criteria Wise opens the
-     filter drawer. */
   const handleOpenScanFlow = () => {
     if (!material) return;
     setScanInput("");
@@ -1025,10 +995,6 @@ export default function MaterialStockReconciliation() {
     setMode("scan");
   };
 
-  /* A physical barcode scanner behaves like a fast keyboard, ending each
-     scan with an Enter keystroke — the field is a textarea, so the user
-     (or the scanner) can also enter several Job No.'s at once, separated
-     by commas or new lines. */
   const parseAndAddScannedCodes = () => {
     const parts = scanInput
       .split(/[\n,]+/)
@@ -1056,8 +1022,6 @@ export default function MaterialStockReconciliation() {
     setScannedCodes((prev) => prev.filter((c) => c !== code));
   };
 
-  /* CHANGE: a scanned bag is VALID only if it exists AND belongs to the
-     material selected on the landing page. Anything else is INVALID. */
   const validScannedCodes = useMemo(
     () =>
       scannedCodes.filter((code) =>
@@ -1073,8 +1037,6 @@ export default function MaterialStockReconciliation() {
     [scannedCodes, material]
   );
 
-  /* Clicking "Scan" loads the data for every valid Job No. in the list,
-     combined into one summary, and closes the drawer. */
   const handleScanAndView = () => {
     if (validScannedCodes.length === 0) return;
     setStockSummary(buildSummaryFromScanCodes(validScannedCodes, material));
@@ -1082,21 +1044,16 @@ export default function MaterialStockReconciliation() {
     setScanDrawerOpen(false);
   };
 
-  /* Keeps "TOTAL RM BAGS / PIECES / SYSTEM WEIGHT" in sync with only the
-     currently VALID scanned codes (for the selected material) whenever the
-     scanned list changes, as long as we're in scan mode and a summary
-     already exists. */
   useEffect(() => {
     if (mode !== "scan") return;
     setStockSummary((prevSummary) => {
-      if (!prevSummary) return prevSummary; // no scan done yet — nothing to sync
-      if (validScannedCodes.length === 0) return null; // nothing valid left — clear the summary
+      if (!prevSummary) return prevSummary;
+      if (validScannedCodes.length === 0) return null;
       return buildSummaryFromScanCodes(validScannedCodes, material);
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [scannedCodes]);
 
-  /* Auto-close the info modal when there are no valid scanned jobs left. */
   useEffect(() => {
     if (validScannedCodes.length === 0) setScanInfoOpen(false);
   }, [validScannedCodes.length]);
@@ -1144,34 +1101,44 @@ export default function MaterialStockReconciliation() {
 
   const handleSaveReconciliation = () => {
     if (!result) return;
-    const record = {
-      id: history.length + 1,
-      dateTime: nowStamp(),
+
+    const batchId = Date.now();
+    const dateTime = nowStamp();
+
+    // one history record per bag (row), not one bulk record
+    const bagRecords = stockSummary.rows.map((r) => ({
+      id: `${batchId}-${r.id}`,
+      rowId: r.id, // NEW: links this record back to its bag row
+      dateTime,
       user: "Admin",
-      material: stockSummary.material || "All",
-      shape: stockSummary.subFilters?.shape || stockSummary.subFilters?.type || "—",
-      size: stockSummary.subFilters?.size || "—",
-      lotNo: stockSummary.subFilters?.lotno || stockSummary.subFilters?.lot || "—",
-      filters: stockSummary.subFilters,
-      totalBags: stockSummary.bags,
-      totalPieces: stockSummary.pieces,
-      systemWeight: result.systemWeight,
+      rmBag: r.rfbag,
+      material: r.itemname,
+      shape: r.shape || "—",
+      size: r.size || "—",
+      lotNo: r.rfbag,
+      systemWeight: Number(r.TotalRemainingWeight) || 0,
+      totalPieces: Number(r.TotalRemainingPcs) || 0,
+      totalBags: 1,
+      status: result.status,
+      remarks,
+      reconciledBy: r.istoreCust_Customercode || "—",
+
       grossWeight: result.grossWeight,
       stickerWeight: result.stickerWeight,
       polytheneWeight: result.polytheneWeight,
       trayWeight: result.trayWeight,
-      remarks,
       physicalNet: result.physicalNet,
       difference: result.difference,
       tolerance: result.tolerance,
-      status: result.status,
-    };
-    setHistory((prev) => [record, ...prev]);
+    }));
+
+    setHistory((prev) => [...bagRecords, ...prev]);
     setReconciledIds((prev) => {
       const next = new Set(prev);
       stockSummary.rows.forEach((r) => next.add(r.id));
       return next;
     });
+
     setGrossWeight("");
     setTrayWeight("");
     setStickerWeight("");
@@ -1181,7 +1148,6 @@ export default function MaterialStockReconciliation() {
     setStockSummary(null);
   };
 
-  /* Direct download of a saved reconciliation (no popup). */
   const handleDownloadRecord = (r) => {
     const rows = [
       ["Date & Time", r.dateTime],
@@ -1227,13 +1193,9 @@ export default function MaterialStockReconciliation() {
   }, [stockSummary]);
 
   const showWorkspace = mode === "filter" || mode === "scan";
-  // Summary/measurement/result show only after Search (filter mode) or Scan (scan mode) is clicked
   const showSummaryBlock = showWorkspace && !!stockSummary;
   const showHistoryBlock = mode === "filter" || mode === "scan" || mode === "history";
 
-  /* Today's date, same "DD Mon YYYY" format nowStamp() starts each
-     record with — used to split the History table into "History" and
-     "Today's Reconciliation" tabs. */
   const todayDateStr = useMemo(
     () =>
       new Date().toLocaleDateString("en-GB", {
@@ -1243,11 +1205,50 @@ export default function MaterialStockReconciliation() {
       }),
     []
   );
-  const todaysHistory = useMemo(
-    () => history.filter((h) => h.dateTime.startsWith(todayDateStr)),
-    [history, todayDateStr]
+
+  /* NEW: which bags are listed in the history table.
+     - Criteria Wise mode -> every bag of the selected material
+     - Scan mode          -> every valid scanned bag */
+  const historyBaseRows = useMemo(() => {
+    if (!material) return [];
+    if (mode === "scan") {
+      return RAW_DATA.filter(
+        (r) => r.itemname === material && validScannedCodes.includes(r.rfbag)
+      );
+    }
+    return RAW_DATA.filter((r) => r.itemname === material);
+  }, [mode, material, validScannedCodes]);
+
+  /* NEW: merge each listed bag with its latest saved reconciliation (if any).
+     `history` is newest-first, so the first match is the latest. */
+  const historyRows = useMemo(
+    () =>
+      historyBaseRows.map((r) => {
+        const rec = history.find((h) => h.rowId === r.id);
+        return {
+          key: r.id,
+          dateTime: rec ? rec.dateTime : "—",
+          rmBag: r.rfbag,
+          material: r.itemname,
+          shape: r.shape || "—",
+          size: r.size || "—",
+          lotNo: r.rfbag,
+          systemWeight: Number(r.TotalRemainingWeight) || 0,
+          // reconciled: !!rec && rec.status === "ACCEPT",
+          status: !rec ? "PENDING" : rec.status === "ACCEPT" ? "DONE" : "REJECTED",
+          remarks: rec ? rec.remarks : "",
+          reconciledBy: r.istoreCust_Customercode || "—",
+          doneToday: !!rec && rec.dateTime.startsWith(todayDateStr),
+        };
+      }),
+    [historyBaseRows, history, todayDateStr]
   );
-  const historyRowsToShow = historyTab === 0 ? history : todaysHistory;
+
+  const todaysHistory = useMemo(
+    () => historyRows.filter((h) => h.doneToday),
+    [historyRows]
+  );
+  const historyRowsToShow = historyTab === 0 ? historyRows : todaysHistory;
 
   /* ----------------------------------------------------------------- */
   return (
@@ -1314,8 +1315,7 @@ export default function MaterialStockReconciliation() {
           </Drawer>
         )}
 
-        {/* ================= SCANNED JOBS INFO MODAL (Scan RM Bag mode) =================
-            Fixed 300px x 500px. Content scrolls inside when there are many jobs. */}
+        {/* ================= SCANNED JOBS INFO MODAL (Scan RM Bag mode) ================= */}
         {mode === "scan" && (
           <Dialog
             open={scanInfoOpen}
@@ -1353,14 +1353,7 @@ export default function MaterialStockReconciliation() {
               </IconButton>
             </Box>
 
-            <Box
-              sx={{
-                flex: 1,
-                minHeight: 0,
-                overflow: "auto", // scrolls (horizontal + vertical) when content is larger than the fixed modal
-                p: 2,
-              }}
-            >
+            <Box sx={{ flex: 1, minHeight: 0, overflow: "auto", p: 2 }}>
               <Box
                 sx={{
                   display: "flex",
@@ -1386,7 +1379,6 @@ export default function MaterialStockReconciliation() {
 
         {/* ================= MAIN CONTENT ================= */}
         <Box sx={{ flex: 1, minWidth: 0, p: 1.5, pt: 1 }}>
-          {/* Landing page */}
           {mode === "initial" && (
             <LandingPage
               onSystemData={handleOpenSystemData}
@@ -1401,7 +1393,6 @@ export default function MaterialStockReconciliation() {
             />
           )}
 
-          {/* Back button — filter/scan/history modes only */}
           {mode !== "initial" && (
             <Tooltip title="Back" arrow>
               <IconButton
@@ -1424,7 +1415,6 @@ export default function MaterialStockReconciliation() {
             </Tooltip>
           )}
 
-          {/* Page header — content changes with mode */}
           {mode !== "initial" && (
             <Box sx={{ display: "flex", alignItems: "center", justifyContent: "flex-start", mb: 1, gap: 1.5, marginLeft: "6px", flexWrap: "wrap" }}>
               {mode === "filter" && (
@@ -1457,8 +1447,6 @@ export default function MaterialStockReconciliation() {
                 {mode === "scan" ? "" : "Material Stock Reconciliation"}
               </Typography>
 
-              {/* Scan mode: instead of listing every scanned Job No. inline, show an
-                  info icon — clicking it opens a fixed-size modal with the full list. */}
               {mode === "scan" && validScannedCodes.length > 0 && (
                 <Tooltip title="View scanned Job No.'s" arrow>
                   <IconButton
@@ -1483,7 +1471,6 @@ export default function MaterialStockReconciliation() {
             </Box>
           )}
 
-          {/* System Stock Summary + Physical Measurement + Result (filter or scan mode) */}
           {showSummaryBlock && (
             <>
               <Paper
@@ -1500,15 +1487,13 @@ export default function MaterialStockReconciliation() {
                   <Typography sx={{ fontSize: 16, fontWeight: 600, color: "#6c3fc5" }}>
                     System Stock Summary
                   </Typography>
-                  {mode !== "scan" &&(
-                     <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.75, justifyContent: "flex-end" }}>
-                     {summaryChips.map((c, i) => (
-                       <Chip key={i} label={c} size="small" sx={{ ...chipSx, backgroundColor: "#f3f4f6", fontWeight: 500 }} />
-                     ))}
-                   </Box>
-
+                  {mode !== "scan" && (
+                    <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.75, justifyContent: "flex-end" }}>
+                      {summaryChips.map((c, i) => (
+                        <Chip key={i} label={c} size="small" sx={{ ...chipSx, backgroundColor: "#f3f4f6", fontWeight: 500 }} />
+                      ))}
+                    </Box>
                   )}
-                 
                 </Box>
 
                 <Box
@@ -1736,7 +1721,7 @@ export default function MaterialStockReconciliation() {
             </>
           )}
 
-          {/* Reconciliation History — tabbed: "History" (all) vs "Today's Reconciliation" */}
+          {/* Reconciliation History — all bags (criteria: material bags, scan: scanned bags) */}
           {showHistoryBlock && (
             <Paper sx={cardSx} elevation={0}>
               <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 1, mb: 1 }}>
@@ -1754,7 +1739,7 @@ export default function MaterialStockReconciliation() {
                 }}
               >
                 <Tab
-                  label="History"
+                  label={`History${historyRows.length ? ` (${historyRows.length})` : ""}`}
                   sx={{
                     minHeight: 36,
                     textTransform: "none",
@@ -1788,25 +1773,25 @@ export default function MaterialStockReconciliation() {
                       <TableCell sx={theadCellSx}>Size</TableCell>
                       <TableCell sx={theadCellSx}>Lot No</TableCell>
                       <TableCell sx={theadCellSx} align="right">System Weight</TableCell>
-                       
-                 
                       <TableCell sx={theadCellSx}>Status</TableCell>
                       <TableCell sx={theadCellSx}>Remarks</TableCell>
-                      <TableCell sx={theadCellSx} align="center">Reconciliation By</TableCell> 
+                      <TableCell sx={theadCellSx}>Reconciliation By</TableCell>
                     </TableRow>
                   </TableHead>
                   <TableBody>
                     {historyRowsToShow.length === 0 && (
                       <TableRow>
-                        <TableCell colSpan={11} align="center" sx={{ color: COLORS.textMuted, py: 3 }}>
-                          {historyTab === 0 ? "No reconciliations saved yet." : "No reconciliations done today yet."}
+                        <TableCell colSpan={10} align="center" sx={{ color: COLORS.textMuted, py: 3 }}>
+                          {historyTab === 0
+                            ? mode === "scan"
+                              ? "No scanned bags yet."
+                              : "No bags found for this material."
+                            : "No reconciliations done today yet."}
                         </TableCell>
                       </TableRow>
                     )}
                     {historyRowsToShow.map((h) => (
-                      
-                      <TableRow key={h.id}>
-                        {console.log("TCL: MaterialStockReconciliation ->h ", h)}
+                      <TableRow key={h.key}>
                         <TableCell sx={tbodyCellSx}>{h.dateTime}</TableCell>
                         <TableCell sx={tbodyCellSx}>{h.rmBag}</TableCell>
                         <TableCell sx={linkCellSx}>{h.material}</TableCell>
@@ -1814,20 +1799,23 @@ export default function MaterialStockReconciliation() {
                         <TableCell sx={tbodyCellSx}>{h.size}</TableCell>
                         <TableCell sx={tbodyCellSx}>{h.lotNo}</TableCell>
                         <TableCell sx={tbodyCellSx} align="right">{fmt(h.systemWeight)}</TableCell>
-                        {/* <TableCell sx={tbodyCellSx} align="right">{fmt(h.physicalNet)}</TableCell> */}
-                        {/* <TableCell sx={tbodyCellSx} align="right">
-                          {h.difference >= 0 ? "+" : ""}
-                          {fmt(h.difference)}
-                        </TableCell> */}
                         <TableCell sx={tbodyCellSx}>
-                          <Chip size="small" label={h.status === "ACCEPT" ? "PASS" : "FAIL"} sx={h.status === "ACCEPT" ? chipSuccessSx : chipDangerSx} />
+                          <Chip
+                            size="small"
+                            label={
+                              h.status === "DONE" ? "Done" : h.status === "REJECTED" ? "Rejected" : "Pending"
+                            }
+                            sx={
+                              h.status === "DONE"
+                                ? chipSuccessSx
+                                : h.status === "REJECTED"
+                                  ? chipDangerSx
+                                  : chipWarningSx
+                            }
+                          />
                         </TableCell>
                         <TableCell sx={tbodyCellSx}>{h.remarks || "—"}</TableCell>
-                        <TableCell sx={tbodyCellSx} align="center">
-                          <IconButton size="small" onClick={() => handleDownloadRecord(h)}>
-                            <DownloadIcon fontSize="small" />
-                          </IconButton>
-                        </TableCell>
+                        <TableCell sx={tbodyCellSx}>{h.reconciledBy}</TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
