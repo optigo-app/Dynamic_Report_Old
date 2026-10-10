@@ -859,16 +859,19 @@ const TAB_LABELS = [
 */
 const PCS_DETAIL_COLUMNS = [
   { field: 'promiseDate', headerName: 'Promise Date', flex: 1, minWidth: 120, align: 'center', headerAlign: 'center' },
-  { field: 'remDays', headerName: 'Rem. Days', flex: 1.0, minWidth: 100, align: 'center', headerAlign: 'center' }, 
+  { field: 'remDays', headerName: 'Rem. Days', flex: 0.7, minWidth: 70, align: 'center', headerAlign: 'center' },
   { field: 'location', headerName: 'Location', flex: 1.1, minWidth: 120 },
-  { field: 'custCode', headerName: 'Cust Code', flex: 1, minWidth: 120 },          
+  { field: 'design', headerName: 'Design No.', flex: 1, minWidth: 120 },
+  { field: 'custCode', headerName: 'Cust Code', flex: 1, minWidth: 120 },
   { field: 'jobNo', headerName: 'Job No', flex: 1, minWidth: 120 },
-  { field: 'Pcs', headerName: 'Pcs', flex: 0.8, minWidth: 90 },
-  { field: 'design', headerName: 'Design No.', flex: 1.1, minWidth: 130 },
+  { field: 'Pcs', headerName: 'Pcs', flex: 0.7, minWidth: 70 },
+
+  // NEW: two columns after Pcs
+  { field: 'grossWt', headerName: 'Gross Wt', flex: 0.8, minWidth: 80, align: 'right', headerAlign: 'center' },
+  { field: 'netWt', headerName: 'Net Wt', flex: 0.8, minWidth: 80, align: 'right', headerAlign: 'center' },
+
   { field: 'status', headerName: 'Current Status', flex: 1.4, minWidth: 140 },
-  { field: 'workerName', headerName: 'Worker Name', flex: 1.2, minWidth: 140 },
-  // { field: 'grossWt', headerName: 'Gross Wt', flex: 0.9, minWidth: 100, align: 'right', headerAlign: 'center' },
-  // { field: 'netWt', headerName: 'Net Wt', flex: 0.9, minWidth: 100, align: 'right', headerAlign: 'center' },
+  { field: 'workerName', headerName: 'Worker Name', flex: 1.1, minWidth: 120 },
 ];
 const WIPMis = () => {
   const [data, setData] = useState(null);
