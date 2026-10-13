@@ -41,6 +41,7 @@ import './WIPMis.scss';
 import DescriptionOutlinedIcon from '@mui/icons-material/DescriptionOutlined';
 import TextField from '@mui/material/TextField';
 import SearchIcon from '@mui/icons-material/Search';
+import FileDownloadOutlinedIcon from '@mui/icons-material/FileDownloadOutlined';
 
 /* ---------------------------------------------------------------- */
 /* Helpers (DATA LOGIC — UNCHANGED)                                   */
@@ -1109,6 +1110,25 @@ const WIPMis = () => {
     setPcsDetail(null);
     setPcsSearch('');
   };
+  // NEW: export the popup table (respects the current search filter)
+const handleExportPcsDetail = () => {
+  if (!pcsDetail || pcsDetailFilteredRows.length === 0) return;
+
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(
+    wb,
+    XLSX.utils.aoa_to_sheet(buildSheetAOA(PCS_DETAIL_COLUMNS, pcsDetailFilteredRows, null)),
+    'Details'
+  );
+
+  // File names can't contain these characters, and the title has "—"
+  const safeTitle = String(pcsDetail.title)
+    .replace(/[\\/:*?"<>|—]/g, '')
+    .replace(/\s+/g, '_')
+    .slice(0, 60);
+
+  XLSX.writeFile(wb, `${safeTitle}_${new Date().toISOString().slice(0, 10)}.xlsx`);
+};
 
   const buildPivotColumns = (rowLabel, colKeys, detailCfg) => [
     { field: 'row', headerName: rowLabel, flex: 1.4, minWidth: 160 },
@@ -1659,24 +1679,37 @@ const WIPMis = () => {
               columns={PCS_DETAIL_COLUMNS}
               rows={pcsDetailFilteredRows}
               headerFilters={
-                <TextField
-                  size="small"
-                  placeholder="Search job, design, status, worker..."
-                  value={pcsSearch}
-                  onChange={(e) => setPcsSearch(e.target.value)}
-                  autoFocus
-                  InputProps={{
-                    startAdornment: (
-                      <SearchIcon fontSize="small" style={{ marginRight: 6, color: '#8a90a6' }} />
-                    ),
-                    endAdornment: pcsSearch ? (
-                      <IconButton size="small" onClick={() => setPcsSearch('')} title="Clear">
-                        <CloseIcon fontSize="small" />
-                      </IconButton>
-                    ) : null,
-                  }}
-                  sx={{ minWidth: 330 }}
-                />
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <TextField
+                    size="small"
+                    placeholder="Search job, design, status, worker..."
+                    value={pcsSearch}
+                    onChange={(e) => setPcsSearch(e.target.value)}
+                    autoFocus
+                    InputProps={{
+                      startAdornment: (
+                        <SearchIcon fontSize="small" style={{ marginRight: 6, color: '#8a90a6' }} />
+                      ),
+                      endAdornment: pcsSearch ? (
+                        <IconButton size="small" onClick={() => setPcsSearch('')} title="Clear">
+                          <CloseIcon fontSize="small" />
+                        </IconButton>
+                      ) : null,
+                    }}
+                    sx={{ minWidth: 330 }}
+                  />
+              
+                  {/* NEW: Excel export */}
+                  <IconButton
+                    className="wip-mis__export-btn"
+                    onClick={handleExportPcsDetail}
+                    size="small"
+                    title="Export to Excel"
+                    disabled={pcsDetailFilteredRows.length === 0}
+                  >
+                    <DescriptionOutlinedIcon fontSize="small" />
+                  </IconButton>
+                </Box>
               }
             />
           )}

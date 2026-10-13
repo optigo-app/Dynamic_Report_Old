@@ -17,7 +17,12 @@ import {
   TableRow,
   TableCell,
   TableContainer,
+  Checkbox,
   Chip,
+  CircularProgress,
+  Autocomplete,
+  TablePagination,
+  createFilterOptions,
   Divider,
   IconButton,
   Popover,
@@ -46,6 +51,7 @@ import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import Inventory2OutlinedIcon from "@mui/icons-material/Inventory2Outlined";
 import TuneIcon from "@mui/icons-material/Tune";
 import { keyframes } from "@emotion/react";
+import { getMasterMaterialData, GetmaterialWiseData } from "../../API/GetRmBulkReconcilationData/GetRmBulkReconcilationData";
 
 
 /* ========================================================================
@@ -171,126 +177,92 @@ const linkCellSx = { ...tbodyCellSx, color: COLORS.purple, fontWeight: 600 };
 const fieldSx = { mb: 1.75 };
 
 /* ========================================================================
-   DUMMY DATA
+   API HELPERS
+   - toArray:      accepts either a plain array or a wrapped response
+   - normalizeRow: maps ONE API row (GetmaterialWiseData) to the field names
+                   the rest of this screen already uses. If your API returns
+                   different field names for Diamond / Color Stone / Mount /
+                   Finding, adjust ONLY this function.
    ===================================================================== */
-const RAW_DATA = [
-  {
-    itemname: "DIAMOND", rfbag: "0000005799", MaterialType: "Labgrown", master_item_id: 3,
-    Mountcategoryname: "", supplier: "Customer", shape: "ASSCHER", quality: "RJ01",
-    color: "RED-S", size: "1.55 mm", job: "", findingAccessories: "", findingtypename: "",
-    istoreCust_Customercode: "orail25", materialtypename: "Polki", TotalRemainingPcs: 2,
-    TotalRemainingWeight: 4, Locker: "Locker1", certno: "DIADIA", certurl: "", inscription: "DIADIA",
-    salerate: 10, length: "12", width: "11", depth: "10", depth_per: 15, table_per: 15,
-    cutname: "round cut", polishname: "Good", symmetryname: "Good", gridlename: "Extremely Thin",
-    fluorescencename: "Faint", culetname: "Very Small", labname: "IGI",
-  },
-  {
-    itemname: "DIAMOND", rfbag: "0000005801", MaterialType: "Natural", master_item_id: 3,
-    Mountcategoryname: "", supplier: "Company", shape: "Baguatte", quality: "check2",
-    color: "A1", size: "1.70 mm", job: "", findingAccessories: "", findingtypename: "",
-    istoreCust_Customercode: "orail25", materialtypename: "Polki", TotalRemainingPcs: 2,
-    TotalRemainingWeight: 4, Locker: "Locker1", certno: "sasasas", certurl: "chatgpt.com",
-    inscription: "sasasas", salerate: 100, length: "11", width: "12", depth: "17",
-    depth_per: 12, table_per: 12, cutname: "Oval Cut", polishname: "Poor", symmetryname: "Good",
-    gridlename: "Extremely Thin", fluorescencename: "Very Strong", culetname: "Large", labname: "LAB1",
-  },
-  {
-    itemname: "DIAMOND", rfbag: "0000005802", MaterialType: "", master_item_id: 3,
-    Mountcategoryname: "", supplier: "Manufacturer", shape: "A style 1", quality: "VVS1-M",
-    color: "RED-S", size: "5.5-5.9", job: "", findingAccessories: "", findingtypename: "",
-    istoreCust_Customercode: "orail25", materialtypename: "", TotalRemainingPcs: 2,
-    TotalRemainingWeight: 4, Locker: "Locker1", certno: "", certurl: "", inscription: "",
-    salerate: 0, length: "", width: "", depth: "", depth_per: 0, table_per: 0, cutname: "",
-    polishname: "", symmetryname: "", gridlename: "", fluorescencename: "", culetname: "", labname: "",
-  },
-  {
-    itemname: "DIAMOND", rfbag: "0000005806", MaterialType: "Labgrown", master_item_id: 3,
-    Mountcategoryname: "", supplier: "Manufacturer", shape: "ABCD", quality: "VVS1-M",
-    color: "RED-S", size: "C:2", job: "", findingAccessories: "", findingtypename: "",
-    istoreCust_Customercode: "orail25", materialtypename: "", TotalRemainingPcs: 12,
-    TotalRemainingWeight: 12.5, Locker: "Locker1", certno: "", certurl: "", inscription: "",
-    salerate: 40.5, length: "", width: "", depth: "", depth_per: 0, table_per: 0, cutname: "",
-    polishname: "", symmetryname: "", gridlename: "", fluorescencename: "", culetname: "", labname: "",
-  },
-  {
-    itemname: "Colorstone", rfbag: "0000005812", master_item_id: 3, MaterialType: "",
-    Mountcategoryname: "", supplier: "Company", shape: "ABCD", quality: "VVS1-M",
-    color: "RED-S", size: "C:2", job: "", findingAccessories: "", findingtypename: "",
-    istoreCust_Customercode: "orail25", materialtypename: "", TotalRemainingPcs: 12,
-    TotalRemainingWeight: 12.5, Locker: "Locker1", certno: "", certurl: "", inscription: "",
-    salerate: 40.5, length: "", width: "", depth: "", depth_per: 0, table_per: 0, cutname: "",
-    polishname: "", symmetryname: "", gridlename: "", fluorescencename: "", culetname: "", labname: "",
-  },
-  {
-    itemname: "Metal", rfbag: "0000005845", MaterialType: "Gold", master_item_id: 3,
-    Mountcategoryname: "", supplier: "Customer", shape: "ALLOY", quality: "18k",
-    color: "Ayellow", size: "71.000", job: "", findingAccessories: "", findingtypename: "",
-    istoreCust_Customercode: "orail25", materialtypename: "", TotalRemainingPcs: 12,
-    TotalRemainingWeight: 12.5, Locker: "Locker1", certno: "", certurl: "", inscription: "",
-    salerate: 40.5, length: "", width: "", depth: "", depth_per: 0, table_per: 0, cutname: "",
-    polishname: "", symmetryname: "", gridlename: "", fluorescencename: "", culetname: "", labname: "",
-  },
-  {
-    itemname: "Mount", rfbag: "0000005845", master_item_id: 3, MaterialType: "Silver",
-    Mountcategoryname: "check2", supplier: "Manufacturer", shape: "ALLOY", quality: "24K",
-    color: "Ayellow", size: "71.000", job: "", findingAccessories: "", findingtypename: "",
-    istoreCust_Customercode: "orail25", materialtypename: "", TotalRemainingPcs: 12,
-    TotalRemainingWeight: 12.5, Locker: "Locker1", certno: "", certurl: "", inscription: "",
-    salerate: 40.5, length: "", width: "", depth: "", depth_per: 0, table_per: 0, cutname: "",
-    polishname: "", symmetryname: "", gridlename: "", fluorescencename: "", culetname: "", labname: "",
-  },
-  {
-    itemname: "Finding", rfbag: "0000005845", MaterialType: "Gold", master_item_id: 3,
-    Mountcategoryname: "check2", supplier: "Manufacturer", shape: "ALLOY", quality: "24K",
-    color: "Ayellow", size: "71.000", job: "", findingAccessories: "HOOK12", findingtypename: "Chain",
-    istoreCust_Customercode: "orail25", materialtypename: "", TotalRemainingPcs: 12,
-    TotalRemainingWeight: 12.5, Locker: "Locker1", certno: "", certurl: "", inscription: "",
-    salerate: 40.5, length: "", width: "", depth: "", depth_per: 0, table_per: 0, cutname: "",
-    polishname: "", symmetryname: "", gridlename: "", fluorescencename: "", culetname: "", labname: "",
-  },
-].map((row, i) => ({ ...row, id: i }));
+const toArray = (res) => {
+  if (Array.isArray(res)) return res;
+  if (Array.isArray(res?.data)) return res.data;
+  if (Array.isArray(res?.Data)) return res.Data;
+  return [];
+};
 
-const DIAMOND_GROUP = ["DIAMOND", "Colorstone", "MISC"];
+const normalizeRow = (r, materialName, index) => ({
+  ...r, // keep every original API field available
+  id: r.id ?? index,
+  itemname: materialName, // data is fetched per material, so this always matches the selection
+  rfbag: r.rfbag ?? "",
+  MaterialType: r.MaterialType ?? r.typename ?? "",
+  shape: r.shape ?? r.shapename ?? "",
+  quality: r.quality ?? r.qualityname ?? r.purity ?? "",
+  color: r.color ?? r.colorname ?? "",
+  size: r.size ?? r.itemsize ?? "",
+  supplier: r.supplier ?? r.suppliername ?? "",
+  Mountcategoryname: r.Mountcategoryname ?? r.mountcategoryname ?? "",
+  findingAccessories: r.findingAccessories ?? r.findingaccessories ?? "",
+  findingtypename: r.findingtypename ?? "",
+  Locker: r.Locker ?? r.LockerName ?? "",
+  TotalRemainingPcs: Number(r.TotalRemainingPcs) || 0,
+  TotalRemainingWeight: Number(r.TotalRemainingWeight) || 0,
+  istoreCust_Customercode: r.istoreCust_Customercode ?? "",
+});
+
+/* ========================================================================
+   FILTER CONFIG (keys are UPPERCASE to match API item names)
+   ===================================================================== */
+const DIAMOND_GROUP = ["DIAMOND", "COLOR STONE", "MISC"];
 
 const FILTER_CONFIG = {
   diamondGroup: [
-    { key: "materialtype", label: "Material Type", dataKey: "MaterialType" },
+    { key: "materialtype", label: "Material Type", dataKey: "typename" },
     { key: "shape", label: "Shape", dataKey: "shape" },
-    { key: "quality", label: "Quality", dataKey: "quality" },
-    { key: "color", label: "Color", dataKey: "color" },
+    { key: "quality", label: "Quality", dataKey: "Quality" },
+    { key: "color", label: "Color", dataKey: "colorname" },
     { key: "size", label: "Size", dataKey: "size" },
-    { key: "supplier", label: "Supplier", dataKey: "supplier" },
-    { key: "lotno", label: "Lot No.", dataKey: "rfbag" },
+    // { key: "supplier", label: "Supplier", dataKey: "supplier" },
+    { key: "lotno", label: "Lot No.", dataKey: "lotNo" },
   ],
-  Metal: [
-    { key: "materialtype", label: "Material Type", dataKey: "MaterialType" },
-    { key: "type", label: "Type", dataKey: "shape" },
+  METAL: [
+    { key: "materialtype", label: "Metal Type", dataKey: "MaterialType" },
+    // { key: "type", label: "Type", dataKey: "shape" },
     { key: "quality", label: "Quality", dataKey: "quality" },
     { key: "color", label: "Color", dataKey: "color" },
   ],
-  Mount: [
+  MOUNT: [
     { key: "category", label: "Category", dataKey: "Mountcategoryname" },
-    { key: "type", label: "Type", dataKey: "shape" },
+    { key: "type", label: "Type", dataKey: "typename" },
     { key: "quality", label: "Quality", dataKey: "quality" },
     { key: "color", label: "Color", dataKey: "color" },
-    { key: "supplier", label: "Supplier", dataKey: "supplier" },
-    { key: "lot", label: "Lot", dataKey: "rfbag" },
+    // { key: "supplier", label: "Supplier", dataKey: "supplier" },
+    { key: "lot", label: "Lot", dataKey: "lotNo" },
   ],
-  Finding: [
+  FINDING: [
     { key: "ftype", label: "F.Type", dataKey: "findingtypename" },
     { key: "accessories", label: "Accessories", dataKey: "findingAccessories" },
-    { key: "type", label: "Type", dataKey: "shape" },
+    // { key: "type", label: "Type", dataKey: "shape" },
     { key: "quality", label: "Quality", dataKey: "quality" },
     { key: "color", label: "Color", dataKey: "color" },
-    { key: "supplier", label: "Supplier", dataKey: "supplier" },
-    { key: "lot", label: "Lot", dataKey: "rfbag" },
+    // { key: "supplier", label: "Supplier", dataKey: "supplier" },
+    { key: "lot", label: "Lot", dataKey: "lotNo" },
   ],
 };
 
+/* NEW: filters shown for EVERY material */
+const COMMON_FILTERS = [
+  { key: "customer", label: "Customer", dataKey: "istoreCust_Customercode" },
+];
+
 function getFilterConfig(material) {
   if (!material) return [];
-  if (DIAMOND_GROUP.includes(material)) return FILTER_CONFIG.diamondGroup;
-  return FILTER_CONFIG[material] || [];
+  const key = String(material).toUpperCase();
+  const specific = DIAMOND_GROUP.includes(key)
+    ? FILTER_CONFIG.diamondGroup
+    : FILTER_CONFIG[key] || [];
+  return [...COMMON_FILTERS, ...specific];
 }
 
 const uniq = (arr) => [...new Set(arr.filter((v) => v !== undefined && v !== null && v !== ""))];
@@ -300,14 +272,25 @@ const nowStamp = () =>
     day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit",
   });
 
-function buildSummary(loc, mat, subs) {
-  const base = RAW_DATA.filter((r) => (!loc || r.Locker === loc) && (!mat || r.itemname === mat));
+/* CHANGE: both builders now receive the API data as the first argument
+   (instead of reading a global RAW_DATA constant). */
+function buildSummary(data, loc, mat, subs) {
+  // loc and every subs[key] are ARRAYS of selected values (empty = All)
+  const lockers = [].concat(loc || []);
+  const base = data.filter(
+    (r) => (!lockers.length || lockers.includes(r.Locker)) && (!mat || r.itemname === mat)
+  );
   const cfg = getFilterConfig(mat);
-  const rows = base.filter((r) => cfg.every((f) => !subs[f.key] || r[f.dataKey] === subs[f.key]));
+  const rows = base.filter((r) =>
+    cfg.every((f) => {
+      const sel = subs[f.key];
+      return !sel || !sel.length || sel.includes(r[f.dataKey]);
+    })
+  );
   const bags = rows.length;
   const pieces = rows.reduce((s, r) => s + (Number(r.TotalRemainingPcs) || 0), 0);
   const weight = rows.reduce((s, r) => s + (Number(r.TotalRemainingWeight) || 0), 0);
-  return { bags, pieces, weight, rows, material: mat, locker: loc, subFilters: { ...subs } };
+  return { bags, pieces, weight, rows, material: mat, locker: lockers, subFilters: { ...subs } };
 }
 
 /* Build one combined summary from EVERY scanned Job / Lot No. (rfbag).
@@ -315,12 +298,13 @@ function buildSummary(loc, mat, subs) {
    mode" shows once the user clicks the "Scan" button, instead of the
    filter-built summary.
 
-   CHANGE: rows are now restricted to the material selected on the landing
+   Rows are restricted to the material selected on the landing
    page — a bag number only counts if it belongs to that material. */
-function buildSummaryFromScanCodes(codes, mat) {
+function buildSummaryFromScanCodes(data, codes, mat) {
   const uniqueCodes = uniq(codes);
-  const rows = RAW_DATA.filter(
-    (r) => uniqueCodes.includes(r.rfbag) && (!mat || r.itemname === mat)
+  const codeSet = new Set(uniqueCodes);
+  const rows = data.filter(
+    (r) => codeSet.has(r.rfbag) && (!mat || r.itemname === mat)
   );
   // One scanned Job/Lot No. = one bag, even if that bag's rfbag appears on
   // several item rows (e.g. Metal + Mount + Finding under the same bag).
@@ -362,12 +346,12 @@ function ResultLine({ label, value }) {
    Material dropdown on top + two entry points (Criteria Wise / Scan RM Bag)
    + tolerance settings.
    ===================================================================== */
-function LandingActionCard({ icon, title, description, onClick, variant = "primary", disabled = false }) {
+function LandingActionCard({ icon, title, description, onClick, variant = "primary", disabled = false, loading = false }) {
   const isPrimary = variant === "primary";
   return (
     <ButtonBase
       onClick={onClick}
-      disabled={disabled}
+      disabled={disabled || loading}
       sx={{
         display: "flex",
         flexDirection: "column",
@@ -385,7 +369,7 @@ function LandingActionCard({ icon, title, description, onClick, variant = "prima
           ? "0 10px 28px rgba(108,63,197,0.28)"
           : "0 4px 16px rgba(30,27,46,0.06)",
         transition: "transform .18s ease, box-shadow .18s ease, border-color .18s ease",
-        opacity: disabled ? 0.5 : 1,
+        opacity: disabled && !loading ? 0.5 : 1,
         "&:hover": disabled
           ? {}
           : {
@@ -434,7 +418,16 @@ function LandingActionCard({ icon, title, description, onClick, variant = "prima
           color: isPrimary ? "#fff" : COLORS.purple,
         }}
       >
-        Continue <ArrowForwardIcon sx={{ fontSize: 18 }} />
+        {loading ? (
+          <>
+            <CircularProgress size={16} thickness={5} sx={{ color: isPrimary ? "#fff" : COLORS.purple }} />
+            Loading data...
+          </>
+        ) : (
+          <>
+            Continue <ArrowForwardIcon sx={{ fontSize: 18 }} />
+          </>
+        )}
       </Box>
     </ButtonBase>
   );
@@ -450,6 +443,7 @@ function LandingPage({
   material,
   onMaterialChange,
   materialOptions,
+  pendingAction, // NEW: 'filter' | 'scan' | null — card clicked, waiting for API data
 }) {
   return (
     <Box
@@ -543,7 +537,8 @@ function LandingPage({
       >
         <LandingActionCard
           variant="outline"
-          disabled={!material}
+          disabled={!material || (!!pendingAction && pendingAction !== "filter")}
+          loading={pendingAction === "filter"}
           icon={<Inventory2OutlinedIcon sx={{ fontSize: 30 }} />}
           title="Criteria Wise RM Reconciliation "
           description="Browse stock from the system by Locker, Material, Shape, Quality and more, then reconcile."
@@ -551,7 +546,8 @@ function LandingPage({
         />
         <LandingActionCard
           variant="outline"
-          disabled={!material}
+          disabled={!material || (!!pendingAction && pendingAction !== "scan")}
+          loading={pendingAction === "scan"}
           icon={<QrCodeScannerIcon sx={{ fontSize: 30 }} />}
           title="Scan RM Bag to Reconciliation"
           description="Scan or paste one or many Bag numbers and reconcile them together in one go."
@@ -630,6 +626,41 @@ function LandingPage({
    mode). CHANGE: Material is now fixed (selected on the landing page)
    and shown disabled. The other filters stay material-wise as before.
    ===================================================================== */
+/* PERF: lists with many options use a searchable Autocomplete that renders
+   only the first 100 matches (type to narrow). Small lists keep the normal Select. */
+const limitedFilter = createFilterOptions({ limit: 100 });
+
+function FilterField({ label, value, options, onChange }) {
+  // keep already-selected values visible even if the other filters narrowed the list
+  const allOptions = useMemo(() => uniq([...value, ...options]), [value, options]);
+  return (
+    <Autocomplete
+      multiple
+      disableCloseOnSelect
+      size="small"
+      sx={fieldSx}
+      options={allOptions}
+      value={value}
+      onChange={(e, v) => onChange(v)}
+      filterOptions={limitedFilter}
+      limitTags={2}
+      noOptionsText="No options"
+      renderOption={(props, option, { selected }) => {
+        const { key, ...rest } = props;
+        return (
+          <li key={key ?? option} {...rest}>
+            <Checkbox size="small" checked={selected} sx={{ p: 0.5, mr: 1 }} />
+            {option}
+          </li>
+        );
+      }}
+      renderInput={(params) => (
+        <TextField {...params} label={label} placeholder={value.length ? "" : "All"} />
+      )}
+    />
+  );
+}
+
 function FilterPanelContent({
   locker,
   setLocker,
@@ -657,15 +688,12 @@ function FilterPanelContent({
         )}
       </Box>
 
-      <FormControl fullWidth size="small" sx={fieldSx}>
-        <InputLabel>Locker</InputLabel>
-        <Select label="Locker" value={locker} onChange={(e) => setLocker(e.target.value)}>
-          <MenuItem value="">All</MenuItem>
-          {lockerOptions.map((opt) => (
-            <MenuItem key={opt} value={opt}>{opt}</MenuItem>
-          ))}
-        </Select>
-      </FormControl>
+      <FilterField
+        label="Locker"
+        value={locker}
+        options={lockerOptions}
+        onChange={(val) => setLocker(val)}
+      />
 
       {/* Material — selected on landing page, locked here */}
       <FormControl fullWidth size="small" sx={fieldSx} disabled>
@@ -685,19 +713,13 @@ function FilterPanelContent({
       {filterConfig.length > 0 && <Divider sx={{ my: 1.5 }} />}
 
       {filterConfig.map((f) => (
-        <FormControl fullWidth size="small" sx={fieldSx} key={f.key}>
-          <InputLabel>{f.label}</InputLabel>
-          <Select
-            label={f.label}
-            value={subFilters[f.key] || ""}
-            onChange={(e) => onSubFilterChange(f.key, e.target.value)}
-          >
-            <MenuItem value="">All</MenuItem>
-            {optionsFor(f.dataKey).map((opt) => (
-              <MenuItem key={opt} value={opt}>{opt}</MenuItem>
-            ))}
-          </Select>
-        </FormControl>
+        <FilterField
+          key={f.key}
+          label={f.label}
+          value={subFilters[f.key] || []}
+          options={optionsFor(f.dataKey)}
+          onChange={(val) => onSubFilterChange(f.key, val)}
+        />
       ))}
 
       <Box sx={{ display: "flex", gap: 1.5, mt: 1 }}>
@@ -902,7 +924,13 @@ function ScanPanelContent({
 export default function MaterialStockReconciliation() {
   const [mode, setMode] = useState("initial");
 
-  const [locker, setLocker] = useState("");
+  /* ---- API data ---- */
+  const [materialList, setMaterialList] = useState([]); // from getMasterMaterialData()
+  const [rawData, setRawData] = useState([]);           // from GetmaterialWiseData(materialId)
+  const [dataLoading, setDataLoading] = useState(false);
+  const [pendingAction, setPendingAction] = useState(null); // 'filter' | 'scan' | null
+
+  const [locker, setLocker] = useState([]); // multi-select
   const [material, setMaterial] = useState("");
   const [subFilters, setSubFilters] = useState({});
 
@@ -931,27 +959,87 @@ export default function MaterialStockReconciliation() {
   const [reconciledIds, setReconciledIds] = useState(new Set());
 
   const [historyTab, setHistoryTab] = useState(0);
+  const [historyPage, setHistoryPage] = useState(0);
+  const [historyRowsPerPage, setHistoryRowsPerPage] = useState(25);
 
   /* ------------------------------------------------------------------- */
-  const lockerOptions = useMemo(() => uniq(RAW_DATA.map((r) => r.Locker)), []);
-  const materialOptions = useMemo(() => uniq(RAW_DATA.map((r) => r.itemname)), []);
+  /* Load the material master list once */
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await getMasterMaterialData();
+        if (!cancelled) setMaterialList(toArray(res));
+      } catch (err) {
+        console.error("getMasterMaterialData failed:", err);
+        if (!cancelled) setMaterialList([]);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  /* Load material-wise data whenever the selected material changes */
+  useEffect(() => {
+    if (!material) {
+      setRawData([]);
+      setDataLoading(false);
+      return;
+    }
+    const selected = materialList.find((m) => m.itemname === material);
+    if (!selected) return;
+
+    let cancelled = false;
+    setDataLoading(true);
+    setRawData([]);
+    (async () => {
+      try {
+        const res = await GetmaterialWiseData(selected.itemid);
+        if (!cancelled) {
+          setRawData(toArray(res).map((r, i) => normalizeRow(r, material, i)));
+        }
+      } catch (err) {
+        console.error("GetmaterialWiseData failed:", err);
+        if (!cancelled) setRawData([]);
+      } finally {
+        if (!cancelled) setDataLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [material, materialList]);
+
+  const lockerOptions = useMemo(() => uniq(rawData.map((r) => r.Locker)), [rawData]);
+  const materialOptions = useMemo(
+    () => uniq(materialList.map((m) => m.itemname)),
+    [materialList]
+  );
 
   const baseFiltered = useMemo(
     () =>
-      RAW_DATA.filter(
-        (r) => (!locker || r.Locker === locker) && (!material || r.itemname === material)
+      rawData.filter(
+        (r) => (!locker.length || locker.includes(r.Locker)) && (!material || r.itemname === material)
       ),
-    [locker, material]
+    [rawData, locker, material]
   );
 
   const filterConfig = useMemo(() => getFilterConfig(material), [material]);
 
-  const optionsFor = useCallback(
-    (dataKey) => uniq(baseFiltered.map((r) => r[dataKey])),
-    [baseFiltered]
-  );
+  // PERF: compute every dropdown's option list once per data/locker change
+  const optionsMap = useMemo(() => {
+    const m = {};
+    filterConfig.forEach((f) => {
+      m[f.dataKey] = uniq(baseFiltered.map((r) => r[f.dataKey]));
+    });
+    return m;
+  }, [baseFiltered, filterConfig]);
+
+  const optionsFor = useCallback((dataKey) => optionsMap[dataKey] || [], [optionsMap]);
 
   const handleMaterialChange = (val) => {
+    setPendingAction(null);
     setMaterial(val);
     setSubFilters({});
   };
@@ -961,22 +1049,21 @@ export default function MaterialStockReconciliation() {
   };
 
   const handleSearchSummary = () => {
-    setStockSummary(buildSummary(locker, material, subFilters));
+    setStockSummary(buildSummary(rawData, locker, material, subFilters));
     setResult(null);
     setFilterOpen(false);
     setMode("filter");
   };
 
   const handleClearFilters = () => {
-    setLocker("");
+    setLocker([]);
     setSubFilters({});
   };
 
   const activeFilterCount =
-    (locker ? 1 : 0) + Object.values(subFilters).filter(Boolean).length;
+    (locker.length ? 1 : 0) + Object.values(subFilters).filter((v) => v && v.length).length;
 
-  const handleOpenSystemData = () => {
-    if (!material) return;
+  const doOpenSystemData = () => {
     handleClearFilters();
     setStockSummary(null);
     setResult(null);
@@ -984,8 +1071,7 @@ export default function MaterialStockReconciliation() {
     setMode("filter");
   };
 
-  const handleOpenScanFlow = () => {
-    if (!material) return;
+  const doOpenScanFlow = () => {
     setScanInput("");
     setScannedCodes([]);
     setStockSummary(null);
@@ -994,6 +1080,34 @@ export default function MaterialStockReconciliation() {
     setScanDrawerOpen(true);
     setMode("scan");
   };
+
+  /* Card click: if data is still loading, stay on the landing page (card shows
+     a spinner) and redirect automatically as soon as the API data arrives. */
+  const handleOpenSystemData = () => {
+    if (!material || pendingAction) return;
+    if (dataLoading) {
+      setPendingAction("filter");
+      return;
+    }
+    doOpenSystemData();
+  };
+
+  const handleOpenScanFlow = () => {
+    if (!material || pendingAction) return;
+    if (dataLoading) {
+      setPendingAction("scan");
+      return;
+    }
+    doOpenScanFlow();
+  };
+
+  useEffect(() => {
+    if (!pendingAction || dataLoading) return;
+    if (pendingAction === "filter") doOpenSystemData();
+    else doOpenScanFlow();
+    setPendingAction(null);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pendingAction, dataLoading]);
 
   const parseAndAddScannedCodes = () => {
     const parts = scanInput
@@ -1022,35 +1136,34 @@ export default function MaterialStockReconciliation() {
     setScannedCodes((prev) => prev.filter((c) => c !== code));
   };
 
+  const bagSet = useMemo(
+    () => new Set(rawData.filter((r) => r.itemname === material).map((r) => r.rfbag)),
+    [rawData, material]
+  );
   const validScannedCodes = useMemo(
-    () =>
-      scannedCodes.filter((code) =>
-        RAW_DATA.some((r) => r.rfbag === code && r.itemname === material)
-      ),
-    [scannedCodes, material]
+    () => scannedCodes.filter((code) => bagSet.has(code)),
+    [scannedCodes, bagSet]
   );
   const invalidScannedCodes = useMemo(
-    () =>
-      scannedCodes.filter(
-        (code) => !RAW_DATA.some((r) => r.rfbag === code && r.itemname === material)
-      ),
-    [scannedCodes, material]
+    () => scannedCodes.filter((code) => !bagSet.has(code)),
+    [scannedCodes, bagSet]
   );
 
   const handleScanAndView = () => {
     if (validScannedCodes.length === 0) return;
-    setStockSummary(buildSummaryFromScanCodes(validScannedCodes, material));
+    setStockSummary(buildSummaryFromScanCodes(rawData, validScannedCodes, material));
     setResult(null);
     setScanDrawerOpen(false);
   };
-
   useEffect(() => {
     if (mode !== "scan") return;
     setStockSummary((prevSummary) => {
       if (!prevSummary) return prevSummary;
       if (validScannedCodes.length === 0) return null;
-      return buildSummaryFromScanCodes(validScannedCodes, material);
+      return buildSummaryFromScanCodes(rawData, validScannedCodes, material);
     });
+
+
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [scannedCodes]);
 
@@ -1075,8 +1188,8 @@ export default function MaterialStockReconciliation() {
   const deduction = stickerTotal + polytheneTotal + trayTotal;
   const netWeightLive = (Number(grossWeight) || 0) - deduction;
 
-  const applicableTolerance = material === "Metal" ? toleranceMetal : toleranceOther;
-  const toleranceLabel = material === "Metal" ? "Metal" : "Other Material";
+  const applicableTolerance = String(material).toUpperCase() === "METAL" ? toleranceMetal : toleranceOther;
+  const toleranceLabel = String(material).toUpperCase() === "METAL" ? "Metal" : "Other Material";
 
   const handleReconcile = () => {
     if (!stockSummary || grossWeight === "") return;
@@ -1184,9 +1297,11 @@ export default function MaterialStockReconciliation() {
   const summaryChips = useMemo(() => {
     if (!stockSummary) return [];
     const chips = [];
-    if (stockSummary.locker) chips.push(stockSummary.locker);
+    [].concat(stockSummary.locker || []).forEach((v) => v && chips.push(v));
     if (stockSummary.material) chips.push(stockSummary.material);
-    Object.values(stockSummary.subFilters || {}).forEach((v) => v && chips.push(v));
+    Object.values(stockSummary.subFilters || {}).forEach((v) =>
+      [].concat(v || []).forEach((x) => x && chips.push(x))
+    );
     chips.push(`${stockSummary.bags} Bags`);
     chips.push(`${stockSummary.pieces} Pcs`);
     return chips;
@@ -1212,19 +1327,24 @@ export default function MaterialStockReconciliation() {
   const historyBaseRows = useMemo(() => {
     if (!material) return [];
     if (mode === "scan") {
-      return RAW_DATA.filter(
+      return rawData.filter(
         (r) => r.itemname === material && validScannedCodes.includes(r.rfbag)
       );
     }
-    return RAW_DATA.filter((r) => r.itemname === material);
-  }, [mode, material, validScannedCodes]);
+    return rawData.filter((r) => r.itemname === material);
+  }, [mode, material, validScannedCodes, rawData]);
 
   /* NEW: merge each listed bag with its latest saved reconciliation (if any).
      `history` is newest-first, so the first match is the latest. */
   const historyRows = useMemo(
-    () =>
-      historyBaseRows.map((r) => {
-        const rec = history.find((h) => h.rowId === r.id);
+    () => {
+      // PERF: newest record per bag, built once (history is newest-first)
+      const latest = new Map();
+      history.forEach((h) => {
+        if (!latest.has(h.rowId)) latest.set(h.rowId, h);
+      });
+      return historyBaseRows.map((r) => {
+        const rec = latest.get(r.id);
         return {
           key: r.id,
           dateTime: rec ? rec.dateTime : "—",
@@ -1232,7 +1352,7 @@ export default function MaterialStockReconciliation() {
           material: r.itemname,
           shape: r.shape || "—",
           size: r.size || "—",
-          lotNo: r.rfbag,
+          lotNo: r.lotNo,
           systemWeight: Number(r.TotalRemainingWeight) || 0,
           // reconciled: !!rec && rec.status === "ACCEPT",
           status: !rec ? "PENDING" : rec.status === "ACCEPT" ? "DONE" : "REJECTED",
@@ -1240,7 +1360,8 @@ export default function MaterialStockReconciliation() {
           reconciledBy: r.istoreCust_Customercode || "—",
           doneToday: !!rec && rec.dateTime.startsWith(todayDateStr),
         };
-      }),
+      });
+    },
     [historyBaseRows, history, todayDateStr]
   );
 
@@ -1249,6 +1370,20 @@ export default function MaterialStockReconciliation() {
     [historyRows]
   );
   const historyRowsToShow = historyTab === 0 ? historyRows : todaysHistory;
+
+  // PERF: render only one page of history rows instead of thousands at once
+  const pagedHistoryRows = useMemo(
+    () =>
+      historyRowsToShow.slice(
+        historyPage * historyRowsPerPage,
+        historyPage * historyRowsPerPage + historyRowsPerPage
+      ),
+    [historyRowsToShow, historyPage, historyRowsPerPage]
+  );
+
+  useEffect(() => {
+    setHistoryPage(0);
+  }, [historyTab, mode, material, validScannedCodes.length]);
 
   /* ----------------------------------------------------------------- */
   return (
@@ -1269,7 +1404,7 @@ export default function MaterialStockReconciliation() {
             anchor="left"
             open={filterOpen}
             onClose={() => setFilterOpen(false)}
-            PaperProps={{ sx: { width: 320, bgcolor: COLORS.bg } }}
+            PaperProps={{ sx: { width: 380, bgcolor: COLORS.bg } }}
           >
             <FilterPanelContent
               locker={locker}
@@ -1390,6 +1525,7 @@ export default function MaterialStockReconciliation() {
               material={material}
               onMaterialChange={handleMaterialChange}
               materialOptions={materialOptions}
+              pendingAction={pendingAction}
             />
           )}
 
@@ -1790,7 +1926,7 @@ export default function MaterialStockReconciliation() {
                         </TableCell>
                       </TableRow>
                     )}
-                    {historyRowsToShow.map((h) => (
+                    {pagedHistoryRows.map((h) => (
                       <TableRow key={h.key}>
                         <TableCell sx={tbodyCellSx}>{h.dateTime}</TableCell>
                         <TableCell sx={tbodyCellSx}>{h.rmBag}</TableCell>
@@ -1821,6 +1957,18 @@ export default function MaterialStockReconciliation() {
                   </TableBody>
                 </Table>
               </TableContainer>
+              <TablePagination
+                component="div"
+                count={historyRowsToShow.length}
+                page={Math.min(historyPage, Math.max(0, Math.ceil(historyRowsToShow.length / historyRowsPerPage) - 1))}
+                onPageChange={(e, p) => setHistoryPage(p)}
+                rowsPerPage={historyRowsPerPage}
+                onRowsPerPageChange={(e) => {
+                  setHistoryRowsPerPage(Number(e.target.value));
+                  setHistoryPage(0);
+                }}
+                rowsPerPageOptions={[10, 25, 50, 100]}
+              />
             </Paper>
           )}
         </Box>
