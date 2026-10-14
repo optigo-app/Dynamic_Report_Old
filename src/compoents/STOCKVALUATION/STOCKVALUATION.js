@@ -19,7 +19,6 @@ const StockValuation = () => {
   const [allOutData, setAllOutData] = useState([]);
   const [itemMaster, setItemMaster] = useState([]);
   const [materialMaster, setMaterialMaster] = useState([]);
-  const [metalTypeMaster, setMetalTypeMaster] = useState([]);
   const [finalTable, setFinalTable] = useState([]);
   const [expandedItemId, setExpandedItemId] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -27,6 +26,7 @@ const StockValuation = () => {
   const [jobworkData, setJobworkData] = useState([]);
   const [jobworkDataTotal, setJobworkDataTotal] = useState([]);
   const [modalLoading, setModalLoading] = useState(false);
+  const [metalTypeMaster, setMetalTypeMaster] = useState([]);
   const [openingData, setOpeningData] = useState([]);
   const [redirectData, setRedirectData] = useState();
   const [stockValPt, setStockValPt] = useState([]);
@@ -74,23 +74,8 @@ const StockValuation = () => {
           },
           sp
         ),
-        GetWorkerData(
-          {
-            "con": `{\"id\":\"\",\"mode\":\"CLOSING_STOCK_VALUATION_PT\",\"appuserid\":\"${AllData?.uid}\"}`,
-            "p": "",
-            "f": "Task Management (taskmaster)"
-          },
-          sp
-        ),
       ]);
 
-      // setAllInData(sampleAllInData);
-      // setAllOutData(sampleallOutData);
-      // setItemMaster(sampleitemMaster);
-      // setMaterialMaster(samplematerialMaster);
-      // setMetalTypeMaster(samplemetalTypeMaster);
-      // setRedirectData(redirectDataApi?.Data?.rd[0]);
-      setStockValPt(STOCKVALUATIONPT?.Data);
       setAllInData(inRes?.Data?.rd1 || []);
       setAllOutData(outRes?.Data?.rd1 || []);
       setItemMaster(masterRes?.Data?.rd || []);

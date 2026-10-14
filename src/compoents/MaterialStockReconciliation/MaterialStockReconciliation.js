@@ -17,7 +17,12 @@ import {
   TableRow,
   TableCell,
   TableContainer,
+  Checkbox,
   Chip,
+  CircularProgress,
+  Autocomplete,
+  TablePagination,
+  createFilterOptions,
   Divider,
   IconButton,
   Popover,
@@ -26,6 +31,8 @@ import {
   Badge,
   ThemeProvider,
   Tooltip,
+  Tabs,
+  Tab,
   createTheme,
 } from "@mui/material";
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
@@ -44,7 +51,8 @@ import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import Inventory2OutlinedIcon from "@mui/icons-material/Inventory2Outlined";
 import TuneIcon from "@mui/icons-material/Tune";
 import { keyframes } from "@emotion/react";
- 
+import { getMasterMaterialData, GetmaterialWiseData } from "../../API/GetRmBulkReconcilationData/GetRmBulkReconcilationData";
+
 
 /* ========================================================================
    COLOR TOKENS  (single source of truth — used everywhere via sx)
@@ -147,6 +155,7 @@ const outlineBtnSx = {
 const chipSx = { bgcolor: COLORS.purpleLight, color: COLORS.purpleDark, fontWeight: 500 };
 const chipSuccessSx = { bgcolor: COLORS.successBg, color: COLORS.success, fontWeight: 600 };
 const chipDangerSx = { bgcolor: COLORS.dangerBg, color: COLORS.danger, fontWeight: 600 };
+const chipWarningSx = { bgcolor: COLORS.warningBg, color: COLORS.warning, fontWeight: 600 };
 
 const tableContainerSx = {
   border: `1px solid ${COLORS.border}`,
@@ -168,126 +177,92 @@ const linkCellSx = { ...tbodyCellSx, color: COLORS.purple, fontWeight: 600 };
 const fieldSx = { mb: 1.75 };
 
 /* ========================================================================
-   DUMMY DATA
+   API HELPERS
+   - toArray:      accepts either a plain array or a wrapped response
+   - normalizeRow: maps ONE API row (GetmaterialWiseData) to the field names
+                   the rest of this screen already uses. If your API returns
+                   different field names for Diamond / Color Stone / Mount /
+                   Finding, adjust ONLY this function.
    ===================================================================== */
-const RAW_DATA = [
-  {
-    itemname: "DIAMOND", rfbag: "0000005799", MaterialType: "Labgrown", master_item_id: 3,
-    Mountcategoryname: "", supplier: "Customer", shape: "ASSCHER", quality: "RJ01",
-    color: "RED-S", size: "1.55 mm", job: "", findingAccessories: "", findingtypename: "",
-    istoreCust_Customercode: "orail25", materialtypename: "Polki", TotalRemainingPcs: 2,
-    TotalRemainingWeight: 4, Locker: "Locker1", certno: "DIADIA", certurl: "", inscription: "DIADIA",
-    salerate: 10, length: "12", width: "11", depth: "10", depth_per: 15, table_per: 15,
-    cutname: "round cut", polishname: "Good", symmetryname: "Good", gridlename: "Extremely Thin",
-    fluorescencename: "Faint", culetname: "Very Small", labname: "IGI",
-  },
-  {
-    itemname: "DIAMOND", rfbag: "0000005801", MaterialType: "Natural", master_item_id: 3,
-    Mountcategoryname: "", supplier: "Company", shape: "Baguatte", quality: "check2",
-    color: "A1", size: "1.70 mm", job: "", findingAccessories: "", findingtypename: "",
-    istoreCust_Customercode: "orail25", materialtypename: "Polki", TotalRemainingPcs: 2,
-    TotalRemainingWeight: 4, Locker: "Locker1", certno: "sasasas", certurl: "chatgpt.com",
-    inscription: "sasasas", salerate: 100, length: "11", width: "12", depth: "17",
-    depth_per: 12, table_per: 12, cutname: "Oval Cut", polishname: "Poor", symmetryname: "Good",
-    gridlename: "Extremely Thin", fluorescencename: "Very Strong", culetname: "Large", labname: "LAB1",
-  },
-  {
-    itemname: "DIAMOND", rfbag: "0000005802", MaterialType: "", master_item_id: 3,
-    Mountcategoryname: "", supplier: "Manufacturer", shape: "A style 1", quality: "VVS1-M",
-    color: "RED-S", size: "5.5-5.9", job: "", findingAccessories: "", findingtypename: "",
-    istoreCust_Customercode: "orail25", materialtypename: "", TotalRemainingPcs: 2,
-    TotalRemainingWeight: 4, Locker: "Locker1", certno: "", certurl: "", inscription: "",
-    salerate: 0, length: "", width: "", depth: "", depth_per: 0, table_per: 0, cutname: "",
-    polishname: "", symmetryname: "", gridlename: "", fluorescencename: "", culetname: "", labname: "",
-  },
-  {
-    itemname: "DIAMOND", rfbag: "0000005806", MaterialType: "Labgrown", master_item_id: 3,
-    Mountcategoryname: "", supplier: "Manufacturer", shape: "ABCD", quality: "VVS1-M",
-    color: "RED-S", size: "C:2", job: "", findingAccessories: "", findingtypename: "",
-    istoreCust_Customercode: "orail25", materialtypename: "", TotalRemainingPcs: 12,
-    TotalRemainingWeight: 12.5, Locker: "Locker1", certno: "", certurl: "", inscription: "",
-    salerate: 40.5, length: "", width: "", depth: "", depth_per: 0, table_per: 0, cutname: "",
-    polishname: "", symmetryname: "", gridlename: "", fluorescencename: "", culetname: "", labname: "",
-  },
-  {
-    itemname: "Colorstone", rfbag: "0000005812", master_item_id: 3, MaterialType: "",
-    Mountcategoryname: "", supplier: "Company", shape: "ABCD", quality: "VVS1-M",
-    color: "RED-S", size: "C:2", job: "", findingAccessories: "", findingtypename: "",
-    istoreCust_Customercode: "orail25", materialtypename: "", TotalRemainingPcs: 12,
-    TotalRemainingWeight: 12.5, Locker: "Locker1", certno: "", certurl: "", inscription: "",
-    salerate: 40.5, length: "", width: "", depth: "", depth_per: 0, table_per: 0, cutname: "",
-    polishname: "", symmetryname: "", gridlename: "", fluorescencename: "", culetname: "", labname: "",
-  },
-  {
-    itemname: "Metal", rfbag: "0000005845", MaterialType: "Gold", master_item_id: 3,
-    Mountcategoryname: "", supplier: "Customer", shape: "ALLOY", quality: "18k",
-    color: "Ayellow", size: "71.000", job: "", findingAccessories: "", findingtypename: "",
-    istoreCust_Customercode: "orail25", materialtypename: "", TotalRemainingPcs: 12,
-    TotalRemainingWeight: 12.5, Locker: "Locker1", certno: "", certurl: "", inscription: "",
-    salerate: 40.5, length: "", width: "", depth: "", depth_per: 0, table_per: 0, cutname: "",
-    polishname: "", symmetryname: "", gridlename: "", fluorescencename: "", culetname: "", labname: "",
-  },
-  {
-    itemname: "Mount", rfbag: "0000005845", master_item_id: 3, MaterialType: "Silver",
-    Mountcategoryname: "check2", supplier: "Manufacturer", shape: "ALLOY", quality: "24K",
-    color: "Ayellow", size: "71.000", job: "", findingAccessories: "", findingtypename: "",
-    istoreCust_Customercode: "orail25", materialtypename: "", TotalRemainingPcs: 12,
-    TotalRemainingWeight: 12.5, Locker: "Locker1", certno: "", certurl: "", inscription: "",
-    salerate: 40.5, length: "", width: "", depth: "", depth_per: 0, table_per: 0, cutname: "",
-    polishname: "", symmetryname: "", gridlename: "", fluorescencename: "", culetname: "", labname: "",
-  },
-  {
-    itemname: "Finding", rfbag: "0000005845", MaterialType: "Gold", master_item_id: 3,
-    Mountcategoryname: "check2", supplier: "Manufacturer", shape: "ALLOY", quality: "24K",
-    color: "Ayellow", size: "71.000", job: "", findingAccessories: "HOOK12", findingtypename: "Chain",
-    istoreCust_Customercode: "orail25", materialtypename: "", TotalRemainingPcs: 12,
-    TotalRemainingWeight: 12.5, Locker: "Locker1", certno: "", certurl: "", inscription: "",
-    salerate: 40.5, length: "", width: "", depth: "", depth_per: 0, table_per: 0, cutname: "",
-    polishname: "", symmetryname: "", gridlename: "", fluorescencename: "", culetname: "", labname: "",
-  },
-].map((row, i) => ({ ...row, id: i }));
+const toArray = (res) => {
+  if (Array.isArray(res)) return res;
+  if (Array.isArray(res?.data)) return res.data;
+  if (Array.isArray(res?.Data)) return res.Data;
+  return [];
+};
 
-const DIAMOND_GROUP = ["DIAMOND", "Colorstone", "MISC"];
+const normalizeRow = (r, materialName, index) => ({
+  ...r, // keep every original API field available
+  id: r.id ?? index,
+  itemname: materialName, // data is fetched per material, so this always matches the selection
+  rfbag: r.rfbag ?? "",
+  MaterialType: r.MaterialType ?? r.typename ?? "",
+  shape: r.shape ?? r.shapename ?? "",
+  quality: r.quality ?? r.qualityname ?? r.purity ?? "",
+  color: r.color ?? r.colorname ?? "",
+  size: r.size ?? r.itemsize ?? "",
+  supplier: r.supplier ?? r.suppliername ?? "",
+  Mountcategoryname: r.Mountcategoryname ?? r.mountcategoryname ?? "",
+  findingAccessories: r.findingAccessories ?? r.findingaccessories ?? "",
+  findingtypename: r.findingtypename ?? "",
+  Locker: r.Locker ?? r.LockerName ?? "",
+  TotalRemainingPcs: Number(r.TotalRemainingPcs) || 0,
+  TotalRemainingWeight: Number(r.TotalRemainingWeight) || 0,
+  istoreCust_Customercode: r.istoreCust_Customercode ?? "",
+});
+
+/* ========================================================================
+   FILTER CONFIG (keys are UPPERCASE to match API item names)
+   ===================================================================== */
+const DIAMOND_GROUP = ["DIAMOND", "COLOR STONE", "MISC"];
 
 const FILTER_CONFIG = {
   diamondGroup: [
-    { key: "materialtype", label: "Material Type", dataKey: "MaterialType" },
+    { key: "materialtype", label: "Material Type", dataKey: "typename" },
     { key: "shape", label: "Shape", dataKey: "shape" },
-    { key: "quality", label: "Quality", dataKey: "quality" },
-    { key: "color", label: "Color", dataKey: "color" },
+    { key: "quality", label: "Quality", dataKey: "Quality" },
+    { key: "color", label: "Color", dataKey: "colorname" },
     { key: "size", label: "Size", dataKey: "size" },
-    { key: "supplier", label: "Supplier", dataKey: "supplier" },
-    { key: "lotno", label: "Lot No.", dataKey: "rfbag" },
+    // { key: "supplier", label: "Supplier", dataKey: "supplier" },
+    { key: "lotno", label: "Lot No.", dataKey: "lotNo" },
   ],
-  Metal: [
-    { key: "materialtype", label: "Material Type", dataKey: "MaterialType" },
-    { key: "type", label: "Type", dataKey: "shape" },
+  METAL: [
+    { key: "materialtype", label: "Metal Type", dataKey: "MaterialType" },
+    // { key: "type", label: "Type", dataKey: "shape" },
     { key: "quality", label: "Quality", dataKey: "quality" },
     { key: "color", label: "Color", dataKey: "color" },
   ],
-  Mount: [
+  MOUNT: [
     { key: "category", label: "Category", dataKey: "Mountcategoryname" },
-    { key: "type", label: "Type", dataKey: "shape" },
+    { key: "type", label: "Type", dataKey: "typename" },
     { key: "quality", label: "Quality", dataKey: "quality" },
     { key: "color", label: "Color", dataKey: "color" },
-    { key: "supplier", label: "Supplier", dataKey: "supplier" },
-    { key: "lot", label: "Lot", dataKey: "rfbag" },
+    // { key: "supplier", label: "Supplier", dataKey: "supplier" },
+    { key: "lot", label: "Lot", dataKey: "lotNo" },
   ],
-  Finding: [
+  FINDING: [
     { key: "ftype", label: "F.Type", dataKey: "findingtypename" },
     { key: "accessories", label: "Accessories", dataKey: "findingAccessories" },
-    { key: "type", label: "Type", dataKey: "shape" },
+    // { key: "type", label: "Type", dataKey: "shape" },
     { key: "quality", label: "Quality", dataKey: "quality" },
     { key: "color", label: "Color", dataKey: "color" },
-    { key: "supplier", label: "Supplier", dataKey: "supplier" },
-    { key: "lot", label: "Lot", dataKey: "rfbag" },
+    // { key: "supplier", label: "Supplier", dataKey: "supplier" },
+    { key: "lot", label: "Lot", dataKey: "lotNo" },
   ],
 };
 
+/* NEW: filters shown for EVERY material */
+const COMMON_FILTERS = [
+  { key: "customer", label: "Customer", dataKey: "istoreCust_Customercode" },
+];
+
 function getFilterConfig(material) {
   if (!material) return [];
-  if (DIAMOND_GROUP.includes(material)) return FILTER_CONFIG.diamondGroup;
-  return FILTER_CONFIG[material] || [];
+  const key = String(material).toUpperCase();
+  const specific = DIAMOND_GROUP.includes(key)
+    ? FILTER_CONFIG.diamondGroup
+    : FILTER_CONFIG[key] || [];
+  return [...COMMON_FILTERS, ...specific];
 }
 
 const uniq = (arr) => [...new Set(arr.filter((v) => v !== undefined && v !== null && v !== ""))];
@@ -297,23 +272,40 @@ const nowStamp = () =>
     day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit",
   });
 
-function buildSummary(loc, mat, subs) {
-  const base = RAW_DATA.filter((r) => (!loc || r.Locker === loc) && (!mat || r.itemname === mat));
+/* CHANGE: both builders now receive the API data as the first argument
+   (instead of reading a global RAW_DATA constant). */
+function buildSummary(data, loc, mat, subs) {
+  // loc and every subs[key] are ARRAYS of selected values (empty = All)
+  const lockers = [].concat(loc || []);
+  const base = data.filter(
+    (r) => (!lockers.length || lockers.includes(r.Locker)) && (!mat || r.itemname === mat)
+  );
   const cfg = getFilterConfig(mat);
-  const rows = base.filter((r) => cfg.every((f) => !subs[f.key] || r[f.dataKey] === subs[f.key]));
+  const rows = base.filter((r) =>
+    cfg.every((f) => {
+      const sel = subs[f.key];
+      return !sel || !sel.length || sel.includes(r[f.dataKey]);
+    })
+  );
   const bags = rows.length;
   const pieces = rows.reduce((s, r) => s + (Number(r.TotalRemainingPcs) || 0), 0);
   const weight = rows.reduce((s, r) => s + (Number(r.TotalRemainingWeight) || 0), 0);
-  return { bags, pieces, weight, rows, material: mat, locker: loc, subFilters: { ...subs } };
+  return { bags, pieces, weight, rows, material: mat, locker: lockers, subFilters: { ...subs } };
 }
 
 /* Build one combined summary from EVERY scanned Job / Lot No. (rfbag).
    Rows for all scanned codes are grouped together — this is what "scan
    mode" shows once the user clicks the "Scan" button, instead of the
-   filter-built summary. */
-function buildSummaryFromScanCodes(codes) {
+   filter-built summary.
+
+   Rows are restricted to the material selected on the landing
+   page — a bag number only counts if it belongs to that material. */
+function buildSummaryFromScanCodes(data, codes, mat) {
   const uniqueCodes = uniq(codes);
-  const rows = RAW_DATA.filter((r) => uniqueCodes.includes(r.rfbag));
+  const codeSet = new Set(uniqueCodes);
+  const rows = data.filter(
+    (r) => codeSet.has(r.rfbag) && (!mat || r.itemname === mat)
+  );
   // One scanned Job/Lot No. = one bag, even if that bag's rfbag appears on
   // several item rows (e.g. Metal + Mount + Finding under the same bag).
   // Pieces/weight still sum every matching row; bags counts scanned jobs.
@@ -326,7 +318,7 @@ function buildSummaryFromScanCodes(codes) {
     pieces,
     weight,
     rows,
-    material: materials.length === 1 ? materials[0] : "Scanned Items",
+    material: mat || (materials.length === 1 ? materials[0] : "Scanned Items"),
     locker: rows[0]?.Locker || "",
     subFilters: { lotno: uniqueCodes.join(", ") },
   };
@@ -351,13 +343,15 @@ function ResultLine({ label, value }) {
 
 /* ========================================================================
    LANDING PAGE
-   Two entry points (Criteria Wise / Scan RM Bag) + tolerance settings.
+   Material dropdown on top + two entry points (Criteria Wise / Scan RM Bag)
+   + tolerance settings.
    ===================================================================== */
-function LandingActionCard({ icon, title, description, onClick, variant="primary" }) {
+function LandingActionCard({ icon, title, description, onClick, variant = "primary", disabled = false, loading = false }) {
   const isPrimary = variant === "primary";
   return (
     <ButtonBase
       onClick={onClick}
+      disabled={disabled || loading}
       sx={{
         display: "flex",
         flexDirection: "column",
@@ -375,13 +369,16 @@ function LandingActionCard({ icon, title, description, onClick, variant="primary
           ? "0 10px 28px rgba(108,63,197,0.28)"
           : "0 4px 16px rgba(30,27,46,0.06)",
         transition: "transform .18s ease, box-shadow .18s ease, border-color .18s ease",
-        "&:hover": {
-          transform: "translateY(-4px)",
-          boxShadow: isPrimary
-            ? "0 16px 34px rgba(108,63,197,0.38)"
-            : "0 12px 28px rgba(108,63,197,0.16)",
-          borderColor: isPrimary ? "transparent" : COLORS.purple,
-        },
+        opacity: disabled && !loading ? 0.5 : 1,
+        "&:hover": disabled
+          ? {}
+          : {
+            transform: "translateY(-4px)",
+            boxShadow: isPrimary
+              ? "0 16px 34px rgba(108,63,197,0.38)"
+              : "0 12px 28px rgba(108,63,197,0.16)",
+            borderColor: isPrimary ? "transparent" : COLORS.purple,
+          },
       }}
     >
       <Box
@@ -421,7 +418,16 @@ function LandingActionCard({ icon, title, description, onClick, variant="primary
           color: isPrimary ? "#fff" : COLORS.purple,
         }}
       >
-        Continue <ArrowForwardIcon sx={{ fontSize: 18 }} />
+        {loading ? (
+          <>
+            <CircularProgress size={16} thickness={5} sx={{ color: isPrimary ? "#fff" : COLORS.purple }} />
+            Loading data...
+          </>
+        ) : (
+          <>
+            Continue <ArrowForwardIcon sx={{ fontSize: 18 }} />
+          </>
+        )}
       </Box>
     </ButtonBase>
   );
@@ -434,6 +440,10 @@ function LandingPage({
   setToleranceMetal,
   toleranceOther,
   setToleranceOther,
+  material,
+  onMaterialChange,
+  materialOptions,
+  pendingAction, // NEW: 'filter' | 'scan' | null — card clicked, waiting for API data
 }) {
   return (
     <Box
@@ -460,6 +470,60 @@ function LandingPage({
         </Typography>
       </Box>
 
+      {/* NEW: Material dropdown — sits above the two entry cards */}
+
+      <Box
+        sx={{
+          width: "100%",
+          maxWidth: 720,
+          p: 3,
+          borderRadius: "16px",
+          border: `1px solid ${COLORS.border}`,
+          bgcolor: COLORS.surface,
+          boxShadow: "0 4px 16px rgba(30,27,46,0.05)",
+          maxWidth: 720, mb: 3
+        }}
+
+
+      >
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, mb: 2.5 }}>
+          <Box
+            sx={{
+              width: 40,
+              height: 40,
+              borderRadius: "10px",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              bgcolor: COLORS.purpleLight,
+              color: COLORS.purple,
+            }}
+          >
+            <FilterListIcon fontSize="small" />
+          </Box>
+          <Box>
+            <Typography sx={{ fontSize: 15, fontWeight: 700, color: COLORS.text }}>
+              Selecet Material
+            </Typography>
+          </Box>
+        </Box>
+        <FormControl fullWidth size="small" sx={{ bgcolor: COLORS.surface, borderRadius: "8px" }}>
+          <InputLabel>Material</InputLabel>
+          <Select
+            label="Material"
+            value={material}
+            onChange={(e) => onMaterialChange(e.target.value)}
+          >
+            {materialOptions.map((opt) => (
+              <MenuItem key={opt} value={opt}>{opt}</MenuItem>
+            ))}
+          </Select>
+        </FormControl>
+        {/* {!material && (
+          <Typography sx={{...hintSx,color:"red"}}>Select a material to continue.</Typography>
+        )} */}
+      </Box>
+
       {/* Two entry cards */}
       <Box
         sx={{
@@ -473,6 +537,8 @@ function LandingPage({
       >
         <LandingActionCard
           variant="outline"
+          disabled={!material || (!!pendingAction && pendingAction !== "filter")}
+          loading={pendingAction === "filter"}
           icon={<Inventory2OutlinedIcon sx={{ fontSize: 30 }} />}
           title="Criteria Wise RM Reconciliation "
           description="Browse stock from the system by Locker, Material, Shape, Quality and more, then reconcile."
@@ -480,6 +546,8 @@ function LandingPage({
         />
         <LandingActionCard
           variant="outline"
+          disabled={!material || (!!pendingAction && pendingAction !== "scan")}
+          loading={pendingAction === "scan"}
           icon={<QrCodeScannerIcon sx={{ fontSize: 30 }} />}
           title="Scan RM Bag to Reconciliation"
           description="Scan or paste one or many Bag numbers and reconcile them together in one go."
@@ -555,8 +623,44 @@ function LandingPage({
 
 /* ========================================================================
    Shared filter fields — used inside the left Drawer (Criteria Wise
-   mode). UNCHANGED.
+   mode). CHANGE: Material is now fixed (selected on the landing page)
+   and shown disabled. The other filters stay material-wise as before.
    ===================================================================== */
+/* PERF: lists with many options use a searchable Autocomplete that renders
+   only the first 100 matches (type to narrow). Small lists keep the normal Select. */
+const limitedFilter = createFilterOptions({ limit: 100 });
+
+function FilterField({ label, value, options, onChange }) {
+  // keep already-selected values visible even if the other filters narrowed the list
+  const allOptions = useMemo(() => uniq([...value, ...options]), [value, options]);
+  return (
+    <Autocomplete
+      multiple
+      disableCloseOnSelect
+      size="small"
+      sx={fieldSx}
+      options={allOptions}
+      value={value}
+      onChange={(e, v) => onChange(v)}
+      filterOptions={limitedFilter}
+      limitTags={2}
+      noOptionsText="No options"
+      renderOption={(props, option, { selected }) => {
+        const { key, ...rest } = props;
+        return (
+          <li key={key ?? option} {...rest}>
+            <Checkbox size="small" checked={selected} sx={{ p: 0.5, mr: 1 }} />
+            {option}
+          </li>
+        );
+      }}
+      renderInput={(params) => (
+        <TextField {...params} label={label} placeholder={value.length ? "" : "All"} />
+      )}
+    />
+  );
+}
+
 function FilterPanelContent({
   locker,
   setLocker,
@@ -584,20 +688,22 @@ function FilterPanelContent({
         )}
       </Box>
 
-      <FormControl fullWidth size="small" sx={fieldSx}>
-        <InputLabel>Locker</InputLabel>
-        <Select label="Locker" value={locker} onChange={(e) => setLocker(e.target.value)}>
-          <MenuItem value="">All</MenuItem>
-          {lockerOptions.map((opt) => (
-            <MenuItem key={opt} value={opt}>{opt}</MenuItem>
-          ))}
-        </Select>
-      </FormControl>
+      <FilterField
+        label="Locker"
+        value={locker}
+        options={lockerOptions}
+        onChange={(val) => setLocker(val)}
+      />
 
-      <FormControl fullWidth size="small" sx={fieldSx}>
+      {/* Material — selected on landing page, locked here */}
+      <FormControl fullWidth size="small" sx={fieldSx} disabled>
         <InputLabel>Material</InputLabel>
-        <Select label="Material" value={material} onChange={(e) => onMaterialChange(e.target.value)}>
-          <MenuItem value="">All</MenuItem>
+        <Select
+          label="Material"
+          value={material}
+          disabled
+          onChange={(e) => onMaterialChange(e.target.value)}
+        >
           {materialOptions.map((opt) => (
             <MenuItem key={opt} value={opt}>{opt}</MenuItem>
           ))}
@@ -607,19 +713,13 @@ function FilterPanelContent({
       {filterConfig.length > 0 && <Divider sx={{ my: 1.5 }} />}
 
       {filterConfig.map((f) => (
-        <FormControl fullWidth size="small" sx={fieldSx} key={f.key}>
-          <InputLabel>{f.label}</InputLabel>
-          <Select
-            label={f.label}
-            value={subFilters[f.key] || ""}
-            onChange={(e) => onSubFilterChange(f.key, e.target.value)}
-          >
-            <MenuItem value="">All</MenuItem>
-            {optionsFor(f.dataKey).map((opt) => (
-              <MenuItem key={opt} value={opt}>{opt}</MenuItem>
-            ))}
-          </Select>
-        </FormControl>
+        <FilterField
+          key={f.key}
+          label={f.label}
+          value={subFilters[f.key] || []}
+          options={optionsFor(f.dataKey)}
+          onChange={(val) => onSubFilterChange(f.key, val)}
+        />
       ))}
 
       <Box sx={{ display: "flex", gap: 1.5, mt: 1 }}>
@@ -644,6 +744,8 @@ function FilterPanelContent({
 /* ========================================================================
    Scan panel — the "Scan RM Bag to Reconciliation" drawer. Scanned Job
    No.'s are shown as small deletable chips instead of a modal list.
+   CHANGE: shows the selected material, and a bag is VALID only if it
+   belongs to that material.
    ===================================================================== */
 function ScanPanelContent({
   scanInput,
@@ -657,6 +759,7 @@ function ScanPanelContent({
   onClearAll,
   onScan,
   onClose,
+  material,
 }) {
   const isValid = (code) => validScannedCodes.includes(code);
 
@@ -671,60 +774,66 @@ function ScanPanelContent({
         )}
       </Box>
       <Box
-  sx={{
-    position: "relative",
-    width: 90,
-    height: 90,
-    mx: "auto",          // centered
-    mb: 2.5,             // space before the input field
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-  }}
->
-  {/* corner brackets — only the outer corner is rounded */}
-  {[
-    { top: 0, left: 0, borderWidth: "3px 0 0 3px", borderTopLeftRadius: "8px" },
-    { top: 0, right: 0, borderWidth: "3px 3px 0 0", borderTopRightRadius: "8px" },
-    { bottom: 0, left: 0, borderWidth: "0 0 3px 3px", borderBottomLeftRadius: "8px" },
-    { bottom: 0, right: 0, borderWidth: "0 3px 3px 0", borderBottomRightRadius: "8px" },
-  ].map((pos, i) => (
-    <Box
-      key={i}
-      sx={{
-        position: "absolute",
-        width: 22,
-        height: 22,
-        borderStyle: "solid",
-        borderColor: "#6d5efc",
-        ...pos,
-      }}
-    />
-  ))}
+        sx={{
+          position: "relative",
+          width: 90,
+          height: 90,
+          mx: "auto",          // centered
+          mb: 2.5,             // space before the input field
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
+        {/* corner brackets — only the outer corner is rounded */}
+        {[
+          { top: 0, left: 0, borderWidth: "3px 0 0 3px", borderTopLeftRadius: "8px" },
+          { top: 0, right: 0, borderWidth: "3px 3px 0 0", borderTopRightRadius: "8px" },
+          { bottom: 0, left: 0, borderWidth: "0 0 3px 3px", borderBottomLeftRadius: "8px" },
+          { bottom: 0, right: 0, borderWidth: "0 3px 3px 0", borderBottomRightRadius: "8px" },
+        ].map((pos, i) => (
+          <Box
+            key={i}
+            sx={{
+              position: "absolute",
+              width: 22,
+              height: 22,
+              borderStyle: "solid",
+              borderColor: "#6d5efc",
+              ...pos,
+            }}
+          />
+        ))}
 
-  {/* moving scan line — gradient with faded ends, kept inside the brackets */}
-  <Box
-    sx={{
-      position: "absolute",
-      left: "14%",
-      width: "72%",
-      height: 2,
-      borderRadius: 1,
-      background:
-        "linear-gradient(90deg, transparent 0%, #6d5efc 20%, #6d5efc 80%, transparent 100%)",
-      boxShadow: "0 0 8px 2px rgba(109,94,252,0.45)",
-      animation: `${scanLineMove} 1.8s ease-in-out infinite`,
-    }}
-  />
+        {/* moving scan line — gradient with faded ends, kept inside the brackets */}
+        <Box
+          sx={{
+            position: "absolute",
+            left: "14%",
+            width: "72%",
+            height: 2,
+            borderRadius: 1,
+            background:
+              "linear-gradient(90deg, transparent 0%, #6d5efc 20%, #6d5efc 80%, transparent 100%)",
+            boxShadow: "0 0 8px 2px rgba(109,94,252,0.45)",
+            animation: `${scanLineMove} 1.8s ease-in-out infinite`,
+          }}
+        />
 
-  <QrCodeScannerIcon
-    sx={{
-      fontSize: 42,
-      color: "#6d5efc",
-      animation: `${iconPulse} 1.8s ease-in-out infinite`,
-    }}
-  />
-</Box>
+        <QrCodeScannerIcon
+          sx={{
+            fontSize: 42,
+            color: "#6d5efc",
+            animation: `${iconPulse} 1.8s ease-in-out infinite`,
+          }}
+        />
+      </Box>
+
+      {/* Selected material (fixed) */}
+      <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1.5 }}>
+        <Typography sx={{ fontSize: 12, fontWeight: 700, color: COLORS.textMuted }}>Material:</Typography>
+        <Chip label={material} size="small" sx={chipSx} />
+      </Box>
 
       <TextField
         autoFocus
@@ -770,17 +879,7 @@ function ScanPanelContent({
         <Typography sx={hintInlineSx}>No items scanned yet.</Typography>
       ) : (
         <>
-          <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1, maxHeight: 260, overflowY: "auto", mb: 2 }}>
-            {scannedCodes.map((code) => (
-              <Chip
-                key={code}
-                label={code}
-                size="small"
-                onDelete={() => onRemove(code)}
-                sx={isValid(code) ? chipSx : chipDangerSx}
-              />
-            ))}
-          </Box>
+
 
           <Box sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 1.5, mb: 2 }}>
             <Box sx={{ bgcolor: COLORS.successBg, borderRadius: "8px", px: 1.5, py: 1.25 }}>
@@ -796,6 +895,12 @@ function ScanPanelContent({
               </Typography>
             </Box>
           </Box>
+
+          {invalidScannedCodes.length > 0 && (
+            <Typography sx={{ ...hintSx, color: COLORS.danger, mb: 1.5 }}>
+              Invalid bags don't exist or don't belong to the selected material ({material}).
+            </Typography>
+          )}
 
           <Button
             fullWidth
@@ -817,34 +922,28 @@ function ScanPanelContent({
    COMPONENT
    ===================================================================== */
 export default function MaterialStockReconciliation() {
-  /* ---- top-level mode:
-     'initial' -> landing page (Criteria Wise / Scan RM Bag / tolerance settings)
-     'filter'  -> Criteria Wise view, driven by the Filters drawer
-     'scan'    -> Scan RM Bag view, driven by the Scan drawer
-     'history' -> just the Reconciliation History table ---- */
   const [mode, setMode] = useState("initial");
 
-  /* ---- filters (draft state) — Criteria Wise flow, UNCHANGED ---- */
-  const [locker, setLocker] = useState("");
+  /* ---- API data ---- */
+  const [materialList, setMaterialList] = useState([]); // from getMasterMaterialData()
+  const [rawData, setRawData] = useState([]);           // from GetmaterialWiseData(materialId)
+  const [dataLoading, setDataLoading] = useState(false);
+  const [pendingAction, setPendingAction] = useState(null); // 'filter' | 'scan' | null
+
+  const [locker, setLocker] = useState([]); // multi-select
   const [material, setMaterial] = useState("");
   const [subFilters, setSubFilters] = useState({});
 
-  /* ---- filter drawer (Criteria Wise mode only) ---- */
   const [filterOpen, setFilterOpen] = useState(false);
 
-  /* ---- stock summary snapshot: null until either a filter search or a
-     scan selection populates it ---- */
   const [stockSummary, setStockSummary] = useState(null);
 
-  /* ---- scan flow (now drawer-based, not a modal) ---- */
   const [scanDrawerOpen, setScanDrawerOpen] = useState(false);
   const [scanInput, setScanInput] = useState("");
   const [scannedCodes, setScannedCodes] = useState([]);
 
-  /* ---- NEW: info modal that lists all scanned Job No.'s (scan mode) ---- */
   const [scanInfoOpen, setScanInfoOpen] = useState(false);
 
-  /* ---- physical measurement ---- */
   const [grossWeight, setGrossWeight] = useState("");
   const [trayWeight, setTrayWeight] = useState("");
   const [stickerWeight, setStickerWeight] = useState("");
@@ -852,36 +951,95 @@ export default function MaterialStockReconciliation() {
   const [remarks, setRemarks] = useState("");
   const [result, setResult] = useState(null);
 
-  /* ---- tolerance (editable — set from the landing page, also visible
-     via the info icon next to "Reconciliation Result") ---- */
   const [toleranceMetal, setToleranceMetal] = useState(0.02);
   const [toleranceOther, setToleranceOther] = useState(0.01);
   const [tolAnchor, setTolAnchor] = useState(null);
 
-  /* ---- saved reconciliation log ---- */
   const [history, setHistory] = useState([]);
   const [reconciledIds, setReconciledIds] = useState(new Set());
 
+  const [historyTab, setHistoryTab] = useState(0);
+  const [historyPage, setHistoryPage] = useState(0);
+  const [historyRowsPerPage, setHistoryRowsPerPage] = useState(25);
+
   /* ------------------------------------------------------------------- */
-  const lockerOptions = useMemo(() => uniq(RAW_DATA.map((r) => r.Locker)), []);
-  const materialOptions = useMemo(() => uniq(RAW_DATA.map((r) => r.itemname)), []);
+  /* Load the material master list once */
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await getMasterMaterialData();
+        if (!cancelled) setMaterialList(toArray(res));
+      } catch (err) {
+        console.error("getMasterMaterialData failed:", err);
+        if (!cancelled) setMaterialList([]);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  /* Load material-wise data whenever the selected material changes */
+  useEffect(() => {
+    if (!material) {
+      setRawData([]);
+      setDataLoading(false);
+      return;
+    }
+    const selected = materialList.find((m) => m.itemname === material);
+    if (!selected) return;
+
+    let cancelled = false;
+    setDataLoading(true);
+    setRawData([]);
+    (async () => {
+      try {
+        const res = await GetmaterialWiseData(selected.itemid);
+        if (!cancelled) {
+          setRawData(toArray(res).map((r, i) => normalizeRow(r, material, i)));
+        }
+      } catch (err) {
+        console.error("GetmaterialWiseData failed:", err);
+        if (!cancelled) setRawData([]);
+      } finally {
+        if (!cancelled) setDataLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [material, materialList]);
+
+  const lockerOptions = useMemo(() => uniq(rawData.map((r) => r.Locker)), [rawData]);
+  const materialOptions = useMemo(
+    () => uniq(materialList.map((m) => m.itemname)),
+    [materialList]
+  );
 
   const baseFiltered = useMemo(
     () =>
-      RAW_DATA.filter(
-        (r) => (!locker || r.Locker === locker) && (!material || r.itemname === material)
+      rawData.filter(
+        (r) => (!locker.length || locker.includes(r.Locker)) && (!material || r.itemname === material)
       ),
-    [locker, material]
+    [rawData, locker, material]
   );
 
   const filterConfig = useMemo(() => getFilterConfig(material), [material]);
 
-  const optionsFor = useCallback(
-    (dataKey) => uniq(baseFiltered.map((r) => r[dataKey])),
-    [baseFiltered]
-  );
+  // PERF: compute every dropdown's option list once per data/locker change
+  const optionsMap = useMemo(() => {
+    const m = {};
+    filterConfig.forEach((f) => {
+      m[f.dataKey] = uniq(baseFiltered.map((r) => r[f.dataKey]));
+    });
+    return m;
+  }, [baseFiltered, filterConfig]);
+
+  const optionsFor = useCallback((dataKey) => optionsMap[dataKey] || [], [optionsMap]);
 
   const handleMaterialChange = (val) => {
+    setPendingAction(null);
     setMaterial(val);
     setSubFilters({});
   };
@@ -890,27 +1048,22 @@ export default function MaterialStockReconciliation() {
     setSubFilters((prev) => ({ ...prev, [key]: val }));
   };
 
-  /* Filters drive the page ONLY when the user explicitly clicks Search.
-     ---- CRITERIA WISE FLOW — UNCHANGED ---- */
   const handleSearchSummary = () => {
-    setStockSummary(buildSummary(locker, material, subFilters));
+    setStockSummary(buildSummary(rawData, locker, material, subFilters));
     setResult(null);
     setFilterOpen(false);
     setMode("filter");
   };
 
   const handleClearFilters = () => {
-    setLocker("");
-    setMaterial("");
+    setLocker([]);
     setSubFilters({});
   };
 
   const activeFilterCount =
-    (locker ? 1 : 0) + (material ? 1 : 0) + Object.values(subFilters).filter(Boolean).length;
+    (locker.length ? 1 : 0) + Object.values(subFilters).filter((v) => v && v.length).length;
 
-  /* Landing → "Criteria Wise": enter the filter view with the filter
-     drawer opened right away. ---- UNCHANGED ---- */
-  const handleOpenSystemData = () => {
+  const doOpenSystemData = () => {
     handleClearFilters();
     setStockSummary(null);
     setResult(null);
@@ -918,12 +1071,7 @@ export default function MaterialStockReconciliation() {
     setMode("filter");
   };
 
-  /* ---- scan flow handlers (drawer-based) ---- */
-
-  /* Landing → "Scan RM Bag to Reconciliation": enter scan mode with the
-     scan drawer opened right away, exactly like Criteria Wise opens the
-     filter drawer. */
-  const handleOpenScanFlow = () => {
+  const doOpenScanFlow = () => {
     setScanInput("");
     setScannedCodes([]);
     setStockSummary(null);
@@ -933,10 +1081,34 @@ export default function MaterialStockReconciliation() {
     setMode("scan");
   };
 
-  /* A physical barcode scanner behaves like a fast keyboard, ending each
-     scan with an Enter keystroke — the field is a textarea, so the user
-     (or the scanner) can also enter several Job No.'s at once, separated
-     by commas or new lines. */
+  /* Card click: if data is still loading, stay on the landing page (card shows
+     a spinner) and redirect automatically as soon as the API data arrives. */
+  const handleOpenSystemData = () => {
+    if (!material || pendingAction) return;
+    if (dataLoading) {
+      setPendingAction("filter");
+      return;
+    }
+    doOpenSystemData();
+  };
+
+  const handleOpenScanFlow = () => {
+    if (!material || pendingAction) return;
+    if (dataLoading) {
+      setPendingAction("scan");
+      return;
+    }
+    doOpenScanFlow();
+  };
+
+  useEffect(() => {
+    if (!pendingAction || dataLoading) return;
+    if (pendingAction === "filter") doOpenSystemData();
+    else doOpenScanFlow();
+    setPendingAction(null);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pendingAction, dataLoading]);
+
   const parseAndAddScannedCodes = () => {
     const parts = scanInput
       .split(/[\n,]+/)
@@ -964,44 +1136,37 @@ export default function MaterialStockReconciliation() {
     setScannedCodes((prev) => prev.filter((c) => c !== code));
   };
 
+  const bagSet = useMemo(
+    () => new Set(rawData.filter((r) => r.itemname === material).map((r) => r.rfbag)),
+    [rawData, material]
+  );
   const validScannedCodes = useMemo(
-    () => scannedCodes.filter((code) => RAW_DATA.some((r) => r.rfbag === code)),
-    [scannedCodes]
+    () => scannedCodes.filter((code) => bagSet.has(code)),
+    [scannedCodes, bagSet]
   );
   const invalidScannedCodes = useMemo(
-    () => scannedCodes.filter((code) => !RAW_DATA.some((r) => r.rfbag === code)),
-    [scannedCodes]
+    () => scannedCodes.filter((code) => !bagSet.has(code)),
+    [scannedCodes, bagSet]
   );
 
-  /* Clicking "Scan" loads the data for every valid Job No. in the list,
-     combined into one summary, and closes the drawer. */
   const handleScanAndView = () => {
     if (validScannedCodes.length === 0) return;
-    setStockSummary(buildSummaryFromScanCodes(validScannedCodes));
+    setStockSummary(buildSummaryFromScanCodes(rawData, validScannedCodes, material));
     setResult(null);
     setScanDrawerOpen(false);
   };
-
-  /* BUG FIX: once a scan summary is already on screen, removing (or
-     adding) a scanned chip — whether from the drawer or the header row —
-     must keep "TOTAL RM BAGS / PIECES / SYSTEM WEIGHT" in sync with only
-     the currently VALID scanned codes. Previously the summary stayed
-     frozen at whatever it was when "Scan" was last clicked, so removing
-     2 of 4 valid jobs still showed the old totals. This effect re-builds
-     the summary straight from validScannedCodes whenever the scanned
-     list changes, as long as we're in scan mode and a summary already
-     exists (i.e. the user has clicked "Scan" at least once). */
   useEffect(() => {
     if (mode !== "scan") return;
     setStockSummary((prevSummary) => {
-      if (!prevSummary) return prevSummary; // no scan done yet — nothing to sync
-      if (validScannedCodes.length === 0) return null; // nothing valid left — clear the summary
-      return buildSummaryFromScanCodes(validScannedCodes);
+      if (!prevSummary) return prevSummary;
+      if (validScannedCodes.length === 0) return null;
+      return buildSummaryFromScanCodes(rawData, validScannedCodes, material);
     });
+
+
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [scannedCodes]);
 
-  /* Auto-close the info modal when there are no valid scanned jobs left. */
   useEffect(() => {
     if (validScannedCodes.length === 0) setScanInfoOpen(false);
   }, [validScannedCodes.length]);
@@ -1023,8 +1188,8 @@ export default function MaterialStockReconciliation() {
   const deduction = stickerTotal + polytheneTotal + trayTotal;
   const netWeightLive = (Number(grossWeight) || 0) - deduction;
 
-  const applicableTolerance = material === "Metal" ? toleranceMetal : toleranceOther;
-  const toleranceLabel = material === "Metal" ? "Metal" : "Other Material";
+  const applicableTolerance = String(material).toUpperCase() === "METAL" ? toleranceMetal : toleranceOther;
+  const toleranceLabel = String(material).toUpperCase() === "METAL" ? "Metal" : "Other Material";
 
   const handleReconcile = () => {
     if (!stockSummary || grossWeight === "") return;
@@ -1049,34 +1214,44 @@ export default function MaterialStockReconciliation() {
 
   const handleSaveReconciliation = () => {
     if (!result) return;
-    const record = {
-      id: history.length + 1,
-      dateTime: nowStamp(),
+
+    const batchId = Date.now();
+    const dateTime = nowStamp();
+
+    // one history record per bag (row), not one bulk record
+    const bagRecords = stockSummary.rows.map((r) => ({
+      id: `${batchId}-${r.id}`,
+      rowId: r.id, // NEW: links this record back to its bag row
+      dateTime,
       user: "Admin",
-      material: stockSummary.material || "All",
-      shape: stockSummary.subFilters?.shape || stockSummary.subFilters?.type || "—",
-      size: stockSummary.subFilters?.size || "—",
-      lotNo: stockSummary.subFilters?.lotno || stockSummary.subFilters?.lot || "—",
-      filters: stockSummary.subFilters,
-      totalBags: stockSummary.bags,
-      totalPieces: stockSummary.pieces,
-      systemWeight: result.systemWeight,
+      rmBag: r.rfbag,
+      material: r.itemname,
+      shape: r.shape || "—",
+      size: r.size || "—",
+      lotNo: r.rfbag,
+      systemWeight: Number(r.TotalRemainingWeight) || 0,
+      totalPieces: Number(r.TotalRemainingPcs) || 0,
+      totalBags: 1,
+      status: result.status,
+      remarks,
+      reconciledBy: r.istoreCust_Customercode || "—",
+
       grossWeight: result.grossWeight,
       stickerWeight: result.stickerWeight,
       polytheneWeight: result.polytheneWeight,
       trayWeight: result.trayWeight,
-      remarks,
       physicalNet: result.physicalNet,
       difference: result.difference,
       tolerance: result.tolerance,
-      status: result.status,
-    };
-    setHistory((prev) => [record, ...prev]);
+    }));
+
+    setHistory((prev) => [...bagRecords, ...prev]);
     setReconciledIds((prev) => {
       const next = new Set(prev);
       stockSummary.rows.forEach((r) => next.add(r.id));
       return next;
     });
+
     setGrossWeight("");
     setTrayWeight("");
     setStickerWeight("");
@@ -1086,7 +1261,6 @@ export default function MaterialStockReconciliation() {
     setStockSummary(null);
   };
 
-  /* Direct download of a saved reconciliation (no popup). */
   const handleDownloadRecord = (r) => {
     const rows = [
       ["Date & Time", r.dateTime],
@@ -1123,18 +1297,93 @@ export default function MaterialStockReconciliation() {
   const summaryChips = useMemo(() => {
     if (!stockSummary) return [];
     const chips = [];
-    if (stockSummary.locker) chips.push(stockSummary.locker);
+    [].concat(stockSummary.locker || []).forEach((v) => v && chips.push(v));
     if (stockSummary.material) chips.push(stockSummary.material);
-    Object.values(stockSummary.subFilters || {}).forEach((v) => v && chips.push(v));
+    Object.values(stockSummary.subFilters || {}).forEach((v) =>
+      [].concat(v || []).forEach((x) => x && chips.push(x))
+    );
     chips.push(`${stockSummary.bags} Bags`);
     chips.push(`${stockSummary.pieces} Pcs`);
     return chips;
   }, [stockSummary]);
 
   const showWorkspace = mode === "filter" || mode === "scan";
-  // Summary/measurement/result show only after Search (filter mode) or Scan (scan mode) is clicked
   const showSummaryBlock = showWorkspace && !!stockSummary;
   const showHistoryBlock = mode === "filter" || mode === "scan" || mode === "history";
+
+  const todayDateStr = useMemo(
+    () =>
+      new Date().toLocaleDateString("en-GB", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+      }),
+    []
+  );
+
+  /* NEW: which bags are listed in the history table.
+     - Criteria Wise mode -> every bag of the selected material
+     - Scan mode          -> every valid scanned bag */
+  const historyBaseRows = useMemo(() => {
+    if (!material) return [];
+    if (mode === "scan") {
+      return rawData.filter(
+        (r) => r.itemname === material && validScannedCodes.includes(r.rfbag)
+      );
+    }
+    return rawData.filter((r) => r.itemname === material);
+  }, [mode, material, validScannedCodes, rawData]);
+
+  /* NEW: merge each listed bag with its latest saved reconciliation (if any).
+     `history` is newest-first, so the first match is the latest. */
+  const historyRows = useMemo(
+    () => {
+      // PERF: newest record per bag, built once (history is newest-first)
+      const latest = new Map();
+      history.forEach((h) => {
+        if (!latest.has(h.rowId)) latest.set(h.rowId, h);
+      });
+      return historyBaseRows.map((r) => {
+        const rec = latest.get(r.id);
+        return {
+          key: r.id,
+          dateTime: rec ? rec.dateTime : "—",
+          rmBag: r.rfbag,
+          material: r.itemname,
+          shape: r.shape || "—",
+          size: r.size || "—",
+          lotNo: r.lotNo,
+          systemWeight: Number(r.TotalRemainingWeight) || 0,
+          // reconciled: !!rec && rec.status === "ACCEPT",
+          status: !rec ? "PENDING" : rec.status === "ACCEPT" ? "DONE" : "REJECTED",
+          remarks: rec ? rec.remarks : "",
+          reconciledBy: r.istoreCust_Customercode || "—",
+          doneToday: !!rec && rec.dateTime.startsWith(todayDateStr),
+        };
+      });
+    },
+    [historyBaseRows, history, todayDateStr]
+  );
+
+  const todaysHistory = useMemo(
+    () => historyRows.filter((h) => h.doneToday),
+    [historyRows]
+  );
+  const historyRowsToShow = historyTab === 0 ? historyRows : todaysHistory;
+
+  // PERF: render only one page of history rows instead of thousands at once
+  const pagedHistoryRows = useMemo(
+    () =>
+      historyRowsToShow.slice(
+        historyPage * historyRowsPerPage,
+        historyPage * historyRowsPerPage + historyRowsPerPage
+      ),
+    [historyRowsToShow, historyPage, historyRowsPerPage]
+  );
+
+  useEffect(() => {
+    setHistoryPage(0);
+  }, [historyTab, mode, material, validScannedCodes.length]);
 
   /* ----------------------------------------------------------------- */
   return (
@@ -1149,13 +1398,13 @@ export default function MaterialStockReconciliation() {
           "*": { boxSizing: "border-box" },
         }}
       >
-        {/* ================= FILTER DRAWER (Criteria Wise mode) — UNCHANGED ================= */}
+        {/* ================= FILTER DRAWER (Criteria Wise mode) ================= */}
         {mode === "filter" && (
           <Drawer
             anchor="left"
             open={filterOpen}
             onClose={() => setFilterOpen(false)}
-            PaperProps={{ sx: { width: 320, bgcolor: COLORS.bg } }}
+            PaperProps={{ sx: { width: 380, bgcolor: COLORS.bg } }}
           >
             <FilterPanelContent
               locker={locker}
@@ -1196,12 +1445,12 @@ export default function MaterialStockReconciliation() {
               onClearAll={() => setScannedCodes([])}
               onScan={handleScanAndView}
               onClose={() => setScanDrawerOpen(false)}
+              material={material}
             />
           </Drawer>
         )}
 
-        {/* ================= SCANNED JOBS INFO MODAL (Scan RM Bag mode) =================
-            Fixed 300px x 500px. Content scrolls inside when there are many jobs. */}
+        {/* ================= SCANNED JOBS INFO MODAL (Scan RM Bag mode) ================= */}
         {mode === "scan" && (
           <Dialog
             open={scanInfoOpen}
@@ -1239,14 +1488,7 @@ export default function MaterialStockReconciliation() {
               </IconButton>
             </Box>
 
-            <Box
-              sx={{
-                flex: 1,
-                minHeight: 0,
-                overflow: "auto", // scrolls (horizontal + vertical) when content is larger than the fixed modal
-                p: 2,
-              }}
-            >
+            <Box sx={{ flex: 1, minHeight: 0, overflow: "auto", p: 2 }}>
               <Box
                 sx={{
                   display: "flex",
@@ -1272,7 +1514,6 @@ export default function MaterialStockReconciliation() {
 
         {/* ================= MAIN CONTENT ================= */}
         <Box sx={{ flex: 1, minWidth: 0, p: 1.5, pt: 1 }}>
-          {/* Landing page */}
           {mode === "initial" && (
             <LandingPage
               onSystemData={handleOpenSystemData}
@@ -1281,10 +1522,13 @@ export default function MaterialStockReconciliation() {
               setToleranceMetal={setToleranceMetal}
               toleranceOther={toleranceOther}
               setToleranceOther={setToleranceOther}
+              material={material}
+              onMaterialChange={handleMaterialChange}
+              materialOptions={materialOptions}
+              pendingAction={pendingAction}
             />
           )}
 
-          {/* Back button — filter/scan/history modes only */}
           {mode !== "initial" && (
             <Tooltip title="Back" arrow>
               <IconButton
@@ -1307,7 +1551,6 @@ export default function MaterialStockReconciliation() {
             </Tooltip>
           )}
 
-          {/* Page header — content changes with mode */}
           {mode !== "initial" && (
             <Box sx={{ display: "flex", alignItems: "center", justifyContent: "flex-start", mb: 1, gap: 1.5, marginLeft: "6px", flexWrap: "wrap" }}>
               {mode === "filter" && (
@@ -1340,8 +1583,6 @@ export default function MaterialStockReconciliation() {
                 {mode === "scan" ? "" : "Material Stock Reconciliation"}
               </Typography>
 
-              {/* Scan mode: instead of listing every scanned Job No. inline, show an
-                  info icon — clicking it opens a fixed-size modal with the full list. */}
               {mode === "scan" && validScannedCodes.length > 0 && (
                 <Tooltip title="View scanned Job No.'s" arrow>
                   <IconButton
@@ -1366,7 +1607,6 @@ export default function MaterialStockReconciliation() {
             </Box>
           )}
 
-          {/* System Stock Summary + Physical Measurement + Result (filter or scan mode) */}
           {showSummaryBlock && (
             <>
               <Paper
@@ -1383,15 +1623,13 @@ export default function MaterialStockReconciliation() {
                   <Typography sx={{ fontSize: 16, fontWeight: 600, color: "#6c3fc5" }}>
                     System Stock Summary
                   </Typography>
-                  {mode !== "scan" &&(
-                     <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.75, justifyContent: "flex-end" }}>
-                     {summaryChips.map((c, i) => (
-                       <Chip key={i} label={c} size="small" sx={{ ...chipSx, backgroundColor: "#f3f4f6", fontWeight: 500 }} />
-                     ))}
-                   </Box>
-
+                  {mode !== "scan" && (
+                    <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.75, justifyContent: "flex-end" }}>
+                      {summaryChips.map((c, i) => (
+                        <Chip key={i} label={c} size="small" sx={{ ...chipSx, backgroundColor: "#f3f4f6", fontWeight: 500 }} />
+                      ))}
+                    </Box>
                   )}
-                 
                 </Box>
 
                 <Box
@@ -1484,7 +1722,7 @@ export default function MaterialStockReconciliation() {
                       InputProps={{ endAdornment: <Typography sx={{ fontSize: 12, color: COLORS.textMuted }}>gm</Typography> }}
                     />
                     <TextField
-                      label=" Singale Sticker Weight"
+                      label=" Single Sticker Weight"
                       required
                       fullWidth
                       size="small"
@@ -1494,7 +1732,7 @@ export default function MaterialStockReconciliation() {
                       InputProps={{ endAdornment: <Typography sx={{ fontSize: 12, color: COLORS.textMuted }}>gm</Typography> }}
                     />
                     <TextField
-                      label="Singale Polythene Weight"
+                      label="Single Polythene Weight"
                       required
                       fullWidth
                       size="small"
@@ -1619,62 +1857,118 @@ export default function MaterialStockReconciliation() {
             </>
           )}
 
-          {/* Reconciliation History */}
+          {/* Reconciliation History — all bags (criteria: material bags, scan: scanned bags) */}
           {showHistoryBlock && (
             <Paper sx={cardSx} elevation={0}>
-              <Typography sx={panelTitleSx}>Reconciliation History</Typography>
+              <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 1, mb: 1 }}>
+                <Typography sx={{ ...panelTitleSx, mb: 0 }}>Reconciliation History</Typography>
+              </Box>
+
+              <Tabs
+                value={historyTab}
+                onChange={(e, val) => setHistoryTab(val)}
+                sx={{
+                  minHeight: 36,
+                  mb: 1.5,
+                  borderBottom: `1px solid ${COLORS.border}`,
+                  "& .MuiTabs-indicator": { backgroundColor: COLORS.purple },
+                }}
+              >
+                <Tab
+                  label={`History${historyRows.length ? ` (${historyRows.length})` : ""}`}
+                  sx={{
+                    minHeight: 36,
+                    textTransform: "none",
+                    fontSize: 13,
+                    fontWeight: 600,
+                    color: COLORS.textMuted,
+                    "&.Mui-selected": { color: COLORS.purple },
+                  }}
+                />
+                <Tab
+                  label={`Today's Reconciliation${todaysHistory.length ? ` (${todaysHistory.length})` : ""}`}
+                  sx={{
+                    minHeight: 36,
+                    textTransform: "none",
+                    fontSize: 13,
+                    fontWeight: 600,
+                    color: COLORS.textMuted,
+                    "&.Mui-selected": { color: COLORS.purple },
+                  }}
+                />
+              </Tabs>
+
               <TableContainer sx={tableContainerSx}>
                 <Table size="small">
                   <TableHead>
                     <TableRow>
                       <TableCell sx={theadCellSx}>Date &amp; Time</TableCell>
+                      <TableCell sx={theadCellSx}>RM Bag</TableCell>
                       <TableCell sx={theadCellSx}>Material</TableCell>
                       <TableCell sx={theadCellSx}>Shape</TableCell>
                       <TableCell sx={theadCellSx}>Size</TableCell>
                       <TableCell sx={theadCellSx}>Lot No</TableCell>
                       <TableCell sx={theadCellSx} align="right">System Weight</TableCell>
-                      <TableCell sx={theadCellSx} align="right">Physical Weight</TableCell>
-                      <TableCell sx={theadCellSx} align="right">Difference</TableCell>
                       <TableCell sx={theadCellSx}>Status</TableCell>
                       <TableCell sx={theadCellSx}>Remarks</TableCell>
-                      <TableCell sx={theadCellSx} align="center">Reconciliation By</TableCell> 
+                      <TableCell sx={theadCellSx}>Reconciliation By</TableCell>
                     </TableRow>
                   </TableHead>
                   <TableBody>
-                    {history.length === 0 && (
+                    {historyRowsToShow.length === 0 && (
                       <TableRow>
-                        <TableCell colSpan={11} align="center" sx={{ color: COLORS.textMuted, py: 3 }}>
-                          No reconciliations saved yet.
+                        <TableCell colSpan={10} align="center" sx={{ color: COLORS.textMuted, py: 3 }}>
+                          {historyTab === 0
+                            ? mode === "scan"
+                              ? "No scanned bags yet."
+                              : "No bags found for this material."
+                            : "No reconciliations done today yet."}
                         </TableCell>
                       </TableRow>
                     )}
-                    {history.map((h) => (
-                      <TableRow key={h.id}>
+                    {pagedHistoryRows.map((h) => (
+                      <TableRow key={h.key}>
                         <TableCell sx={tbodyCellSx}>{h.dateTime}</TableCell>
+                        <TableCell sx={tbodyCellSx}>{h.rmBag}</TableCell>
                         <TableCell sx={linkCellSx}>{h.material}</TableCell>
                         <TableCell sx={tbodyCellSx}>{h.shape}</TableCell>
                         <TableCell sx={tbodyCellSx}>{h.size}</TableCell>
                         <TableCell sx={tbodyCellSx}>{h.lotNo}</TableCell>
                         <TableCell sx={tbodyCellSx} align="right">{fmt(h.systemWeight)}</TableCell>
-                        <TableCell sx={tbodyCellSx} align="right">{fmt(h.physicalNet)}</TableCell>
-                        <TableCell sx={tbodyCellSx} align="right">
-                          {h.difference >= 0 ? "+" : ""}
-                          {fmt(h.difference)}
-                        </TableCell>
                         <TableCell sx={tbodyCellSx}>
-                          <Chip size="small" label={h.status === "ACCEPT" ? "PASS" : "FAIL"} sx={h.status === "ACCEPT" ? chipSuccessSx : chipDangerSx} />
+                          <Chip
+                            size="small"
+                            label={
+                              h.status === "DONE" ? "Done" : h.status === "REJECTED" ? "Rejected" : "Pending"
+                            }
+                            sx={
+                              h.status === "DONE"
+                                ? chipSuccessSx
+                                : h.status === "REJECTED"
+                                  ? chipDangerSx
+                                  : chipWarningSx
+                            }
+                          />
                         </TableCell>
                         <TableCell sx={tbodyCellSx}>{h.remarks || "—"}</TableCell>
-                        <TableCell sx={tbodyCellSx} align="center">
-                          <IconButton size="small" onClick={() => handleDownloadRecord(h)}>
-                            <DownloadIcon fontSize="small" />
-                          </IconButton>
-                        </TableCell>
+                        <TableCell sx={tbodyCellSx}>{h.reconciledBy}</TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
                 </Table>
               </TableContainer>
+              <TablePagination
+                component="div"
+                count={historyRowsToShow.length}
+                page={Math.min(historyPage, Math.max(0, Math.ceil(historyRowsToShow.length / historyRowsPerPage) - 1))}
+                onPageChange={(e, p) => setHistoryPage(p)}
+                rowsPerPage={historyRowsPerPage}
+                onRowsPerPageChange={(e) => {
+                  setHistoryRowsPerPage(Number(e.target.value));
+                  setHistoryPage(0);
+                }}
+                rowsPerPageOptions={[10, 25, 50, 100]}
+              />
             </Paper>
           )}
         </Box>

@@ -41,6 +41,7 @@ import './WIPMis.scss';
 import DescriptionOutlinedIcon from '@mui/icons-material/DescriptionOutlined';
 import TextField from '@mui/material/TextField';
 import SearchIcon from '@mui/icons-material/Search';
+import FileDownloadOutlinedIcon from '@mui/icons-material/FileDownloadOutlined';
 
 /* ---------------------------------------------------------------- */
 /* Helpers (DATA LOGIC — UNCHANGED)                                   */
@@ -859,16 +860,19 @@ const TAB_LABELS = [
 */
 const PCS_DETAIL_COLUMNS = [
   { field: 'promiseDate', headerName: 'Promise Date', flex: 1, minWidth: 120, align: 'center', headerAlign: 'center' },
-  { field: 'remDays', headerName: 'Rem. Days', flex: 1.0, minWidth: 100, align: 'center', headerAlign: 'center' }, 
+  { field: 'remDays', headerName: 'Rem. Days', flex: 0.7, minWidth: 70, align: 'center', headerAlign: 'center' },
   { field: 'location', headerName: 'Location', flex: 1.1, minWidth: 120 },
-  { field: 'custCode', headerName: 'Cust Code', flex: 1, minWidth: 120 },          
+  { field: 'design', headerName: 'Design No.', flex: 1, minWidth: 120 },
+  { field: 'custCode', headerName: 'Cust Code', flex: 1, minWidth: 120 },
   { field: 'jobNo', headerName: 'Job No', flex: 1, minWidth: 120 },
-  { field: 'Pcs', headerName: 'Pcs', flex: 0.8, minWidth: 90 },
-  { field: 'design', headerName: 'Design No.', flex: 1.1, minWidth: 130 },
+  { field: 'Pcs', headerName: 'Pcs', flex: 0.7, minWidth: 70 },
+
+  // NEW: two columns after Pcs
+  { field: 'grossWt', headerName: 'Gross Wt', flex: 0.8, minWidth: 80, align: 'right', headerAlign: 'center' },
+  { field: 'netWt', headerName: 'Net Wt', flex: 0.8, minWidth: 80, align: 'right', headerAlign: 'center' },
+
   { field: 'status', headerName: 'Current Status', flex: 1.4, minWidth: 140 },
-  { field: 'workerName', headerName: 'Worker Name', flex: 1.2, minWidth: 140 },
-  // { field: 'grossWt', headerName: 'Gross Wt', flex: 0.9, minWidth: 100, align: 'right', headerAlign: 'center' },
-  // { field: 'netWt', headerName: 'Net Wt', flex: 0.9, minWidth: 100, align: 'right', headerAlign: 'center' },
+  { field: 'workerName', headerName: 'Worker Name', flex: 1.1, minWidth: 120 },
 ];
 const WIPMis = () => {
   const [data, setData] = useState(null);
@@ -1106,6 +1110,25 @@ const WIPMis = () => {
     setPcsDetail(null);
     setPcsSearch('');
   };
+  // NEW: export the popup table (respects the current search filter)
+const handleExportPcsDetail = () => {
+  if (!pcsDetail || pcsDetailFilteredRows.length === 0) return;
+
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(
+    wb,
+    XLSX.utils.aoa_to_sheet(buildSheetAOA(PCS_DETAIL_COLUMNS, pcsDetailFilteredRows, null)),
+    'Details'
+  );
+
+  // File names can't contain these characters, and the title has "—"
+  const safeTitle = String(pcsDetail.title)
+    .replace(/[\\/:*?"<>|—]/g, '')
+    .replace(/\s+/g, '_')
+    .slice(0, 60);
+
+  XLSX.writeFile(wb, `${safeTitle}_${new Date().toISOString().slice(0, 10)}.xlsx`);
+};
 
   const buildPivotColumns = (rowLabel, colKeys, detailCfg) => [
     { field: 'row', headerName: rowLabel, flex: 1.4, minWidth: 160 },
@@ -1656,24 +1679,37 @@ const WIPMis = () => {
               columns={PCS_DETAIL_COLUMNS}
               rows={pcsDetailFilteredRows}
               headerFilters={
-                <TextField
-                  size="small"
-                  placeholder="Search job, design, status, worker..."
-                  value={pcsSearch}
-                  onChange={(e) => setPcsSearch(e.target.value)}
-                  autoFocus
-                  InputProps={{
-                    startAdornment: (
-                      <SearchIcon fontSize="small" style={{ marginRight: 6, color: '#8a90a6' }} />
-                    ),
-                    endAdornment: pcsSearch ? (
-                      <IconButton size="small" onClick={() => setPcsSearch('')} title="Clear">
-                        <CloseIcon fontSize="small" />
-                      </IconButton>
-                    ) : null,
-                  }}
-                  sx={{ minWidth: 330 }}
-                />
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <TextField
+                    size="small"
+                    placeholder="Search job, design, status, worker..."
+                    value={pcsSearch}
+                    onChange={(e) => setPcsSearch(e.target.value)}
+                    autoFocus
+                    InputProps={{
+                      startAdornment: (
+                        <SearchIcon fontSize="small" style={{ marginRight: 6, color: '#8a90a6' }} />
+                      ),
+                      endAdornment: pcsSearch ? (
+                        <IconButton size="small" onClick={() => setPcsSearch('')} title="Clear">
+                          <CloseIcon fontSize="small" />
+                        </IconButton>
+                      ) : null,
+                    }}
+                    sx={{ minWidth: 330 }}
+                  />
+              
+                  {/* NEW: Excel export */}
+                  <IconButton
+                    className="wip-mis__export-btn"
+                    onClick={handleExportPcsDetail}
+                    size="small"
+                    title="Export to Excel"
+                    disabled={pcsDetailFilteredRows.length === 0}
+                  >
+                    <DescriptionOutlinedIcon fontSize="small" />
+                  </IconButton>
+                </Box>
               }
             />
           )}
