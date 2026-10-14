@@ -1866,6 +1866,7 @@ export default function AllEmployeeDataReport({
   const handleClickOpenPoup = () => {
     setOpenPopup(true);
   };
+
   const handleClickOpenPopupDeafiltPin = () => {
     setOpenDefaultpin(true);
   };
@@ -1873,6 +1874,7 @@ export default function AllEmployeeDataReport({
   const handleClosePopup = () => {
     setOpenPopup(false);
   };
+  
   const handleClosePopupPin = () => {
     setOpenDefaultpin(false);
   };
