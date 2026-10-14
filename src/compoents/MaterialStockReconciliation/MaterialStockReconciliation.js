@@ -1,5 +1,5 @@
 // http://localhost:3000/testreport/?sp=9&ifid=AdvanceCRM&pid=18618
-import React, { useMemo, useState, useCallback, useEffect } from "react";
+import React, { useMemo, useState, useCallback, useEffect, useRef } from "react";
 import {
   Box,
   Paper,
@@ -51,7 +51,7 @@ import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import Inventory2OutlinedIcon from "@mui/icons-material/Inventory2Outlined";
 import TuneIcon from "@mui/icons-material/Tune";
 import { keyframes } from "@emotion/react";
-import { getMasterMaterialData, GetmaterialWiseData } from "../../API/GetRmBulkReconcilationData/GetRmBulkReconcilationData";
+import { getMasterMaterialData, GetmaterialWiseData, SaveReconciliation, GetTodaysTransactionData, GetReconcilationSummary } from "../../API/GetRmBulkReconcilationData/GetRmBulkReconcilationData";
 
 
 /* ========================================================================
@@ -157,6 +157,14 @@ const chipSuccessSx = { bgcolor: COLORS.successBg, color: COLORS.success, fontWe
 const chipDangerSx = { bgcolor: COLORS.dangerBg, color: COLORS.danger, fontWeight: 600 };
 const chipWarningSx = { bgcolor: COLORS.warningBg, color: COLORS.warning, fontWeight: 600 };
 
+/* Status chip colour for the "Today's Transactions" table (driven by Last_Reconcileflg) */
+const getStatusChipSx = (status) => {
+  const v = String(status || "").toLowerCase();
+  if (v.includes("reject") || v.includes("fail")) return chipDangerSx;
+  if (v.includes("accept") || v.includes("done") || v.includes("success") || v.includes("pass")) return chipSuccessSx;
+  return chipWarningSx;
+};
+
 const tableContainerSx = {
   border: `1px solid ${COLORS.border}`,
   borderRadius: "10px",
@@ -211,6 +219,21 @@ const normalizeRow = (r, materialName, index) => ({
   istoreCust_Customercode: r.istoreCust_Customercode ?? "",
 });
 
+/* NEW: logged-in user id for the SaveReconciliation API.
+   >>> Adjust the storage key / field names to match how your app stores
+   the logged-in user. <<< */
+const getLoginUserId = () => {
+  try {
+    const raw =
+      sessionStorage.getItem("loginUserDetail") ||
+      localStorage.getItem("loginUserDetail");
+    const u = raw ? JSON.parse(raw) : null;
+    return u?.id ?? u?.userid ?? u?.UserId ?? 0;
+  } catch (e) {
+    return 0;
+  }
+};
+
 /* ========================================================================
    FILTER CONFIG (keys are UPPERCASE to match API item names)
    ===================================================================== */
@@ -218,7 +241,8 @@ const DIAMOND_GROUP = ["DIAMOND", "COLOR STONE", "MISC"];
 
 const FILTER_CONFIG = {
   diamondGroup: [
-    { key: "materialtype", label: "Material Type", dataKey: "typename" },
+    { key: "customer", label: "Customer", dataKey: "istoreCust_Customercode" },
+    { key: "materialtype", label: "Type", dataKey: "typename" },
     { key: "shape", label: "Shape", dataKey: "shape" },
     { key: "quality", label: "Quality", dataKey: "Quality" },
     { key: "color", label: "Color", dataKey: "colorname" },
@@ -233,6 +257,7 @@ const FILTER_CONFIG = {
     { key: "color", label: "Color", dataKey: "color" },
   ],
   MOUNT: [
+    { key: "customer", label: "Customer", dataKey: "istoreCust_Customercode" },
     { key: "category", label: "Category", dataKey: "Mountcategoryname" },
     { key: "type", label: "Type", dataKey: "typename" },
     { key: "quality", label: "Quality", dataKey: "quality" },
@@ -241,6 +266,7 @@ const FILTER_CONFIG = {
     { key: "lot", label: "Lot", dataKey: "lotNo" },
   ],
   FINDING: [
+    { key: "customer", label: "Customer", dataKey: "istoreCust_Customercode" },
     { key: "ftype", label: "F.Type", dataKey: "findingtypename" },
     { key: "accessories", label: "Accessories", dataKey: "findingAccessories" },
     // { key: "type", label: "Type", dataKey: "shape" },
@@ -252,9 +278,9 @@ const FILTER_CONFIG = {
 };
 
 /* NEW: filters shown for EVERY material */
-const COMMON_FILTERS = [
-  { key: "customer", label: "Customer", dataKey: "istoreCust_Customercode" },
-];
+// const COMMON_FILTERS = [
+//   { key: "customer", label: "Customer", dataKey: "istoreCust_Customercode" },
+// ];
 
 function getFilterConfig(material) {
   if (!material) return [];
@@ -262,7 +288,7 @@ function getFilterConfig(material) {
   const specific = DIAMOND_GROUP.includes(key)
     ? FILTER_CONFIG.diamondGroup
     : FILTER_CONFIG[key] || [];
-  return [...COMMON_FILTERS, ...specific];
+  return [ ...specific];
 }
 
 const uniq = (arr) => [...new Set(arr.filter((v) => v !== undefined && v !== null && v !== ""))];
@@ -453,7 +479,7 @@ function LandingPage({
         flexDirection: "column",
         alignItems: "center",
         justifyContent: "center",
-        py: 5,
+        pb: 5,
         px: 2,
         borderRadius: "20px",
         background: `radial-gradient(1200px 500px at 50% -10%, ${COLORS.purpleLight} 0%, ${COLORS.bg} 65%)`,
@@ -630,7 +656,7 @@ function LandingPage({
    only the first 100 matches (type to narrow). Small lists keep the normal Select. */
 const limitedFilter = createFilterOptions({ limit: 100 });
 
-function FilterField({ label, value, options, onChange }) {
+function FilterField({ label, value, options, onChange , showAll = false}) {
   // keep already-selected values visible even if the other filters narrowed the list
   const allOptions = useMemo(() => uniq([...value, ...options]), [value, options]);
   return (
@@ -654,8 +680,16 @@ function FilterField({ label, value, options, onChange }) {
           </li>
         );
       }}
+      // renderInput={(params) => (
+      //   <TextField {...params} label={label} placeholder={value.length ? "" : "All"} />
+      // )}
       renderInput={(params) => (
-        <TextField {...params} label={label} placeholder={value.length ? "" : "All"} />
+        <TextField
+        {...params}
+        label={label}
+        placeholder={value.length ? "" : "All"}
+        InputLabelProps={{ ...params.InputLabelProps, shrink: showAll ? true : params.InputLabelProps.shrink }}
+      />
       )}
     />
   );
@@ -689,11 +723,12 @@ function FilterPanelContent({
       </Box>
 
       <FilterField
-        label="Locker"
-        value={locker}
-        options={lockerOptions}
-        onChange={(val) => setLocker(val)}
-      />
+  label="Locker"
+  value={locker}
+  options={lockerOptions}
+  onChange={(val) => setLocker(val)}
+  showAll
+/>
 
       {/* Material — selected on landing page, locked here */}
       <FormControl fullWidth size="small" sx={fieldSx} disabled>
@@ -951,6 +986,10 @@ export default function MaterialStockReconciliation() {
   const [remarks, setRemarks] = useState("");
   const [result, setResult] = useState(null);
 
+  /* NEW: SaveReconciliation API state */
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState("");
+
   const [toleranceMetal, setToleranceMetal] = useState(0.02);
   const [toleranceOther, setToleranceOther] = useState(0.01);
   const [tolAnchor, setTolAnchor] = useState(null);
@@ -958,7 +997,12 @@ export default function MaterialStockReconciliation() {
   const [history, setHistory] = useState([]);
   const [reconciledIds, setReconciledIds] = useState(new Set());
 
-  const [historyTab, setHistoryTab] = useState(0);
+  /* NEW: Today's transactions table + reconcile summary KPI (from API) */
+  const [todaysData, setTodaysData] = useState([]);
+  const [todaysLoading, setTodaysLoading] = useState(false);
+  const todaysReqRef = useRef(0);
+  const [reconSummary, setReconSummary] = useState({ total: 0, success: 0, reject: 0 });
+
   const [historyPage, setHistoryPage] = useState(0);
   const [historyRowsPerPage, setHistoryRowsPerPage] = useState(25);
 
@@ -1011,6 +1055,50 @@ export default function MaterialStockReconciliation() {
     };
   }, [material, materialList]);
 
+  /* NEW: Today's reconcile summary (KPI card) */
+  const loadReconSummary = useCallback(async () => {
+    try {
+      const res = await GetReconcilationSummary();
+      const rec = Array.isArray(res) ? res[0] : res;
+      setReconSummary({
+        total: Number(rec?.totalreconcile) || 0,
+        success: Number(rec?.successreconcile) || 0,
+        reject: Number(rec?.rejectreconcile) || 0,
+      });
+    } catch (err) {
+      console.error("GetReconcilationSummary failed:", err);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadReconSummary();
+  }, [loadReconSummary]);
+
+  /* NEW: Today's transactions for the selected material */
+  const loadTodaysTransactions = useCallback(async () => {
+    const selected = materialList.find((m) => m.itemname === material);
+    if (!material || !selected) {
+      setTodaysData([]);
+      setTodaysLoading(false);
+      return;
+    }
+    const reqId = ++todaysReqRef.current;
+    setTodaysLoading(true);
+    try {
+      const res = await GetTodaysTransactionData(selected.itemid);
+      if (reqId === todaysReqRef.current) setTodaysData(toArray(res));
+    } catch (err) {
+      console.error("GetTodaysTransactionData failed:", err);
+      if (reqId === todaysReqRef.current) setTodaysData([]);
+    } finally {
+      if (reqId === todaysReqRef.current) setTodaysLoading(false);
+    }
+  }, [material, materialList]);
+
+  useEffect(() => {
+    loadTodaysTransactions();
+  }, [loadTodaysTransactions]);
+
   const lockerOptions = useMemo(() => uniq(rawData.map((r) => r.Locker)), [rawData]);
   const materialOptions = useMemo(
     () => uniq(materialList.map((m) => m.itemname)),
@@ -1051,6 +1139,7 @@ export default function MaterialStockReconciliation() {
   const handleSearchSummary = () => {
     setStockSummary(buildSummary(rawData, locker, material, subFilters));
     setResult(null);
+    setSaveError("");
     setFilterOpen(false);
     setMode("filter");
   };
@@ -1067,6 +1156,7 @@ export default function MaterialStockReconciliation() {
     handleClearFilters();
     setStockSummary(null);
     setResult(null);
+    setSaveError("");
     setFilterOpen(true);
     setMode("filter");
   };
@@ -1076,6 +1166,7 @@ export default function MaterialStockReconciliation() {
     setScannedCodes([]);
     setStockSummary(null);
     setResult(null);
+    setSaveError("");
     setScanInfoOpen(false);
     setScanDrawerOpen(true);
     setMode("scan");
@@ -1153,6 +1244,7 @@ export default function MaterialStockReconciliation() {
     if (validScannedCodes.length === 0) return;
     setStockSummary(buildSummaryFromScanCodes(rawData, validScannedCodes, material));
     setResult(null);
+    setSaveError("");
     setScanDrawerOpen(false);
   };
   useEffect(() => {
@@ -1175,6 +1267,7 @@ export default function MaterialStockReconciliation() {
     setMode("initial");
     setStockSummary(null);
     setResult(null);
+    setSaveError("");
     setFilterOpen(false);
     setScanDrawerOpen(false);
     setScanInfoOpen(false);
@@ -1188,28 +1281,74 @@ export default function MaterialStockReconciliation() {
   const deduction = stickerTotal + polytheneTotal + trayTotal;
   const netWeightLive = (Number(grossWeight) || 0) - deduction;
 
+  /* All four weight inputs are mandatory; Remarks is optional (max 200 chars). */
+  const REMARKS_MAX = 200;
+  const allMandatoryFilled =
+    grossWeight !== "" && trayWeight !== "" && stickerWeight !== "" && polytheneWeight !== "";
+
   const applicableTolerance = String(material).toUpperCase() === "METAL" ? toleranceMetal : toleranceOther;
   const toleranceLabel = String(material).toUpperCase() === "METAL" ? "Metal" : "Other Material";
 
-  const handleReconcile = () => {
-    if (!stockSummary || grossWeight === "") return;
-    const physicalNet = netWeightLive;
-    const difference = physicalNet - stockSummary.weight;
-    const withinTolerance = Math.abs(difference) <= applicableTolerance;
-    setResult({
-      systemWeight: stockSummary.weight,
-      grossWeight: Number(grossWeight) || 0,
-      trayWeight: Number(trayWeight) || 0,
-      stickerWeight: Number(stickerWeight) || 0,
-      polytheneWeight: Number(polytheneWeight) || 0,
-      physicalNet,
-      difference,
-      tolerance: applicableTolerance,
-      status: withinTolerance ? "ACCEPT" : "REJECT",
-      message: withinTolerance
-        ? "Within Tolerance — Reconcile successfully"
-        : "Out of Tolerance — Reconcile Rejected",
-    });
+  /* CHANGED: now calls the BulkReconcileSave API and builds `result`
+     from the API response (rd[0]). */
+  const handleReconcile = async () => {
+    if (!stockSummary || !allMandatoryFilled || saving) return;
+
+    setSaving(true);
+    setSaveError("");
+    setResult(null);
+
+    try {
+      // comma-separated unique RM bag numbers of everything in the summary
+      const rfbags = uniq(stockSummary.rows.map((r) => r.rfbag)).join(",");
+
+      const res = await SaveReconciliation(
+        rfbags,
+        -Math.abs(applicableTolerance),          // tolerancefrom
+        Math.abs(applicableTolerance),           // toleranceto
+        Number(grossWeight) || 0,                // totalweight
+        Number(trayWeight) || 0,                 // trayweight
+        Number(stickerWeight) || 0,              // stickerweight
+        Number(polytheneWeight) || 0,            // polytheneweight
+        Number(stockSummary.weight) || 0,        // systemwt
+        getLoginUserId(),                        // loginuserid
+        remarks.trim().slice(0, REMARKS_MAX)     // remarks (optional, max 200)
+      );
+
+      const rec = Array.isArray(res) ? res[0] : res;
+
+      if (!rec || Number(rec.stat) !== 1) {
+        setSaveError(rec?.stat_msg || "Reconciliation could not be saved. Please try again.");
+        return;
+      }
+
+      const accepted = String(rec.status || "").toLowerCase() === "accept";
+      const tolTo = Number(rec.toleranceto);
+
+      setResult({
+        systemWeight: Number(rec.systemweight) || 0,
+        grossWeight: Number(rec.enteredweight) || 0,
+        trayWeight: Number(rec.trayweight) || 0,
+        stickerWeight: Number(stickerWeight) || 0,
+        polytheneWeight: Number(polytheneWeight) || 0,
+        physicalNet: Number(rec.physicalnetweight) || 0,
+        difference: Number(rec.difference) || 0,
+        tolerance: Number.isFinite(tolTo) ? Math.abs(tolTo) : applicableTolerance,
+        status: accepted ? "ACCEPT" : "REJECT",
+        message: accepted
+          ? "Within Tolerance — Reconcile successfully"
+          : "Out of Tolerance — Reconcile Rejected",
+      });
+
+      // refresh the table + KPI card after a successful save
+      loadTodaysTransactions();
+      loadReconSummary();
+    } catch (err) {
+      console.error("SaveReconciliation failed:", err);
+      setSaveError("Something went wrong while saving. Please try again.");
+    } finally {
+      setSaving(false);
+    }
   };
 
   const handleSaveReconciliation = () => {
@@ -1302,8 +1441,8 @@ export default function MaterialStockReconciliation() {
     Object.values(stockSummary.subFilters || {}).forEach((v) =>
       [].concat(v || []).forEach((x) => x && chips.push(x))
     );
-    chips.push(`${stockSummary.bags} Bags`);
-    chips.push(`${stockSummary.pieces} Pcs`);
+    // chips.push(`${stockSummary.bags} Bags`);
+    // chips.push(`${stockSummary.pieces} Pcs`);
     return chips;
   }, [stockSummary]);
 
@@ -1311,79 +1450,19 @@ export default function MaterialStockReconciliation() {
   const showSummaryBlock = showWorkspace && !!stockSummary;
   const showHistoryBlock = mode === "filter" || mode === "scan" || mode === "history";
 
-  const todayDateStr = useMemo(
+  // PERF: render only one page of rows instead of thousands at once
+  const pagedTodaysRows = useMemo(
     () =>
-      new Date().toLocaleDateString("en-GB", {
-        day: "2-digit",
-        month: "short",
-        year: "numeric",
-      }),
-    []
-  );
-
-  /* NEW: which bags are listed in the history table.
-     - Criteria Wise mode -> every bag of the selected material
-     - Scan mode          -> every valid scanned bag */
-  const historyBaseRows = useMemo(() => {
-    if (!material) return [];
-    if (mode === "scan") {
-      return rawData.filter(
-        (r) => r.itemname === material && validScannedCodes.includes(r.rfbag)
-      );
-    }
-    return rawData.filter((r) => r.itemname === material);
-  }, [mode, material, validScannedCodes, rawData]);
-
-  /* NEW: merge each listed bag with its latest saved reconciliation (if any).
-     `history` is newest-first, so the first match is the latest. */
-  const historyRows = useMemo(
-    () => {
-      // PERF: newest record per bag, built once (history is newest-first)
-      const latest = new Map();
-      history.forEach((h) => {
-        if (!latest.has(h.rowId)) latest.set(h.rowId, h);
-      });
-      return historyBaseRows.map((r) => {
-        const rec = latest.get(r.id);
-        return {
-          key: r.id,
-          dateTime: rec ? rec.dateTime : "—",
-          rmBag: r.rfbag,
-          material: r.itemname,
-          shape: r.shape || "—",
-          size: r.size || "—",
-          lotNo: r.lotNo,
-          systemWeight: Number(r.TotalRemainingWeight) || 0,
-          // reconciled: !!rec && rec.status === "ACCEPT",
-          status: !rec ? "PENDING" : rec.status === "ACCEPT" ? "DONE" : "REJECTED",
-          remarks: rec ? rec.remarks : "",
-          reconciledBy: r.istoreCust_Customercode || "—",
-          doneToday: !!rec && rec.dateTime.startsWith(todayDateStr),
-        };
-      });
-    },
-    [historyBaseRows, history, todayDateStr]
-  );
-
-  const todaysHistory = useMemo(
-    () => historyRows.filter((h) => h.doneToday),
-    [historyRows]
-  );
-  const historyRowsToShow = historyTab === 0 ? historyRows : todaysHistory;
-
-  // PERF: render only one page of history rows instead of thousands at once
-  const pagedHistoryRows = useMemo(
-    () =>
-      historyRowsToShow.slice(
+      todaysData.slice(
         historyPage * historyRowsPerPage,
         historyPage * historyRowsPerPage + historyRowsPerPage
       ),
-    [historyRowsToShow, historyPage, historyRowsPerPage]
+    [todaysData, historyPage, historyRowsPerPage]
   );
 
   useEffect(() => {
     setHistoryPage(0);
-  }, [historyTab, mode, material, validScannedCodes.length]);
+  }, [mode, material, todaysData.length]);
 
   /* ----------------------------------------------------------------- */
   return (
@@ -1671,21 +1750,25 @@ export default function MaterialStockReconciliation() {
                   <Paper elevation={0} sx={{ ...cardSx, p: 2, border: "1px solid", borderColor: "#6c3fc5", borderLeft: "4px solid #6c3fc5", backgroundColor: "#ffffff", mb: 0, width: "100%" }}>
                     <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 2.5 }}>
                       <Typography sx={{ fontSize: 16, fontWeight: 700, color: COLORS.text }}>Today's Reconciliations</Typography>
-                      <Chip label="44" size="small" sx={{ backgroundColor: "#f3f4f6", fontWeight: 700, color: COLORS.text, borderRadius: 2 }} />
+                      <Chip label={reconSummary.total} size="small" sx={{ backgroundColor: "#f3f4f6", fontWeight: 700, color: COLORS.text, borderRadius: 2 }} />
                     </Box>
                     <Box sx={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 2 }}>
+                    <Box>
+                        <Typography sx={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.04em", color: COLORS.textMuted }}>Total</Typography>
+                        <Typography sx={{ fontSize: 24, fontWeight: 800, mt: 0.5, color: COLORS.warning }}>{Math.max(reconSummary.total, 0)}</Typography>
+                      </Box>
                       <Box>
                         <Typography sx={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.04em", color: COLORS.textMuted }}>Passed</Typography>
-                        <Typography sx={{ fontSize: 24, fontWeight: 800, mt: 0.5, color: COLORS.success }}>35</Typography>
+                        <Typography sx={{ fontSize: 24, fontWeight: 800, mt: 0.5, color: COLORS.success }}>{reconSummary.success}</Typography>
                       </Box>
                       <Box>
                         <Typography sx={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.04em", color: COLORS.textMuted }}>Failed</Typography>
-                        <Typography sx={{ fontSize: 24, fontWeight: 800, mt: 0.5, color: COLORS.danger }}>2</Typography>
+                        <Typography sx={{ fontSize: 24, fontWeight: 800, mt: 0.5, color: COLORS.danger }}>{reconSummary.reject}</Typography>
                       </Box>
-                      <Box>
+                      {/* <Box>
                         <Typography sx={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.04em", color: COLORS.textMuted }}>Pending</Typography>
-                        <Typography sx={{ fontSize: 24, fontWeight: 800, mt: 0.5, color: COLORS.warning }}>7</Typography>
-                      </Box>
+                        <Typography sx={{ fontSize: 24, fontWeight: 800, mt: 0.5, color: COLORS.warning }}>{Math.max(reconSummary.total - reconSummary.success - reconSummary.reject, 0)}</Typography>
+                      </Box> */}
                     </Box>
                   </Paper>
                 </Box>
@@ -1760,17 +1843,27 @@ export default function MaterialStockReconciliation() {
                     sx={fieldSx}
                     placeholder="Enter remarks (optional)"
                     value={remarks}
-                    onChange={(e) => setRemarks(e.target.value)}
+                    onChange={(e) => setRemarks(e.target.value.slice(0, REMARKS_MAX))}
+                    inputProps={{ maxLength: REMARKS_MAX }}
+                    helperText={`${remarks.length}/${REMARKS_MAX}`}
+                    FormHelperTextProps={{ sx: { textAlign: "right", mx: 0, mt: 0.5 } }}
                   />
 
                   <Button
                     fullWidth
-                    variant="outlined"
-                    sx={{ ...outlineBtnSx, mt: "auto" }}
+                    variant="contained"
+                    startIcon={
+                      saving ? (
+                        <CircularProgress size={16} thickness={5} sx={{ color: "#fff" }} />
+                      ) : (
+                        <SaveIcon />
+                      )
+                    }
+                    sx={{ ...primaryBtnSx, mt: "auto" }}
                     onClick={handleReconcile}
-                    disabled={!stockSummary || grossWeight === ""}
+                    disabled={!stockSummary || !allMandatoryFilled || saving}
                   >
-                    Reconcile
+                    {saving ? "Saving..." : "Save Reconciliation"}
                   </Button>
                 </Paper>
 
@@ -1838,14 +1931,17 @@ export default function MaterialStockReconciliation() {
 
                       <Button
                         fullWidth
-                        variant="contained"
-                        startIcon={<SaveIcon />}
-                        sx={{ ...primaryBtnSx, mt: "auto" }}
-                        onClick={handleSaveReconciliation}
+                        variant="outlined"
+                        sx={{ ...outlineBtnSx, mt: "auto" }}
+                        // onClick={handleSaveReconciliation}
                       >
-                        Save Reconciliation
+                         Reconcilation Report
                       </Button>
                     </>
+                  ) : saveError ? (
+                    <Typography sx={{ ...hintInlineSx, bgcolor: COLORS.dangerBg, color: COLORS.danger, fontWeight: 600 }}>
+                      {saveError}
+                    </Typography>
                   ) : (
                     <Typography sx={hintInlineSx}>
                       Enter the physical weights and click "Reconcile" to see the comparison against
@@ -1857,110 +1953,78 @@ export default function MaterialStockReconciliation() {
             </>
           )}
 
-          {/* Reconciliation History — all bags (criteria: material bags, scan: scanned bags) */}
+          {/* Today's Transactions — single table (API: GetTodaysTransactionData) */}
           {showHistoryBlock && (
             <Paper sx={cardSx} elevation={0}>
-              <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 1, mb: 1 }}>
-                <Typography sx={{ ...panelTitleSx, mb: 0 }}>Reconciliation History</Typography>
+              <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 1, mb: 1.5 }}>
+                <Typography sx={{ ...panelTitleSx, mb: 0 }}>
+                  {`Today's Transactions${todaysData.length ? ` (${todaysData.length})` : ""}`}
+                </Typography>
               </Box>
-
-              <Tabs
-                value={historyTab}
-                onChange={(e, val) => setHistoryTab(val)}
-                sx={{
-                  minHeight: 36,
-                  mb: 1.5,
-                  borderBottom: `1px solid ${COLORS.border}`,
-                  "& .MuiTabs-indicator": { backgroundColor: COLORS.purple },
-                }}
-              >
-                <Tab
-                  label={`History${historyRows.length ? ` (${historyRows.length})` : ""}`}
-                  sx={{
-                    minHeight: 36,
-                    textTransform: "none",
-                    fontSize: 13,
-                    fontWeight: 600,
-                    color: COLORS.textMuted,
-                    "&.Mui-selected": { color: COLORS.purple },
-                  }}
-                />
-                <Tab
-                  label={`Today's Reconciliation${todaysHistory.length ? ` (${todaysHistory.length})` : ""}`}
-                  sx={{
-                    minHeight: 36,
-                    textTransform: "none",
-                    fontSize: 13,
-                    fontWeight: 600,
-                    color: COLORS.textMuted,
-                    "&.Mui-selected": { color: COLORS.purple },
-                  }}
-                />
-              </Tabs>
 
               <TableContainer sx={tableContainerSx}>
                 <Table size="small">
                   <TableHead>
                     <TableRow>
-                      <TableCell sx={theadCellSx}>Date &amp; Time</TableCell>
-                      <TableCell sx={theadCellSx}>RM Bag</TableCell>
+                      <TableCell sx={theadCellSx}>Bag</TableCell>
                       <TableCell sx={theadCellSx}>Material</TableCell>
+                      <TableCell sx={theadCellSx}>Customer</TableCell>
+                      <TableCell sx={theadCellSx}>M.Type</TableCell>
                       <TableCell sx={theadCellSx}>Shape</TableCell>
+                      <TableCell sx={theadCellSx}>Quality</TableCell>
+                      <TableCell sx={theadCellSx}>Color</TableCell>
                       <TableCell sx={theadCellSx}>Size</TableCell>
-                      <TableCell sx={theadCellSx}>Lot No</TableCell>
-                      <TableCell sx={theadCellSx} align="right">System Weight</TableCell>
+                      <TableCell sx={theadCellSx} align="right">System Wt</TableCell>
+                      <TableCell sx={theadCellSx}>Locker</TableCell>
                       <TableCell sx={theadCellSx}>Status</TableCell>
-                      <TableCell sx={theadCellSx}>Remarks</TableCell>
-                      <TableCell sx={theadCellSx}>Reconciliation By</TableCell>
+                      <TableCell sx={theadCellSx}>Last Action By</TableCell>
                     </TableRow>
                   </TableHead>
                   <TableBody>
-                    {historyRowsToShow.length === 0 && (
+                    {todaysLoading && (
                       <TableRow>
-                        <TableCell colSpan={10} align="center" sx={{ color: COLORS.textMuted, py: 3 }}>
-                          {historyTab === 0
-                            ? mode === "scan"
-                              ? "No scanned bags yet."
-                              : "No bags found for this material."
-                            : "No reconciliations done today yet."}
+                        <TableCell colSpan={12} align="center" sx={{ py: 3 }}>
+                          <CircularProgress size={20} thickness={5} sx={{ color: COLORS.purple }} />
                         </TableCell>
                       </TableRow>
                     )}
-                    {pagedHistoryRows.map((h) => (
-                      <TableRow key={h.key}>
-                        <TableCell sx={tbodyCellSx}>{h.dateTime}</TableCell>
-                        <TableCell sx={tbodyCellSx}>{h.rmBag}</TableCell>
-                        <TableCell sx={linkCellSx}>{h.material}</TableCell>
-                        <TableCell sx={tbodyCellSx}>{h.shape}</TableCell>
-                        <TableCell sx={tbodyCellSx}>{h.size}</TableCell>
-                        <TableCell sx={tbodyCellSx}>{h.lotNo}</TableCell>
-                        <TableCell sx={tbodyCellSx} align="right">{fmt(h.systemWeight)}</TableCell>
-                        <TableCell sx={tbodyCellSx}>
-                          <Chip
-                            size="small"
-                            label={
-                              h.status === "DONE" ? "Done" : h.status === "REJECTED" ? "Rejected" : "Pending"
-                            }
-                            sx={
-                              h.status === "DONE"
-                                ? chipSuccessSx
-                                : h.status === "REJECTED"
-                                  ? chipDangerSx
-                                  : chipWarningSx
-                            }
-                          />
+                    {!todaysLoading && todaysData.length === 0 && (
+                      <TableRow>
+                        <TableCell colSpan={12} align="center" sx={{ color: COLORS.textMuted, py: 3 }}>
+                          No transactions found for today.
                         </TableCell>
-                        <TableCell sx={tbodyCellSx}>{h.remarks || "—"}</TableCell>
-                        <TableCell sx={tbodyCellSx}>{h.reconciledBy}</TableCell>
                       </TableRow>
-                    ))}
+                    )}
+                    {!todaysLoading &&
+                      pagedTodaysRows.map((r, i) => (
+                        <TableRow key={`${r.id ?? "row"}-${historyPage}-${i}`}>
+                          <TableCell sx={tbodyCellSx}>{r.rfbag || "—"}</TableCell>
+                          <TableCell sx={linkCellSx}>{r.itemname || "—"}</TableCell>
+                          <TableCell sx={tbodyCellSx}>{r.Customercode || "—"}</TableCell>
+                          <TableCell sx={tbodyCellSx}>{r.materialtypename || "—"}</TableCell>
+                          <TableCell sx={tbodyCellSx}>{r.shape || "—"}</TableCell>
+                          <TableCell sx={tbodyCellSx}>{r.quality || "—"}</TableCell>
+                          <TableCell sx={tbodyCellSx}>{r.color || "—"}</TableCell>
+                          <TableCell sx={tbodyCellSx}>{r.Size || "—"}</TableCell>
+                          <TableCell sx={tbodyCellSx} align="right">{fmt(Number(r.RemainingWeight))}</TableCell>
+                          <TableCell sx={tbodyCellSx}>{r.LockerName || "—"}</TableCell>
+                          <TableCell sx={tbodyCellSx}>
+                            <Chip
+                              size="small"
+                              label={r.Last_Reconcileflg || "—"}
+                              sx={getStatusChipSx(r.Last_Reconcileflg)}
+                            />
+                          </TableCell>
+                          <TableCell sx={tbodyCellSx}>{String(r.ActionBy || "").trim() || "—"}</TableCell>
+                        </TableRow>
+                      ))}
                   </TableBody>
                 </Table>
               </TableContainer>
               <TablePagination
                 component="div"
-                count={historyRowsToShow.length}
-                page={Math.min(historyPage, Math.max(0, Math.ceil(historyRowsToShow.length / historyRowsPerPage) - 1))}
+                count={todaysData.length}
+                page={Math.min(historyPage, Math.max(0, Math.ceil(todaysData.length / historyRowsPerPage) - 1))}
                 onPageChange={(e, p) => setHistoryPage(p)}
                 rowsPerPage={historyRowsPerPage}
                 onRowsPerPageChange={(e) => {
