@@ -5,17 +5,22 @@ const VERSION =
     window.location.hostname == "nzen"
       ?  "R50B3"
       : "live";
+        const AllData = JSON.parse(sessionStorage.getItem("AuthqueryParams"));
 
 export const getMasterMaterialData = async () => {
     const body = {
         con: JSON.stringify({
           id: "",
           mode: "MasterItemList",
-          FormName: "BulkReconcile"
+          FormName: "BulkReconcile",
+          appuserid : AllData?.uid || ""
+    
         }),
         p: JSON.stringify({ }),
         f: "MasterItemList"
       };
+      
+      console.log("TCL: getMasterMaterialData -> AllData",AllData )
 
       const data = await CommonAPINew(body,'264',VERSION)
       
@@ -29,7 +34,8 @@ export const GetmaterialWiseData = async (MaterialId) => {
         con: JSON.stringify({
           id: "",
           mode: "InvoiceByMasterItem",
-          FormName: "BulkReconcile"
+          FormName: "BulkReconcile",
+          appuserid : AllData?.uid || ""
         }),
         p: JSON.stringify({
           master_item_id: MaterialId
@@ -47,7 +53,8 @@ export const GetTodaysTransactionData = async (MaterialId) => {
   const body = {
     con: JSON.stringify({
       id: "",
-      mode: "CurrentTransactionRFBags"
+      mode: "CurrentTransactionRFBags",
+      appuserid : AllData?.uid || ""
     }),
     p: JSON.stringify({
       master_item_id: MaterialId
@@ -63,7 +70,8 @@ export const GetReconcilationSummary = async () => {
   const body = {
     con: JSON.stringify({
       id: "",
-      mode: "ReconcileSummary"
+      mode: "ReconcileSummary",
+      appuserid : AllData?.uid || ""
     }),
     p: "",
     f: "ReconcileSummary"
@@ -80,7 +88,8 @@ export const SaveReconciliation = async (RmBags,tolerancefrom,toleranceto,totalw
   const body = {
     con: JSON.stringify({
       id: "",
-      mode: "BulkReconcileSave"
+      mode: "BulkReconcileSave",
+      appuserid : AllData?.uid || ""
     }),
     p: JSON.stringify({
       rfbags: RmBags,
