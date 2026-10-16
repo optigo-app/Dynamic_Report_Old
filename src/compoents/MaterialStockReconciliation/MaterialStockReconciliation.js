@@ -28,6 +28,9 @@ import {
   Popover,
   Drawer,
   Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
   Badge,
   ThemeProvider,
   Tooltip,
@@ -350,7 +353,22 @@ function buildSummaryFromScanCodes(data, codes, mat) {
   };
 }
 
-function ResultLine({ label, value }) {
+/* CHANGE 6: ResultLine now accepts an optional `tooltip`. When given, hovering
+   the label shows the tooltip (used for the Difference formula). */
+function ResultLine({ label, value, tooltip }) {
+  const labelNode = (
+    <Typography
+      sx={{
+        fontSize: 13,
+        color: COLORS.textMuted,
+        ...(tooltip
+          ? { cursor: "help", textDecoration: "underline dotted", textUnderlineOffset: "3px" }
+          : {}),
+      }}
+    >
+      {label}
+    </Typography>
+  );
   return (
     <Box
       sx={{
@@ -361,9 +379,52 @@ function ResultLine({ label, value }) {
         borderBottom: `1px dashed ${COLORS.border}`,
       }}
     >
-      <Typography sx={{ fontSize: 13, color: COLORS.textMuted }}>{label}</Typography>
+      {tooltip ? (
+        <Tooltip title={tooltip} arrow placement="top-start">
+          {labelNode}
+        </Tooltip>
+      ) : (
+        labelNode
+      )}
       <Typography sx={{ fontSize: 13, fontWeight: 700 }}>{value}</Typography>
     </Box>
+  );
+}
+
+/* CHANGE B: compact rows used inside the small calculation popover */
+function CalcRow({ label, value }) {
+  return (
+    <Box
+      sx={{
+        display: "flex",
+        alignItems: "flex-start",
+        justifyContent: "space-between",
+        gap: 1.5,
+        py: 0.6,
+      }}
+    >
+      <Typography sx={{ fontSize: 12, color: COLORS.textMuted, lineHeight: 1.4 }}>{label}</Typography>
+      <Typography sx={{ fontSize: 12, fontWeight: 700, color: COLORS.text, whiteSpace: "nowrap" }}>
+        {value}
+      </Typography>
+    </Box>
+  );
+}
+
+function CalcLine({ children, bold = false, color }) {
+  return (
+    <Typography
+      sx={{
+        fontSize: 12,
+        lineHeight: 1.6,
+        py: 0.4,
+        color: color || COLORS.text,
+        fontWeight: bold ? 700 : 500,
+        wordBreak: "break-word",
+      }}
+    >
+      {children}
+    </Typography>
   );
 }
 
@@ -979,6 +1040,9 @@ export default function MaterialStockReconciliation() {
 
   const [scanInfoOpen, setScanInfoOpen] = useState(false);
 
+  /* CHANGE 4: RM bag code waiting for "remove" confirmation (null = dialog closed) */
+  const [removeCode, setRemoveCode] = useState(null);
+
   const [grossWeight, setGrossWeight] = useState("");
   const [trayWeight, setTrayWeight] = useState("");
   const [stickerWeight, setStickerWeight] = useState("");
@@ -989,6 +1053,12 @@ export default function MaterialStockReconciliation() {
   /* NEW: SaveReconciliation API state */
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState("");
+
+  /* CHANGE 1: confirmation dialog for Save Reconciliation */
+  const [confirmSaveOpen, setConfirmSaveOpen] = useState(false);
+
+  /* CHANGE B: small calculation popover anchored to the i icon beside "Physical Measurement" */
+  const [calcAnchor, setCalcAnchor] = useState(null);
 
   const [toleranceMetal, setToleranceMetal] = useState(0.02);
   const [toleranceOther, setToleranceOther] = useState(0.01);
@@ -1227,6 +1297,14 @@ export default function MaterialStockReconciliation() {
     setScannedCodes((prev) => prev.filter((c) => c !== code));
   };
 
+  /* CHANGE 4: confirmed removal of one RM bag from the scanned list.
+     Removing it from scannedCodes also refreshes the summary (via the
+     existing [scannedCodes] effect below). */
+  const handleConfirmRemoveScanned = () => {
+    if (removeCode !== null) handleRemoveScanned(removeCode);
+    setRemoveCode(null);
+  };
+
   const bagSet = useMemo(
     () => new Set(rawData.filter((r) => r.itemname === material).map((r) => r.rfbag)),
     [rawData, material]
@@ -1263,6 +1341,9 @@ export default function MaterialStockReconciliation() {
     if (validScannedCodes.length === 0) setScanInfoOpen(false);
   }, [validScannedCodes.length]);
 
+  /* CHANGE 2: Back button now clears every input on the screen
+     (weights, remarks, scan input + scanned bags, filters, result/errors).
+     The selected material and tolerance settings are kept. */
   const goToStart = () => {
     setMode("initial");
     setStockSummary(null);
@@ -1271,6 +1352,24 @@ export default function MaterialStockReconciliation() {
     setFilterOpen(false);
     setScanDrawerOpen(false);
     setScanInfoOpen(false);
+    setConfirmSaveOpen(false);
+    setCalcAnchor(null); // CHANGE B
+    setRemoveCode(null);
+
+    // physical measurement inputs
+    setGrossWeight("");
+    setTrayWeight("");
+    setStickerWeight("");
+    setPolytheneWeight("");
+    setRemarks("");
+
+    // scan inputs
+    setScanInput("");
+    setScannedCodes([]);
+
+    // filter inputs
+    setLocker([]);
+    setSubFilters({});
   };
 
   /* ---- physical measurement calculations ---- */
@@ -1286,8 +1385,9 @@ export default function MaterialStockReconciliation() {
   const allMandatoryFilled =
     grossWeight !== "" && trayWeight !== "" && stickerWeight !== "" && polytheneWeight !== "";
 
-  const applicableTolerance = String(material).toUpperCase() === "METAL" ? toleranceMetal : toleranceOther;
-  const toleranceLabel = String(material).toUpperCase() === "METAL" ? "Metal" : "Other Material";
+  const isMetal = String(material).toUpperCase() === "METAL";
+  const applicableTolerance = isMetal ? toleranceMetal : toleranceOther;
+  const toleranceLabel = isMetal ? "Metal" : "Other Material";
 
   /* CHANGED: now calls the BulkReconcileSave API and builds `result`
      from the API response (rd[0]). */
@@ -1349,6 +1449,17 @@ export default function MaterialStockReconciliation() {
     } finally {
       setSaving(false);
     }
+  };
+
+  /* CHANGE 1: button opens the confirmation; the actual save runs only after confirm */
+  const handleSaveClick = () => {
+    if (!stockSummary || !allMandatoryFilled || saving) return;
+    setConfirmSaveOpen(true);
+  };
+
+  const handleConfirmSave = () => {
+    setConfirmSaveOpen(false);
+    handleReconcile();
   };
 
   const handleSaveReconciliation = () => {
@@ -1578,11 +1689,14 @@ export default function MaterialStockReconciliation() {
                   width: "100%",
                 }}
               >
+                {/* CHANGE 4: X icon on every RM bag chip → opens remove confirmation */}
                 {validScannedCodes.map((code) => (
                   <Chip
                     key={code}
                     label={code}
                     size="small"
+                    onDelete={() => setRemoveCode(code)}
+                    deleteIcon={<CloseIcon />}
                     sx={{ ...chipSx, flexShrink: 0 }}
                   />
                 ))}
@@ -1590,6 +1704,63 @@ export default function MaterialStockReconciliation() {
             </Box>
           </Dialog>
         )}
+
+        {/* CHANGE 4: confirmation before removing a scanned RM bag */}
+        {mode === "scan" && (
+          <Dialog
+            open={removeCode !== null}
+            onClose={() => setRemoveCode(null)}
+            maxWidth="xs"
+            fullWidth
+          >
+            <DialogTitle sx={{ fontSize: 16, fontWeight: 700, color: COLORS.purple }}>
+              Remove RM Bag
+            </DialogTitle>
+            <DialogContent>
+              <Typography sx={{ fontSize: 14, color: COLORS.text }}>
+                Are you sure you want to remove RM Bag <b>{removeCode}</b> from the scanned list?
+              </Typography>
+            </DialogContent>
+            <DialogActions sx={{ px: 3, pb: 2, gap: 1 }}>
+              <Button variant="outlined" sx={{ ...outlineBtnSx, py: 0.6 }} onClick={() => setRemoveCode(null)}>
+                Cancel
+              </Button>
+              <Button
+                variant="contained"
+                sx={{ ...primaryBtnSx, py: 0.6, bgcolor: COLORS.danger, "&:hover": { bgcolor: "#B53636", boxShadow: "none" } }}
+                onClick={handleConfirmRemoveScanned}
+              >
+                Remove
+              </Button>
+            </DialogActions>
+          </Dialog>
+        )}
+
+        {/* CHANGE 1: confirmation before Save Reconciliation */}
+        <Dialog
+          open={confirmSaveOpen}
+          onClose={() => setConfirmSaveOpen(false)}
+          maxWidth="xs"
+          fullWidth
+        >
+          <DialogTitle sx={{ fontSize: 16, fontWeight: 700, color: COLORS.purple }}>
+            Confirm Reconciliation
+          </DialogTitle>
+          <DialogContent>
+            <Typography sx={{ fontSize: 14, color: COLORS.text }}>
+              Are you sure you want to save this reconciliation
+              {stockSummary ? <> for <b>{stockSummary.bags}</b> RM Bag(s)</> : null}?
+            </Typography>
+          </DialogContent>
+          <DialogActions sx={{ px: 3, pb: 2, gap: 1 }}>
+            <Button variant="outlined" sx={{ ...outlineBtnSx, py: 0.6 }} onClick={() => setConfirmSaveOpen(false)}>
+              Cancel
+            </Button>
+            <Button variant="contained" sx={{ ...primaryBtnSx, py: 0.6 }} onClick={handleConfirmSave}>
+              Yes, Save
+            </Button>
+          </DialogActions>
+        </Dialog>
 
         {/* ================= MAIN CONTENT ================= */}
         <Box sx={{ flex: 1, minWidth: 0, p: 1.5, pt: 1 }}>
@@ -1726,10 +1897,11 @@ export default function MaterialStockReconciliation() {
                     </Typography>
                   </Paper>
 
+                  {/* CHANGE 3: for METAL there are no pieces, so show "—" instead of 0 */}
                   <Paper elevation={0} sx={{ p: 2.5, border: "1px solid", borderColor: "#6c3fc5", backgroundColor: "#ffffff", borderLeft: "4px solid #6c3fc5" }}>
                     <Typography sx={{ fontSize: 16, fontWeight: 700, color: COLORS.text }}>TOTAL PIECES</Typography>
                     <Typography sx={{ fontSize: 22, fontWeight: 800, mt: 1, color: COLORS.text }}>
-                      {stockSummary ? stockSummary.pieces : "—"}
+                      {stockSummary && !isMetal ? stockSummary.pieces : "—"}
                     </Typography>
                   </Paper>
 
@@ -1777,9 +1949,76 @@ export default function MaterialStockReconciliation() {
               {/* Physical Measurement + Reconciliation Result */}
               <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" }, gap: 3, mb: 2.5, alignItems: "stretch" }}>
                 <Paper sx={{ ...cardSx, mb: 0, display: "flex", flexDirection: "column" }} elevation={0}>
-                  <Box sx={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 1.5, mb: 1.5 }}>
+                  {/* CHANGE B: i icon after the heading → opens a small popover right below it */}
+                  <Box sx={{ display: "flex", alignItems: "center", justifyContent: "flex-start", gap: 0.5, mb: 1.5 }}>
                     <Typography sx={{ ...panelTitleSx, mb: 0 }}>Physical Measurement</Typography>
+                    <Tooltip title="How it's calculated" arrow>
+                      <IconButton
+                        size="small"
+                        onClick={(e) => setCalcAnchor(e.currentTarget)}
+                        aria-label="How physical weight is calculated"
+                        sx={{ color: COLORS.purple }}
+                      >
+                        <InfoOutlinedIcon fontSize="small" />
+                      </IconButton>
+                    </Tooltip>
                   </Box>
+
+                  <Popover
+                    open={Boolean(calcAnchor)}
+                    anchorEl={calcAnchor}
+                    onClose={() => setCalcAnchor(null)}
+                    anchorOrigin={{ vertical: "bottom", horizontal: "left" }}
+                    transformOrigin={{ vertical: "top", horizontal: "left" }}
+                    PaperProps={{ sx: { width: 340, maxWidth: "calc(100vw - 32px)", borderRadius: "12px" } }}
+                  >
+                    <Box sx={{ p: 2 }}>
+                      <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 0.75 }}>
+                        <Typography sx={{ fontSize: 13, fontWeight: 700, color: COLORS.purple }}>
+                          Entered Values
+                        </Typography>
+                        <IconButton size="small" onClick={() => setCalcAnchor(null)} sx={{ p: 0.25 }}>
+                          <CloseIcon sx={{ fontSize: 16 }} />
+                        </IconButton>
+                      </Box>
+
+                      <CalcRow
+                        label="Entered whole box (tray + material)"
+                        value={`${fmt(Number(grossWeight) || 0)} gm`}
+                      />
+                      <CalcRow
+                        label="Entered tray weight"
+                        value={`${fmt(Number(trayWeight) || 0)} gm`}
+                      />
+                      <CalcRow
+                        label="Entered sticker weight of single RM bag"
+                        value={`${fmt(Number(stickerWeight) || 0)} gm`}
+                      />
+                      <CalcRow
+                        label="Entered polythene weight of single RM bag"
+                        value={`${fmt(Number(polytheneWeight) || 0)} gm`}
+                      />
+                      <CalcRow label="Total RM bags" value={totalBags} />
+
+                      <Divider sx={{ my: 1 }} />
+
+                      <Typography sx={{ fontSize: 13, fontWeight: 700, color: COLORS.purple, mb: 0.25 }}>
+                        Calculation
+                      </Typography>
+                      <CalcLine>
+                        Sticker Total = {totalBags} × {fmt(Number(stickerWeight) || 0)} = <b>{fmt(stickerTotal)}</b>
+                      </CalcLine>
+                      <CalcLine>
+                        Polythene Total = {totalBags} × {fmt(Number(polytheneWeight) || 0)} = <b>{fmt(polytheneTotal)}</b>
+                      </CalcLine>
+                      <CalcLine>
+                        Deduction = {fmt(stickerTotal)} + {fmt(polytheneTotal)} + {fmt(trayTotal)} = <b>{fmt(deduction)}</b>
+                      </CalcLine>
+                      <CalcLine bold color={netWeightLive < 0 ? COLORS.danger : COLORS.success}>
+                        Physical Weight = {fmt(Number(grossWeight) || 0)} − {fmt(deduction)} = {fmt(netWeightLive)} gm
+                      </CalcLine>
+                    </Box>
+                  </Popover>
 
                   <TextField
                     label="Enter Total Weight"
@@ -1826,12 +2065,14 @@ export default function MaterialStockReconciliation() {
                     />
                   </Box>
 
-                  <Typography sx={hintSx}>
-                    Total Bags: <b>{totalBags}</b> · Sticker Total: <b>{fmt(stickerTotal)}</b> gm · Polythene
-                    Total: <b>{fmt(polytheneTotal)}</b> gm · Tray/Box: <b>{fmt(trayTotal)}</b> gm
+                  {/* CHANGE A: back to the previous two-line layout, with more vertical space
+                      (extra margin below so it no longer touches the Remarks field) */}
+                  <Typography sx={{ ...hintSx, mt: 0.5, mb: 1 }}>
+                    Total Bags: <b>{totalBags}</b> · Tray/Box: <b>{fmt(trayTotal)}</b> gm · Sticker Total: <b>{fmt(stickerTotal)}</b> gm · Polythene
+                    Total: <b>{fmt(polytheneTotal)}</b> gm 
                   </Typography>
-                  <Typography sx={hintSx}>
-                    Net Weight: <b>{fmt(netWeightLive)} gm</b>
+                  <Typography sx={{ ...hintSx, mt: 0, mb: 2.5 }}>
+                  Physical Weight: <b>{fmt(netWeightLive)} gm</b>
                   </Typography>
 
                   <TextField
@@ -1849,6 +2090,7 @@ export default function MaterialStockReconciliation() {
                     FormHelperTextProps={{ sx: { textAlign: "right", mx: 0, mt: 0.5 } }}
                   />
 
+                  {/* CHANGE 1: click opens the confirmation dialog (save happens after confirm) */}
                   <Button
                     fullWidth
                     variant="contained"
@@ -1860,7 +2102,7 @@ export default function MaterialStockReconciliation() {
                       )
                     }
                     sx={{ ...primaryBtnSx, mt: "auto" }}
-                    onClick={handleReconcile}
+                    onClick={handleSaveClick}
                     disabled={!stockSummary || !allMandatoryFilled || saving}
                   >
                     {saving ? "Saving..." : "Save Reconciliation"}
@@ -1870,9 +2112,12 @@ export default function MaterialStockReconciliation() {
                 <Paper sx={{ ...cardSx, mb: 0, display: "flex", flexDirection: "column" }} elevation={0}>
                   <Box sx={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 1.5, mb: 1.5 }}>
                     <Typography sx={{ ...panelTitleSx, mb: 0 }}>Reconciliation Result</Typography>
-                    <IconButton size="small" onClick={(e) => setTolAnchor(e.currentTarget)}>
-                      <InfoOutlinedIcon fontSize="small" />
-                    </IconButton>
+                    {/* CHANGE 5: hover label "Show Tolerance" on the i icon */}
+                    <Tooltip title="Show Tolerance" arrow>
+                      <IconButton size="small" onClick={(e) => setTolAnchor(e.currentTarget)}>
+                        <InfoOutlinedIcon fontSize="small" />
+                      </IconButton>
+                    </Tooltip>
                   </Box>
                   <Popover
                     open={Boolean(tolAnchor)}
@@ -1909,7 +2154,17 @@ export default function MaterialStockReconciliation() {
                     <>
                       <ResultLine label="System Weight" value={`${fmt(result.systemWeight)} gm`} />
                       <ResultLine label="Physical Weight" value={`${fmt(result.physicalNet)} gm`} />
-                      <ResultLine label="Difference" value={`${result.difference >= 0 ? "+" : ""}${fmt(result.difference)} gm`} />
+                      {/* CHANGE 6: hover on "Difference" shows the formula */}
+                      <ResultLine
+                        label="Difference"
+                        value={`${result.difference >= 0 ? "+" : ""}${fmt(result.difference)} gm`}
+                        tooltip={
+                          <Box sx={{ fontSize: 12, lineHeight: 1.6 }}>
+                            <div><b>Difference = Physical Weight − System Weight</b></div>
+                           
+                          </Box>
+                        }
+                      />
                       <ResultLine label={`Allowed Tolerance (${toleranceLabel})`} value={`±${fmt(result.tolerance)} gm`} />
 
                       <Box
