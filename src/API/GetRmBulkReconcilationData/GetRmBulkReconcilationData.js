@@ -24,7 +24,7 @@ export const getMasterMaterialData = async () => {
 
       const data = await CommonAPINew(body,'264',VERSION)
       
-       return data?.Data?.rd || []
+       return data?.Data || []
 
 }
 
@@ -83,8 +83,30 @@ export const GetReconcilationSummary = async () => {
 }
 
 
+export const SetToReconcile = async (metal,othermaterial) => {
+  const body = {
+    con: JSON.stringify({
+      id: "",
+      mode: "SaveTolerance",
+      appuserid : AllData?.uid || ""
 
-export const SaveReconciliation = async (RmBags,tolerancefrom,toleranceto,totalweight,trayweight,stickerweight,polytheneweight,systemwt,loginuserid,remarks) => {
+    
+    }),
+    p: JSON.stringify({
+      metal: metal,
+      othermaterial: othermaterial
+    }),
+    f: "SaveTolerance"
+  };
+    const data = await CommonAPINew(body,'264',VERSION)
+    
+    return data?.Data?.rd || []
+
+}
+
+
+
+export const SaveReconciliation = async (RmBags,tolerance,totalweight,trayweight,stickerweight,polytheneweight,systemwt,loginuserid,remarks) => {
   const body = {
     con: JSON.stringify({
       id: "",
@@ -93,8 +115,9 @@ export const SaveReconciliation = async (RmBags,tolerancefrom,toleranceto,totalw
     }),
     p: JSON.stringify({
       rfbags: RmBags,
-      tolerancefrom: tolerancefrom,
-      toleranceto: toleranceto,
+      tolerance: tolerance,
+      // tolerancefrom: tolerancefrom,
+      // toleranceto: toleranceto,
       totalweight: totalweight,
       trayweight: trayweight,
       stickerweight: stickerweight,

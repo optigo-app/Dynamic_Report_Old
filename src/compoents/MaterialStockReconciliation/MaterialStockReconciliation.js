@@ -54,7 +54,7 @@ import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import Inventory2OutlinedIcon from "@mui/icons-material/Inventory2Outlined";
 import TuneIcon from "@mui/icons-material/Tune";
 import { keyframes } from "@emotion/react";
-import { getMasterMaterialData, GetmaterialWiseData, SaveReconciliation, GetTodaysTransactionData, GetReconcilationSummary } from "../../API/GetRmBulkReconcilationData/GetRmBulkReconcilationData";
+import { getMasterMaterialData, GetmaterialWiseData, SaveReconciliation, GetTodaysTransactionData, GetReconcilationSummary, SetToReconcile } from "../../API/GetRmBulkReconcilationData/GetRmBulkReconcilationData";
 
 
 /* ========================================================================
@@ -291,7 +291,7 @@ function getFilterConfig(material) {
   const specific = DIAMOND_GROUP.includes(key)
     ? FILTER_CONFIG.diamondGroup
     : FILTER_CONFIG[key] || [];
-  return [ ...specific];
+  return [...specific];
 }
 
 const uniq = (arr) => [...new Set(arr.filter((v) => v !== undefined && v !== null && v !== ""))];
@@ -531,6 +531,10 @@ function LandingPage({
   onMaterialChange,
   materialOptions,
   pendingAction, // NEW: 'filter' | 'scan' | null — card clicked, waiting for API data
+  isAdmin,
+  onSaveTolerance,
+  tolSaving,
+  tolMsg,
 }) {
   return (
     <Box
@@ -643,67 +647,97 @@ function LandingPage({
       </Box>
 
       {/* Tolerance settings */}
-      <Paper
-        elevation={0}
-        sx={{
-          width: "100%",
-          maxWidth: 720,
-          p: 3,
-          borderRadius: "16px",
-          border: `1px solid ${COLORS.border}`,
-          bgcolor: COLORS.surface,
-          boxShadow: "0 4px 16px rgba(30,27,46,0.05)",
-        }}
-      >
-        <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, mb: 2.5 }}>
-          <Box
-            sx={{
-              width: 40,
-              height: 40,
-              borderRadius: "10px",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              bgcolor: COLORS.purpleLight,
-              color: COLORS.purple,
-            }}
-          >
-            <TuneIcon fontSize="small" />
-          </Box>
-          <Box>
-            <Typography sx={{ fontSize: 15, fontWeight: 700, color: COLORS.text }}>
-              Tolerance Settings
+      {isAdmin && (
+        <Paper
+          elevation={0}
+          sx={{
+            width: "100%",
+            maxWidth: 720,
+            p: 3,
+            borderRadius: "16px",
+            border: `1px solid ${COLORS.border}`,
+            bgcolor: COLORS.surface,
+            boxShadow: "0 4px 16px rgba(30,27,46,0.05)",
+          }}
+        >
+          <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, mb: 2.5 }}>
+            <Box
+              sx={{
+                width: 40,
+                height: 40,
+                borderRadius: "10px",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                bgcolor: COLORS.purpleLight,
+                color: COLORS.purple,
+              }}
+            >
+              <TuneIcon fontSize="small" />
+            </Box>
+            <Box>
+              <Typography sx={{ fontSize: 15, fontWeight: 700, color: COLORS.text }}>
+                Tolerance Settings
+              </Typography>
+            </Box>
+            <Typography
+              sx={{
+                fontSize: 12,
+                fontWeight: 600,
+                color: tolMsg?.type === "error" ? COLORS.danger : COLORS.success,
+              }}
+            >
+              {tolMsg?.text}
             </Typography>
           </Box>
-        </Box>
 
-        <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr" }, gap: 2 }}>
-          <TextField
-            label="Metal Tolerance"
-            size="small"
-            type="number"
-            fullWidth
-            value={toleranceMetal}
-            onChange={(e) => setToleranceMetal(Number(e.target.value))}
-            inputProps={{ step: 0.001, min: 0 }}
-            InputProps={{
-              endAdornment: <Typography sx={{ fontSize: 12, color: COLORS.textMuted }}>gm</Typography>,
-            }}
-          />
-          <TextField
-            label="Other Material Tolerance"
-            size="small"
-            type="number"
-            fullWidth
-            value={toleranceOther}
-            onChange={(e) => setToleranceOther(Number(e.target.value))}
-            inputProps={{ step: 0.001, min: 0 }}
-            InputProps={{
-              endAdornment: <Typography sx={{ fontSize: 12, color: COLORS.textMuted }}>ct/gm</Typography>,
-            }}
-          />
-        </Box>
-      </Paper>
+           
+
+          <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr 0.5fr" }, gap: 2 }}>
+            <TextField
+              label="Metal Tolerance"
+              size="small"
+              type="number"
+              fullWidth
+              value={toleranceMetal}
+              onChange={(e) => setToleranceMetal(Number(e.target.value))}
+              inputProps={{ step: 0.001, min: 0 }}
+              InputProps={{
+                endAdornment: <Typography sx={{ fontSize: 12, color: COLORS.textMuted }}>gm</Typography>,
+              }}
+            />
+            <TextField
+              label="Other Material Tolerance"
+              size="small"
+              type="number"
+              fullWidth
+              value={toleranceOther}
+              onChange={(e) => setToleranceOther(Number(e.target.value))}
+              inputProps={{ step: 0.001, min: 0 }}
+              InputProps={{
+                endAdornment: <Typography sx={{ fontSize: 12, color: COLORS.textMuted }}>ct/gm</Typography>,
+              }}
+            />
+            <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 2, flexWrap: "wrap" }}>
+           
+
+            <Button
+              variant="contained"
+              startIcon={
+                tolSaving ? <CircularProgress size={16} thickness={5} sx={{ color: "#fff" }} /> : <SaveIcon />
+              }
+              sx={{ ...primaryBtnSx, px: 3 }}
+              onClick={onSaveTolerance}
+              disabled={tolSaving}
+            >
+              {tolSaving ? "Saving..." : "Save"}
+            </Button>
+          </Box>
+          </Box>
+          
+        </Paper>
+      )}
+
     </Box>
   );
 }
@@ -717,7 +751,7 @@ function LandingPage({
    only the first 100 matches (type to narrow). Small lists keep the normal Select. */
 const limitedFilter = createFilterOptions({ limit: 100 });
 
-function FilterField({ label, value, options, onChange , showAll = false}) {
+function FilterField({ label, value, options, onChange, showAll = false }) {
   // keep already-selected values visible even if the other filters narrowed the list
   const allOptions = useMemo(() => uniq([...value, ...options]), [value, options]);
   return (
@@ -746,11 +780,11 @@ function FilterField({ label, value, options, onChange , showAll = false}) {
       // )}
       renderInput={(params) => (
         <TextField
-        {...params}
-        label={label}
-        placeholder={value.length ? "" : "All"}
-        InputLabelProps={{ ...params.InputLabelProps, shrink: showAll ? true : params.InputLabelProps.shrink }}
-      />
+          {...params}
+          label={label}
+          placeholder={value.length ? "" : "All"}
+          InputLabelProps={{ ...params.InputLabelProps, shrink: showAll ? true : params.InputLabelProps.shrink }}
+        />
       )}
     />
   );
@@ -784,12 +818,12 @@ function FilterPanelContent({
       </Box>
 
       <FilterField
-  label="Locker"
-  value={locker}
-  options={lockerOptions}
-  onChange={(val) => setLocker(val)}
-  showAll
-/>
+        label="Locker"
+        value={locker}
+        options={lockerOptions}
+        onChange={(val) => setLocker(val)}
+        showAll
+      />
 
       {/* Material — selected on landing page, locked here */}
       <FormControl fullWidth size="small" sx={fieldSx} disabled>
@@ -935,13 +969,35 @@ function ScanPanelContent({
         autoFocus
         fullWidth
         multiline
-        minRows={3}
         size="small"
         placeholder="Scan or type RM Bag No.'s — e.g. 0000005845 0000005846"
         value={scanInput}
         onChange={(e) => setScanInput(e.target.value)}
         onKeyDown={onKeyDown}
-        sx={{ mb: 1 }}
+        sx={{
+          mb: 1,
+          "& .MuiInputBase-root": {
+            height: 180,
+            alignItems: "flex-start",
+            overflow: "hidden",
+          },
+          "& textarea": {
+            height: "100% !important",
+            overflowY: "auto !important",
+            boxSizing: "border-box",
+            scrollbarWidth: "thin",
+            scrollbarColor: "#6c3ec1 transparent",
+          },
+          // scrollbar color (Chrome / Edge / Safari)
+          "& textarea::-webkit-scrollbar": { width: 8 },
+          "& textarea::-webkit-scrollbar-track": {
+            background: "transparent",
+          },
+          "& textarea::-webkit-scrollbar-thumb": {
+            backgroundColor: "#6c3ec1",
+            borderRadius: 8,
+          },
+        }}
       />
       <Button
         size="small"
@@ -1060,9 +1116,12 @@ export default function MaterialStockReconciliation() {
   /* CHANGE B: small calculation popover anchored to the i icon beside "Physical Measurement" */
   const [calcAnchor, setCalcAnchor] = useState(null);
 
-  const [toleranceMetal, setToleranceMetal] = useState(0.02);
-  const [toleranceOther, setToleranceOther] = useState(0.01);
+  const [toleranceMetal, setToleranceMetal] = useState(0);
+  const [toleranceOther, setToleranceOther] = useState(0);
+  const [isAdmin, setIsAdmin] = useState(false);   // NEW
   const [tolAnchor, setTolAnchor] = useState(null);
+  const [tolSaving, setTolSaving] = useState(false);              // NEW
+  const [tolMsg, setTolMsg] = useState({ type: "", text: "" });
 
   const [history, setHistory] = useState([]);
   const [reconciledIds, setReconciledIds] = useState(new Set());
@@ -1083,7 +1142,24 @@ export default function MaterialStockReconciliation() {
     (async () => {
       try {
         const res = await getMasterMaterialData();
-        if (!cancelled) setMaterialList(toArray(res));
+        if (cancelled) return;
+
+        setMaterialList(toArray(res?.rd || []));
+
+        // NEW: admin flag from rd2
+        const admin = Array.isArray(res?.rd2) ? res.rd2[0] : null;
+        setIsAdmin(Number(admin?.IsAdmin) === 1);
+
+        // NEW: tolerance values from rd1
+        const tol = Array.isArray(res?.rd1) ? res.rd1[0] : null;
+        if (tol) {
+          if (tol.metal !== undefined && tol.metal !== null) {
+            setToleranceMetal(Number(tol.metal) || 0);
+          }
+          if (tol.otherMaterial !== undefined && tol.otherMaterial !== null) {
+            setToleranceOther(Number(tol.otherMaterial) || 0);
+          }
+        }
       } catch (err) {
         console.error("getMasterMaterialData failed:", err);
         if (!cancelled) setMaterialList([]);
@@ -1195,6 +1271,36 @@ export default function MaterialStockReconciliation() {
   }, [baseFiltered, filterConfig]);
 
   const optionsFor = useCallback((dataKey) => optionsMap[dataKey] || [], [optionsMap]);
+
+  /* NEW: save tolerance (admin only) */
+  const handleSaveTolerance = async () => {
+    if (tolSaving) return;
+
+    if (toleranceMetal < 0 || toleranceOther < 0) {
+      setTolMsg({ type: "error", text: "Tolerance cannot be negative." });
+      return;
+    }
+
+    setTolSaving(true);
+    setTolMsg({ type: "", text: "" });
+    try {
+      const res = await SetToReconcile(Number(toleranceMetal), Number(toleranceOther));
+      const rec = Array.isArray(res) ? res[0] : res;
+
+      // if your SP returns stat / stat_msg, respect it; otherwise treat as success
+      if (rec && rec.stat !== undefined && Number(rec.stat) !== 1) {
+        setTolMsg({ type: "error", text: rec.stat_msg || "Could not save tolerance." });
+      } else {
+        setTolMsg({ type: "success", text: "Tolerance saved successfully." });
+        setTimeout(() => setTolMsg({ type: "", text: "" }), 3000);
+      }
+    } catch (err) {
+      console.error("SetToReconcile failed:", err);
+      setTolMsg({ type: "error", text: "Something went wrong while saving. Please try again." });
+    } finally {
+      setTolSaving(false);
+    }
+  };
 
   const handleMaterialChange = (val) => {
     setPendingAction(null);
@@ -1403,8 +1509,7 @@ export default function MaterialStockReconciliation() {
       const rfbags = uniq(stockSummary.rows.map((r) => r.rfbag)).join(",");
 
       const res = await SaveReconciliation(
-        rfbags,
-        -Math.abs(applicableTolerance),          // tolerancefrom
+        rfbags,        // tolerancefrom
         Math.abs(applicableTolerance),           // toleranceto
         Number(grossWeight) || 0,                // totalweight
         Number(trayWeight) || 0,                 // trayweight
@@ -1776,6 +1881,12 @@ export default function MaterialStockReconciliation() {
               onMaterialChange={handleMaterialChange}
               materialOptions={materialOptions}
               pendingAction={pendingAction}
+
+
+              isAdmin={isAdmin}
+              onSaveTolerance={handleSaveTolerance}   // NEW
+              tolSaving={tolSaving}                   // NEW
+              tolMsg={tolMsg}
             />
           )}
 
@@ -1925,7 +2036,7 @@ export default function MaterialStockReconciliation() {
                       <Chip label={reconSummary.total} size="small" sx={{ backgroundColor: "#f3f4f6", fontWeight: 700, color: COLORS.text, borderRadius: 2 }} />
                     </Box>
                     <Box sx={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 2 }}>
-                    <Box>
+                      <Box>
                         <Typography sx={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.04em", color: COLORS.textMuted }}>Total</Typography>
                         <Typography sx={{ fontSize: 24, fontWeight: 800, mt: 0.5, color: COLORS.warning }}>{Math.max(reconSummary.total, 0)}</Typography>
                       </Box>
@@ -2069,10 +2180,10 @@ export default function MaterialStockReconciliation() {
                       (extra margin below so it no longer touches the Remarks field) */}
                   <Typography sx={{ ...hintSx, mt: 0.5, mb: 1 }}>
                     Total Bags: <b>{totalBags}</b> · Tray/Box: <b>{fmt(trayTotal)}</b> gm · Sticker Total: <b>{fmt(stickerTotal)}</b> gm · Polythene
-                    Total: <b>{fmt(polytheneTotal)}</b> gm 
+                    Total: <b>{fmt(polytheneTotal)}</b> gm
                   </Typography>
                   <Typography sx={{ ...hintSx, mt: 0, mb: 2.5 }}>
-                  Physical Weight: <b>{fmt(netWeightLive)} gm</b>
+                    Physical Weight: <b>{fmt(netWeightLive)} gm</b>
                   </Typography>
 
                   <TextField
@@ -2161,7 +2272,7 @@ export default function MaterialStockReconciliation() {
                         tooltip={
                           <Box sx={{ fontSize: 12, lineHeight: 1.6 }}>
                             <div><b>Difference = Physical Weight − System Weight</b></div>
-                           
+
                           </Box>
                         }
                       />
@@ -2188,9 +2299,9 @@ export default function MaterialStockReconciliation() {
                         fullWidth
                         variant="outlined"
                         sx={{ ...outlineBtnSx, mt: "auto" }}
-                        // onClick={handleSaveReconciliation}
+                      // onClick={handleSaveReconciliation}
                       >
-                         Reconcilation Report
+                        Reconcilation Report
                       </Button>
                     </>
                   ) : saveError ? (
