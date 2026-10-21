@@ -106,7 +106,7 @@ export const SetToReconcile = async (metal,othermaterial) => {
 
 
 
-export const SaveReconciliation = async (RmBags,tolerance,totalweight,trayweight,stickerweight,polytheneweight,systemwt,loginuserid,remarks) => {
+export const SaveReconciliation = async (RmBags,tolerance,totalweight,trayweight,stickerweight,polytheneweight,systemwt,remarks,countBag) => {
   const body = {
     con: JSON.stringify({
       id: "",
@@ -123,8 +123,8 @@ export const SaveReconciliation = async (RmBags,tolerance,totalweight,trayweight
       stickerweight: stickerweight,
       polytheneweight: polytheneweight,
       systemwt: systemwt,
-      loginuserid: loginuserid,
-      remarks: remarks
+      remarks: remarks,
+      totalbags: countBag
     }),
     f: "BulkReconcileSave"
   };

@@ -207,9 +207,9 @@ const normalizeRow = (r, materialName, index) => ({
   id: r.id ?? index,
   itemname: materialName, // data is fetched per material, so this always matches the selection
   rfbag: r.rfbag ?? "",
-  MaterialType: r.MaterialType ?? r.typename ?? "",
+  MaterialType: r.MaterialType ?? r.shape ?? "",
   shape: r.shape ?? r.shapename ?? "",
-  quality: r.quality ?? r.qualityname ?? r.purity ?? "",
+  quality: r.quality ?? r.qualityname ?? r.Quality ?? "",
   color: r.color ?? r.colorname ?? "",
   size: r.size ?? r.itemsize ?? "",
   supplier: r.supplier ?? r.suppliername ?? "",
@@ -1506,7 +1506,7 @@ export default function MaterialStockReconciliation() {
 
     try {
       // comma-separated unique RM bag numbers of everything in the summary
-      const rfbags = uniq(stockSummary.rows.map((r) => r.rfbag)).join(",");
+      const rfbags = uniq(stockSummary.rows.map((r) => r.id)).join(",");
 
       const res = await SaveReconciliation(
         rfbags,        // tolerancefrom
@@ -1516,8 +1516,8 @@ export default function MaterialStockReconciliation() {
         Number(stickerWeight) || 0,              // stickerweight
         Number(polytheneWeight) || 0,            // polytheneweight
         Number(stockSummary.weight) || 0,        // systemwt
-        getLoginUserId(),                        // loginuserid
-        remarks.trim().slice(0, REMARKS_MAX)     // remarks (optional, max 200)
+        remarks.trim().slice(0, REMARKS_MAX)   ,  // remarks (optional, max 200)
+        stockSummary.bags || 0,  
       );
 
       const rec = Array.isArray(res) ? res[0] : res;
