@@ -55,7 +55,7 @@ import Inventory2OutlinedIcon from "@mui/icons-material/Inventory2Outlined";
 import TuneIcon from "@mui/icons-material/Tune";
 import { keyframes } from "@emotion/react";
 import { getMasterMaterialData, GetmaterialWiseData, SaveReconciliation, GetTodaysTransactionData, GetReconcilationSummary, SetToReconcile } from "../../API/GetRmBulkReconcilationData/GetRmBulkReconcilationData";
-
+import ScaleIcon from "@mui/icons-material/Scale";
 
 /* ========================================================================
    COLOR TOKENS  (single source of truth — used everywhere via sx)
@@ -691,7 +691,7 @@ function LandingPage({
             </Typography>
           </Box>
 
-           
+
 
           <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr 0.5fr" }, gap: 2 }}>
             <TextField
@@ -719,22 +719,22 @@ function LandingPage({
               }}
             />
             <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 2, flexWrap: "wrap" }}>
-           
 
-            <Button
-              variant="contained"
-              startIcon={
-                tolSaving ? <CircularProgress size={16} thickness={5} sx={{ color: "#fff" }} /> : <SaveIcon />
-              }
-              sx={{ ...primaryBtnSx, px: 3 }}
-              onClick={onSaveTolerance}
-              disabled={tolSaving}
-            >
-              {tolSaving ? "Saving..." : "Save"}
-            </Button>
+
+              <Button
+                variant="contained"
+                startIcon={
+                  tolSaving ? <CircularProgress size={16} thickness={5} sx={{ color: "#fff" }} /> : <SaveIcon />
+                }
+                sx={{ ...primaryBtnSx, px: 3 }}
+                onClick={onSaveTolerance}
+                disabled={tolSaving}
+              >
+                {tolSaving ? "Saving..." : "Save"}
+              </Button>
+            </Box>
           </Box>
-          </Box>
-          
+
         </Paper>
       )}
 
@@ -1098,7 +1098,13 @@ export default function MaterialStockReconciliation() {
 
   /* CHANGE 4: RM bag code waiting for "remove" confirmation (null = dialog closed) */
   const [removeCode, setRemoveCode] = useState(null);
-
+  const [scaleConnected, setScaleConnected] = useState(false);
+  const scalePortRef = useRef(null);
+  const scaleReaderRef = useRef(null);
+  const scaleClosedRef = useRef(null);
+  const scaleBufferRef = useRef("");
+  /* NEW: ref to the "Enter Total Weight" input so we can focus it programmatically */
+  const grossInputRef = useRef(null);
   const [grossWeight, setGrossWeight] = useState("");
   const [trayWeight, setTrayWeight] = useState("");
   const [stickerWeight, setStickerWeight] = useState("");
@@ -1136,22 +1142,40 @@ export default function MaterialStockReconciliation() {
   const [historyRowsPerPage, setHistoryRowsPerPage] = useState(25);
 
   /* ------------------------------------------------------------------- */
-  /* Load the material master list once */
+  /* Load the material master list once.
+     FIX: the first response often comes back without rd2 (admin flag).
+     We keep retrying (up to 10 times) until rd2 arrives, and we never
+     overwrite isAdmin with false from an empty response. */
   useEffect(() => {
-    let cancelled = false;
-    (async () => {
+    let timer = null;
+    let stopped = false;
+    let listSet = false; // material list is set only once (avoids re-fetching rawData on retries)
+    const MAX_ATTEMPTS = 10;
+
+    const retry = (attempt) => {
+      if (stopped || attempt >= MAX_ATTEMPTS) return;
+      timer = setTimeout(() => load(attempt + 1), 800);
+    };
+
+    const load = async (attempt = 0) => {
       try {
         const res = await getMasterMaterialData();
-        if (cancelled) return;
+        if (stopped) return;
+        console.log("getMasterMaterialData response:", res);
 
-        setMaterialList(toArray(res?.rd || []));
+        const root = res?.Data ?? res; // handles both wrapped and plain responses
+        const rd = toArray(root?.rd || []);
+        const rd1 = Array.isArray(root?.rd1) ? root.rd1 : [];
+        const rd2 = Array.isArray(root?.rd2) ? root.rd2 : [];
 
-        // NEW: admin flag from rd2
-        const admin = Array.isArray(res?.rd2) ? res.rd2[0] : null;
-        setIsAdmin(Number(admin?.IsAdmin) === 1);
+        // material list (set once)
+        if (rd.length && !listSet) {
+          setMaterialList(rd);
+          listSet = true;
+        }
 
-        // NEW: tolerance values from rd1
-        const tol = Array.isArray(res?.rd1) ? res.rd1[0] : null;
+        // tolerance values from rd1
+        const tol = rd1[0];
         if (tol) {
           if (tol.metal !== undefined && tol.metal !== null) {
             setToleranceMetal(Number(tol.metal) || 0);
@@ -1160,16 +1184,28 @@ export default function MaterialStockReconciliation() {
             setToleranceOther(Number(tol.otherMaterial) || 0);
           }
         }
+
+        // admin flag from rd2 (accepts 1, "1" or true) — only when rd2 really arrived
+        if (rd2.length) {
+          setIsAdmin([1, "1", true].includes(rd2[0]?.IsAdmin));
+        }
+
+        // response still incomplete -> retry
+        if (!rd.length || !rd2.length) {
+          retry(attempt);
+        }
       } catch (err) {
         console.error("getMasterMaterialData failed:", err);
-        if (!cancelled) setMaterialList([]);
+        retry(attempt);
       }
-    })();
+    };
+
+    load();
     return () => {
-      cancelled = true;
+      stopped = true;
+      if (timer) clearTimeout(timer);
     };
   }, []);
-
   /* Load material-wise data whenever the selected material changes */
   useEffect(() => {
     if (!material) {
@@ -1497,6 +1533,9 @@ export default function MaterialStockReconciliation() {
 
   /* CHANGED: now calls the BulkReconcileSave API and builds `result`
      from the API response (rd[0]). */
+  /* CHANGED: new BulkReconcileSave API.
+   Calculation (physical weight) is done on the frontend; backend only
+   receives the final values and returns stat / status / difference. */
   const handleReconcile = async () => {
     if (!stockSummary || !allMandatoryFilled || saving) return;
 
@@ -1508,19 +1547,24 @@ export default function MaterialStockReconciliation() {
       // comma-separated unique RM bag numbers of everything in the summary
       const rfbags = uniq(stockSummary.rows.map((r) => r.id)).join(",");
 
+      const systemWt = Number(stockSummary.weight) || 0;
+      const physicalWt = Number(netWeightLive.toFixed(3)); // frontend calculated physical weight
+
       const res = await SaveReconciliation(
-        rfbags,        // tolerancefrom
-        Math.abs(applicableTolerance),           // toleranceto
-        Number(grossWeight) || 0,                // totalweight
-        Number(trayWeight) || 0,                 // trayweight
-        Number(stickerWeight) || 0,              // stickerweight
-        Number(polytheneWeight) || 0,            // polytheneweight
-        Number(stockSummary.weight) || 0,        // systemwt
-        remarks.trim().slice(0, REMARKS_MAX)   ,  // remarks (optional, max 200)
-        stockSummary.bags || 0,  
+        rfbags,                                   // RmBags
+        Math.abs(applicableTolerance),            // tolerance
+        Number(grossWeight) || 0,                 // totalweight (entered total weight)
+        systemWt,                                 // SyatemWt
+        stockSummary.bags || 0,                   // totalbags
+        remarks.trim().slice(0, REMARKS_MAX),     // remarks (optional, max 200)
+        physicalWt                                // physicalwt (frontend calculated)
       );
 
-      const rec = Array.isArray(res) ? res[0] : res;
+      // response: { Data: { rd: [ { stat, stat_msg, status, Reconcileflg, difference, remarks } ] } }
+      // (your API helper should already return rd — this also handles the raw shape)
+      const rec = Array.isArray(res)
+        ? res[0]
+        : res?.Data?.rd?.[0] ?? res?.rd?.[0] ?? res;
 
       if (!rec || Number(rec.stat) !== 1) {
         setSaveError(rec?.stat_msg || "Reconciliation could not be saved. Please try again.");
@@ -1528,17 +1572,21 @@ export default function MaterialStockReconciliation() {
       }
 
       const accepted = String(rec.status || "").toLowerCase() === "accept";
-      const tolTo = Number(rec.toleranceto);
+
+      // use backend difference if present, otherwise fall back to frontend calculation
+      const diff = Number.isFinite(Number(rec.difference))
+        ? Number(rec.difference)
+        : physicalWt - systemWt;
 
       setResult({
-        systemWeight: Number(rec.systemweight) || 0,
-        grossWeight: Number(rec.enteredweight) || 0,
-        trayWeight: Number(rec.trayweight) || 0,
+        systemWeight: systemWt,
+        grossWeight: Number(grossWeight) || 0,
+        trayWeight: Number(trayWeight) || 0,
         stickerWeight: Number(stickerWeight) || 0,
         polytheneWeight: Number(polytheneWeight) || 0,
-        physicalNet: Number(rec.physicalnetweight) || 0,
-        difference: Number(rec.difference) || 0,
-        tolerance: Number.isFinite(tolTo) ? Math.abs(tolTo) : applicableTolerance,
+        physicalNet: physicalWt,
+        difference: diff,
+        tolerance: Math.abs(applicableTolerance),
         status: accepted ? "ACCEPT" : "REJECT",
         message: accepted
           ? "Within Tolerance — Reconcile successfully"
@@ -1664,6 +1712,30 @@ export default function MaterialStockReconciliation() {
 
   const showWorkspace = mode === "filter" || mode === "scan";
   const showSummaryBlock = showWorkspace && !!stockSummary;
+  /* try silent auto-connect when the weight form appears */
+  useEffect(() => {
+    if (showSummaryBlock) ensureScaleConnected();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [showSummaryBlock]);
+
+  /* NEW: focus "Enter Total Weight" by default once the weight form is visible
+     and the Filter / Scan drawers are closed (the drawer would otherwise steal
+     the focus back while it is closing). */
+  useEffect(() => {
+    if (!showSummaryBlock || filterOpen || scanDrawerOpen) return;
+    const t = setTimeout(() => {
+      grossInputRef.current?.focus();
+    }, 400);
+    return () => clearTimeout(t);
+  }, [showSummaryBlock, filterOpen, scanDrawerOpen]);
+
+  /* release the port when leaving the screen */
+  useEffect(() => {
+    return () => {
+      disconnectScale();
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   const showHistoryBlock = mode === "filter" || mode === "scan" || mode === "history";
 
   // PERF: render only one page of rows instead of thousands at once
@@ -1679,6 +1751,95 @@ export default function MaterialStockReconciliation() {
   useEffect(() => {
     setHistoryPage(0);
   }, [mode, material, todaysData.length]);
+
+  const extractWeight = (line) => {
+    const m = line.match(/([+-]?\d+\.?\d*)/);
+    if (!m) return null;
+    const w = parseFloat(m[1]);
+    return !isNaN(w) && w >= 0 ? w.toFixed(3) : null;
+  };
+
+  const parseScaleBuffer = () => {
+    const lines = scaleBufferRef.current.split("\n");
+    for (let i = 0; i < lines.length - 1; i++) {
+      const line = lines[i].trim();
+      if (!line) continue;
+      const w = extractWeight(line);
+      if (w !== null) setGrossWeight(w); // fills "Enter Total Weight"
+    }
+    scaleBufferRef.current = lines[lines.length - 1];
+  };
+
+  const readScaleData = async (port) => {
+    const decoder = new TextDecoderStream();
+    scaleClosedRef.current = port.readable.pipeTo(decoder.writable).catch(() => { });
+    const reader = decoder.readable.getReader();
+    scaleReaderRef.current = reader;
+    try {
+      while (true) {
+        const { value, done } = await reader.read();
+        if (done) break;
+        if (value) {
+          scaleBufferRef.current += value;
+          parseScaleBuffer();
+        }
+      }
+    } catch (err) {
+      console.error("Scale read error:", err);
+    } finally {
+      setScaleConnected(false);
+    }
+  };
+
+  const openScalePort = async (port) => {
+    await port.open({ baudRate: 9600, dataBits: 8, stopBits: 1, parity: "none" });
+    scalePortRef.current = port;
+    setScaleConnected(true);
+    readScaleData(port);
+  };
+
+  /* silent connect if the user already granted a port earlier */
+  const ensureScaleConnected = async () => {
+    if (!("serial" in navigator) || scalePortRef.current) return;
+    try {
+      const ports = await navigator.serial.getPorts();
+      if (ports.length > 0) await openScalePort(ports[0]);
+    } catch (err) {
+      console.log("Scale auto-connect skipped:", err.message);
+    }
+  };
+
+  /* manual connect (needs a click = user gesture) */
+  const connectScale = async () => {
+    if (!("serial" in navigator)) {
+      alert("Web Serial API not supported. Use Chrome or Edge.");
+      return;
+    }
+    try {
+      const port = await navigator.serial.requestPort();
+      await openScalePort(port);
+    } catch (err) {
+      console.error("Scale connection error:", err);
+    }
+  };
+
+  const disconnectScale = async () => {
+    try {
+      if (scaleReaderRef.current) {
+        await scaleReaderRef.current.cancel();
+        scaleReaderRef.current = null;
+      }
+      if (scaleClosedRef.current) await scaleClosedRef.current;
+      if (scalePortRef.current) {
+        await scalePortRef.current.close();
+        scalePortRef.current = null;
+      }
+    } catch (err) {
+      console.error("Disconnect error:", err);
+    } finally {
+      setScaleConnected(false);
+    }
+  };
 
   /* ----------------------------------------------------------------- */
   return (
@@ -1981,9 +2142,18 @@ export default function MaterialStockReconciliation() {
                 }}
               >
                 <Box sx={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 1.5, mb: 2.5, flexWrap: "wrap" }}>
-                  <Typography sx={{ fontSize: 16, fontWeight: 600, color: "#6c3fc5" }}>
-                    System Stock Summary
-                  </Typography>
+                  <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                    <Typography sx={{ fontSize: 16, fontWeight: 600, color: "#6c3fc5" }}>
+                      System Stock Summary
+                    </Typography>
+                    {material && (
+                      <Chip
+                        label={material}
+                        size="small"
+                        sx={{ ...chipSx, fontWeight: 700 }}
+                      />
+                    )}
+                  </Box>
                   {mode !== "scan" && (
                     <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.75, justifyContent: "flex-end" }}>
                       {summaryChips.map((c, i) => (
@@ -2024,7 +2194,7 @@ export default function MaterialStockReconciliation() {
                       </Typography>
                       {stockSummary && (
                         <Typography component="span" sx={{ fontSize: 16, color: COLORS.textMuted, fontWeight: 600 }}>
-                          gm
+                          {["DIAMOND", "COLOR STONE"].includes(String(material).toUpperCase()) ? "ct" : "gm"}
                         </Typography>
                       )}
                     </Box>
@@ -2135,12 +2305,28 @@ export default function MaterialStockReconciliation() {
                     label="Enter Total Weight"
                     required
                     fullWidth
+                    inputRef={grossInputRef}
                     size="small"
                     type="number"
                     sx={fieldSx}
                     value={grossWeight}
                     onChange={(e) => setGrossWeight(e.target.value)}
-                    InputProps={{ endAdornment: <Typography sx={{ fontSize: 12, color: COLORS.textMuted }}>gm</Typography> }}
+                    InputProps={{
+                      endAdornment: (
+                        <Box sx={{ display: "flex", alignItems: "center", gap: 0.75 }}>
+                          <Tooltip title={scaleConnected ? "Scale connected (click to disconnect)" : "Connect weight scale"} arrow>
+                            <IconButton
+                              size="small"
+                              onClick={scaleConnected ? disconnectScale : connectScale}
+                              sx={{ color: scaleConnected ? COLORS.success : COLORS.textMuted }}
+                            >
+                              <ScaleIcon fontSize="small" />
+                            </IconButton>
+                          </Tooltip>
+                          <Typography sx={{ fontSize: 12, color: COLORS.textMuted }}>gm</Typography>
+                        </Box>
+                      ),
+                    }}
                   />
 
                   <Box sx={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 1.5, mb: 1.75 }}>
