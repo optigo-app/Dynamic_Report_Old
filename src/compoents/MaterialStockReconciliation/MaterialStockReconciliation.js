@@ -1,4 +1,5 @@
 // http://localhost:3000/testreport/?sp=9&ifid=AdvanceCRM&pid=18618
+// REQUIRES:  npm i @zxing/browser @zxing/library
 import React, { useMemo, useState, useCallback, useEffect, useRef } from "react";
 import {
   Box,
@@ -53,6 +54,10 @@ import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import Inventory2OutlinedIcon from "@mui/icons-material/Inventory2Outlined";
 import TuneIcon from "@mui/icons-material/Tune";
+import CameraAltOutlinedIcon from "@mui/icons-material/CameraAltOutlined"; // NEW (camera scan)
+import VideocamOffOutlinedIcon from "@mui/icons-material/VideocamOffOutlined"; // NEW (camera scan)
+import { BrowserMultiFormatReader } from "@zxing/browser"; // NEW (camera scan)
+import { BarcodeFormat, DecodeHintType } from "@zxing/library"; // NEW (camera scan)
 import { keyframes } from "@emotion/react";
 import { getMasterMaterialData, GetmaterialWiseData, SaveReconciliation, GetTodaysTransactionData, GetReconcilationSummary, SetToReconcile } from "../../API/GetRmBulkReconcilationData/GetRmBulkReconcilationData";
 import ScaleIcon from "@mui/icons-material/Scale";
@@ -186,6 +191,12 @@ const tbodyCellSx = { fontSize: 13, whiteSpace: "nowrap" };
 const linkCellSx = { ...tbodyCellSx, color: COLORS.purple, fontWeight: 600 };
 
 const fieldSx = { mb: 1.75 };
+
+/* NEW: keeps the typed value clearly readable when a field is disabled
+   (locked after the Reconciliation Result is generated) */
+const lockedTextSx = {
+  "& .MuiInputBase-input.Mui-disabled": { WebkitTextFillColor: COLORS.text },
+};
 
 
 const toArray = (res) => {
@@ -708,7 +719,7 @@ function LandingPage({
           </Box>
           <Box>
             <Typography sx={{ fontSize: 15, fontWeight: 700, color: COLORS.text }}>
-              Selecet Material
+              Select Material
             </Typography>
           </Box>
         </Box>
@@ -988,7 +999,290 @@ function FilterPanelContent({
   );
 }
 
+/* ========================================================================
+   NEW: CAMERA SCAN (beep helper + CameraScanner)
+   ===================================================================== */
 
+/* beep + vibrate feedback on every camera scan */
+let _audioCtx = null;
+const scanFeedback = (ok = true) => {
+  try {
+    _audioCtx = _audioCtx || new (window.AudioContext || window.webkitAudioContext)();
+    const o = _audioCtx.createOscillator();
+    const g = _audioCtx.createGain();
+    o.type = "sine";
+    o.frequency.value = ok ? 1000 : 300;
+    g.gain.value = 0.08;
+    o.connect(g);
+    g.connect(_audioCtx.destination);
+    o.start();
+    o.stop(_audioCtx.currentTime + (ok ? 0.12 : 0.25));
+  } catch (e) {
+    /* audio not available — ignore */
+  }
+  try {
+    if (navigator.vibrate) navigator.vibrate(ok ? 60 : [80, 60, 80]);
+  } catch (e) {
+    /* vibrate not available — ignore */
+  }
+};
+
+/* barcode formats a bag label may use */
+const CAMERA_FORMATS = [
+  BarcodeFormat.CODE_128,
+  BarcodeFormat.CODE_39,
+  BarcodeFormat.CODE_93,
+  BarcodeFormat.CODABAR,
+  BarcodeFormat.ITF,
+  BarcodeFormat.EAN_13,
+  BarcodeFormat.EAN_8,
+  BarcodeFormat.UPC_A,
+  BarcodeFormat.QR_CODE,
+  BarcodeFormat.DATA_MATRIX,
+];
+
+/* Live camera preview + continuous barcode decoding.
+   Mounted only while the camera is ON; unmounting stops the camera. */
+function CameraScanner({ onDetected, onStop }) {
+  const videoRef = useRef(null);
+  const controlsRef = useRef(null);
+  const lastRef = useRef({ code: "", time: 0 });
+  const onDetectedRef = useRef(onDetected);
+  onDetectedRef.current = onDetected;
+
+  const [devices, setDevices] = useState([]);
+  const [deviceId, setDeviceId] = useState("");
+  const [status, setStatus] = useState("starting"); // starting | scanning | error
+  const [errorMsg, setErrorMsg] = useState("");
+  const [attempt, setAttempt] = useState(0); // bump to retry
+
+  useEffect(() => {
+    let cancelled = false;
+
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      setStatus("error");
+      setErrorMsg("Camera needs a secure connection (HTTPS) or localhost. It is not available on plain http.");
+      return undefined;
+    }
+
+    setStatus("starting");
+    setErrorMsg("");
+
+    const hints = new Map();
+    hints.set(DecodeHintType.POSSIBLE_FORMATS, CAMERA_FORMATS);
+    hints.set(DecodeHintType.TRY_HARDER, true);
+    const reader = new BrowserMultiFormatReader(hints, { delayBetweenScanAttempts: 120 });
+
+    const handleResult = (result) => {
+      if (!result) return;
+      const text = String(result.getText() || "").trim();
+      if (!text) return;
+      const now = Date.now();
+      // ignore the same code seen again within 2 seconds (camera sees it many times)
+      if (text === lastRef.current.code && now - lastRef.current.time < 2000) return;
+      lastRef.current = { code: text, time: now };
+      onDetectedRef.current(text);
+    };
+
+    const starting = deviceId
+      ? reader.decodeFromVideoDevice(deviceId, videoRef.current, handleResult)
+      : reader.decodeFromConstraints(
+        {
+          video: {
+            facingMode: { ideal: "environment" }, // back camera on phones/tablets
+            width: { ideal: 1280 },
+            height: { ideal: 720 },
+          },
+        },
+        videoRef.current,
+        handleResult
+      );
+
+    starting
+      .then(async (controls) => {
+        if (cancelled) {
+          controls.stop();
+          return;
+        }
+        controlsRef.current = controls;
+        setStatus("scanning");
+        try {
+          const list = await BrowserMultiFormatReader.listVideoInputDevices();
+          if (!cancelled) setDevices(list);
+        } catch (e) {
+          /* device list is optional */
+        }
+      })
+      .catch((err) => {
+        if (cancelled) return;
+        console.error("Camera start failed:", err);
+        setStatus("error");
+        if (err?.name === "NotAllowedError" || err?.name === "SecurityError") {
+          setErrorMsg("Camera permission was denied. Allow camera access in the browser and try again.");
+        } else if (err?.name === "NotFoundError" || err?.name === "OverconstrainedError") {
+          setErrorMsg("No camera was found on this device.");
+        } else if (err?.name === "NotReadableError") {
+          setErrorMsg("The camera is being used by another app or tab.");
+        } else {
+          setErrorMsg("Could not start the camera. Please try again.");
+        }
+      });
+
+    return () => {
+      cancelled = true;
+      try {
+        if (controlsRef.current) controlsRef.current.stop();
+      } catch (e) {
+        /* ignore */
+      }
+      controlsRef.current = null;
+    };
+  }, [deviceId, attempt]);
+
+  return (
+    <Box sx={{ mb: 2 }}>
+      <Box
+        sx={{
+          position: "relative",
+          width: "100%",
+          height: 240,
+          borderRadius: "12px",
+          overflow: "hidden",
+          bgcolor: "#000",
+          border: `1px solid ${COLORS.border}`,
+        }}
+      >
+        <video
+          ref={videoRef}
+          muted
+          playsInline
+          style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
+        />
+
+        {/* aim frame + moving scan line (only while scanning) */}
+        {status === "scanning" && (
+          <>
+            <Box
+              sx={{
+                position: "absolute",
+                top: "18%",
+                bottom: "18%",
+                left: "10%",
+                right: "10%",
+                border: "2px solid rgba(255,255,255,0.85)",
+                borderRadius: "10px",
+                pointerEvents: "none",
+              }}
+            />
+            <Box
+              sx={{
+                position: "absolute",
+                left: "12%",
+                width: "76%",
+                height: 2,
+                borderRadius: 1,
+                background:
+                  "linear-gradient(90deg, transparent 0%, #6d5efc 20%, #6d5efc 80%, transparent 100%)",
+                boxShadow: "0 0 8px 2px rgba(109,94,252,0.6)",
+                animation: `${scanLineMove} 1.8s ease-in-out infinite`,
+                pointerEvents: "none",
+              }}
+            />
+          </>
+        )}
+
+        {status === "starting" && (
+          <Box
+            sx={{
+              position: "absolute",
+              inset: 0,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: 1,
+              color: "#fff",
+              bgcolor: "rgba(0,0,0,0.55)",
+            }}
+          >
+            <CircularProgress size={18} thickness={5} sx={{ color: "#fff" }} />
+            <Typography sx={{ fontSize: 13 }}>Starting camera...</Typography>
+          </Box>
+        )}
+
+        {status === "error" && (
+          <Box
+            sx={{
+              position: "absolute",
+              inset: 0,
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: 1.25,
+              px: 2.5,
+              textAlign: "center",
+              color: "#fff",
+              bgcolor: "rgba(30,27,46,0.92)",
+            }}
+          >
+            <VideocamOffOutlinedIcon />
+            <Typography sx={{ fontSize: 13, lineHeight: 1.5 }}>{errorMsg}</Typography>
+            <Button
+              size="small"
+              variant="outlined"
+              onClick={() => setAttempt((a) => a + 1)}
+              sx={{ color: "#fff", borderColor: "#fff", textTransform: "none" }}
+            >
+              Try again
+            </Button>
+          </Box>
+        )}
+
+        <Button
+          size="small"
+          variant="contained"
+          onClick={onStop}
+          startIcon={<CloseIcon fontSize="small" />}
+          sx={{
+            position: "absolute",
+            top: 8,
+            right: 8,
+            textTransform: "none",
+            fontWeight: 600,
+            bgcolor: "rgba(0,0,0,0.6)",
+            boxShadow: "none",
+            "&:hover": { bgcolor: "rgba(0,0,0,0.8)", boxShadow: "none" },
+          }}
+        >
+          Stop
+        </Button>
+      </Box>
+
+      {devices.length > 1 && (
+        <FormControl fullWidth size="small" sx={{ mt: 1.25 }}>
+          <InputLabel>Camera</InputLabel>
+          <Select
+            label="Camera"
+            value={deviceId}
+            displayEmpty
+            onChange={(e) => setDeviceId(e.target.value)}
+          >
+            <MenuItem value="">Auto (back camera)</MenuItem>
+            {devices.map((d, i) => (
+              <MenuItem key={d.deviceId} value={d.deviceId}>
+                {d.label || `Camera ${i + 1}`}
+              </MenuItem>
+            ))}
+          </Select>
+        </FormControl>
+      )}
+    </Box>
+  );
+}
+
+
+/* CHANGED: ScanPanelContent now has a "Scan using Camera" option.
+   Gun scanner / typing logic is unchanged. New prop: onCameraScan(code). */
 function ScanPanelContent({
   scanInput,
   setScanInput,
@@ -1003,74 +1297,175 @@ function ScanPanelContent({
   onClose,
   material,
   inputRef,
+  onCameraScan, // NEW: (code) => void — adds one code to the scanned list
 }) {
-  const isValid = (code) => validScannedCodes.includes(code);
+  const [cameraOn, setCameraOn] = useState(false);
+  const [lastScan, setLastScan] = useState(null); // { code, kind: 'added' | 'duplicate' | 'unreadable' }
+
+  // always-fresh copy of the list for use inside the camera callback
+  const scannedRef = useRef(scannedCodes);
+  scannedRef.current = scannedCodes;
+
+  const handleCameraDetected = useCallback(
+    (raw) => {
+      const code = String(raw).trim();
+
+      // RM bag numbers are digits only (same rule as the text box)
+      if (!/^[0-9]+$/.test(code)) {
+        setLastScan({ code, kind: "unreadable" });
+        scanFeedback(false);
+        return;
+      }
+      if (scannedRef.current.includes(code)) {
+        setLastScan({ code, kind: "duplicate" });
+        scanFeedback(false);
+        return;
+      }
+      if (onCameraScan) onCameraScan(code);
+      setLastScan({ code, kind: "added" });
+      scanFeedback(true);
+    },
+    [onCameraScan]
+  );
+
+  const stopCamera = () => {
+    setCameraOn(false);
+    // give the gun scanner its focus back
+    setTimeout(() => {
+      if (inputRef && inputRef.current) inputRef.current.focus();
+    }, 150);
+  };
+
+  const renderLastScan = () => {
+    if (!cameraOn || !lastScan) return null;
+    let text = "";
+    let bg = COLORS.successBg;
+    let color = COLORS.success;
+
+    if (lastScan.kind === "unreadable") {
+      text = `Not a valid RM Bag barcode: ${lastScan.code}`;
+      bg = COLORS.dangerBg;
+      color = COLORS.danger;
+    } else if (lastScan.kind === "duplicate") {
+      text = `${lastScan.code} is already scanned`;
+      bg = COLORS.warningBg;
+      color = COLORS.warning;
+    } else if (validScannedCodes.includes(lastScan.code)) {
+      text = `${lastScan.code} added`;
+    } else {
+      text = `${lastScan.code} added, but it is not in ${material}`;
+      bg = COLORS.dangerBg;
+      color = COLORS.danger;
+    }
+
+    return (
+      <Typography sx={{ fontSize: 12, fontWeight: 700, bgcolor: bg, color, borderRadius: "8px", px: 1.5, py: 1, mb: 1.5 }}>
+        {text}
+      </Typography>
+    );
+  };
 
   return (
     <Box sx={{ p: 2.5, width: 520 }}>
       <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 2 }}>
         <Typography sx={{ ...panelTitleSx, mb: 0 }}>Scan RM Bag</Typography>
-        {onClose && (
-          <IconButton size="small" onClick={onClose}>
-            <CloseIcon fontSize="small" />
-          </IconButton>
-        )}
+
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+          {/* open / stop the camera (icon only) */}
+          <Tooltip title={cameraOn ? "Stop camera" : "Scan using camera"} arrow>
+            <IconButton
+              onClick={() => (cameraOn ? stopCamera() : setCameraOn(true))}
+              aria-label={cameraOn ? "Stop camera" : "Scan using camera"}
+              sx={{
+                width: 36,
+                height: 36,
+                color: cameraOn ? "#fff" : COLORS.purple,
+                bgcolor: cameraOn ? COLORS.purple : COLORS.surface,
+                border: `1px solid ${COLORS.purple}`,
+                "&:hover": {
+                  bgcolor: cameraOn ? COLORS.purpleDark : COLORS.purpleLight,
+                },
+              }}
+            >
+              {cameraOn ? (
+                <VideocamOffOutlinedIcon fontSize="small" />
+              ) : (
+                <CameraAltOutlinedIcon fontSize="small" />
+              )}
+            </IconButton>
+          </Tooltip>
+
+          {onClose && (
+            <IconButton size="small" onClick={onClose}>
+              <CloseIcon fontSize="small" />
+            </IconButton>
+          )}
+        </Box>
       </Box>
-      <Box
-        sx={{
-          position: "relative",
-          width: 90,
-          height: 90,
-          mx: "auto",          // centered
-          mb: 2.5,             // space before the input field
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-        }}
-      >
-        {/* corner brackets — only the outer corner is rounded */}
-        {[
-          { top: 0, left: 0, borderWidth: "3px 0 0 3px", borderTopLeftRadius: "8px" },
-          { top: 0, right: 0, borderWidth: "3px 3px 0 0", borderTopRightRadius: "8px" },
-          { bottom: 0, left: 0, borderWidth: "0 0 3px 3px", borderBottomLeftRadius: "8px" },
-          { bottom: 0, right: 0, borderWidth: "0 3px 3px 0", borderBottomRightRadius: "8px" },
-        ].map((pos, i) => (
+
+      {cameraOn ? (
+        <CameraScanner onDetected={handleCameraDetected} onStop={stopCamera} />
+      ) : (
+        <>
           <Box
-            key={i}
             sx={{
-              position: "absolute",
-              width: 22,
-              height: 22,
-              borderStyle: "solid",
-              borderColor: "#6d5efc",
-              ...pos,
+              position: "relative",
+              width: 90,
+              height: 90,
+              mx: "auto",          // centered
+              mb: 1.5,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
             }}
-          />
-        ))}
+          >
+            {/* corner brackets — only the outer corner is rounded */}
+            {[
+              { top: 0, left: 0, borderWidth: "3px 0 0 3px", borderTopLeftRadius: "8px" },
+              { top: 0, right: 0, borderWidth: "3px 3px 0 0", borderTopRightRadius: "8px" },
+              { bottom: 0, left: 0, borderWidth: "0 0 3px 3px", borderBottomLeftRadius: "8px" },
+              { bottom: 0, right: 0, borderWidth: "0 3px 3px 0", borderBottomRightRadius: "8px" },
+            ].map((pos, i) => (
+              <Box
+                key={i}
+                sx={{
+                  position: "absolute",
+                  width: 22,
+                  height: 22,
+                  borderStyle: "solid",
+                  borderColor: "#6d5efc",
+                  ...pos,
+                }}
+              />
+            ))}
 
-        {/* moving scan line — gradient with faded ends, kept inside the brackets */}
-        <Box
-          sx={{
-            position: "absolute",
-            left: "14%",
-            width: "72%",
-            height: 2,
-            borderRadius: 1,
-            background:
-              "linear-gradient(90deg, transparent 0%, #6d5efc 20%, #6d5efc 80%, transparent 100%)",
-            boxShadow: "0 0 8px 2px rgba(109,94,252,0.45)",
-            animation: `${scanLineMove} 1.8s ease-in-out infinite`,
-          }}
-        />
+            {/* moving scan line — gradient with faded ends, kept inside the brackets */}
+            <Box
+              sx={{
+                position: "absolute",
+                left: "14%",
+                width: "72%",
+                height: 2,
+                borderRadius: 1,
+                background:
+                  "linear-gradient(90deg, transparent 0%, #6d5efc 20%, #6d5efc 80%, transparent 100%)",
+                boxShadow: "0 0 8px 2px rgba(109,94,252,0.45)",
+                animation: `${scanLineMove} 1.8s ease-in-out infinite`,
+              }}
+            />
 
-        <QrCodeScannerIcon
-          sx={{
-            fontSize: 42,
-            color: "#6d5efc",
-            animation: `${iconPulse} 1.8s ease-in-out infinite`,
-          }}
-        />
-      </Box>
+            <QrCodeScannerIcon
+              sx={{
+                fontSize: 42,
+                color: "#6d5efc",
+                animation: `${iconPulse} 1.8s ease-in-out infinite`,
+              }}
+            />
+          </Box>
+        </>
+      )}
+
+      {renderLastScan()}
 
       {/* Selected material (fixed) */}
       <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1.5 }}>
@@ -1092,7 +1487,7 @@ function ScanPanelContent({
         sx={{
           mb: 1,
           "& .MuiInputBase-root": {
-            height: 180,
+            height: cameraOn ? 110 : 180, // smaller while the camera preview is open
             alignItems: "flex-start",
             overflow: "hidden",
           },
@@ -1134,7 +1529,10 @@ function ScanPanelContent({
           <Button
             size="small"
             startIcon={<DeleteOutlineIcon fontSize="small" />}
-            onClick={onClearAll}
+            onClick={() => {
+              setLastScan(null);
+              onClearAll();
+            }}
             sx={{ textTransform: "none", color: COLORS.textMuted, fontSize: 12, p: 0, minWidth: 0 }}
           >
             Clear All
@@ -1225,6 +1623,9 @@ export default function MaterialStockReconciliation() {
   const [polytheneWeight, setPolytheneWeight] = useState("");
   const [remarks, setRemarks] = useState("");
   const [result, setResult] = useState(null);
+
+  /* CHANGED: inputs are NOT locked after the result. They are cleared after a
+     successful save so the user can enter new values and save a new reconciliation. */
 
 
   const [touched, setTouched] = useState({});
@@ -1562,6 +1963,11 @@ export default function MaterialStockReconciliation() {
     setScanInput("");
   };
 
+  /* NEW: add ONE code coming from the camera scanner (no duplicates) */
+  const handleCameraScan = useCallback((code) => {
+    setScannedCodes((prev) => (prev.includes(code) ? prev : [...prev, code]));
+  }, []);
+
   const handleScanKeyDown = (e) => {
     if (e.key !== "Enter") return;
     e.preventDefault();
@@ -1734,6 +2140,15 @@ export default function MaterialStockReconciliation() {
           ? "Within Tolerance — Reconcile successfully"
           : "Out of Tolerance — Reconcile Rejected",
       });
+
+      // CHANGED: clear the old values so the next reconciliation starts fresh
+      setGrossWeight("");
+      setTrayWeight("");
+      setStickerWeight("");
+      setPolytheneWeight("");
+      setRemarks("");
+      setTouched({});
+      setTimeout(() => grossInputRef.current?.focus(), 100);
 
       // refresh the table + KPI card after a successful save
       loadTodaysTransactions();
@@ -2035,7 +2450,7 @@ export default function MaterialStockReconciliation() {
             anchor="left"
             open={scanDrawerOpen}
             onClose={() => setScanDrawerOpen(false)}
-            PaperProps={{ sx: { width: 520, bgcolor: COLORS.bg } }}
+            PaperProps={{ sx: { width: 520, maxWidth: "100vw", bgcolor: COLORS.bg } }}
             SlideProps={{ onEntered: () => scanInputRef.current?.focus() }}
           >
             <ScanPanelContent
@@ -2052,6 +2467,7 @@ export default function MaterialStockReconciliation() {
               onClose={() => setScanDrawerOpen(false)}
               material={material}
               inputRef={scanInputRef}
+              onCameraScan={handleCameraScan}
             />
           </Drawer>
         )}
@@ -2458,7 +2874,7 @@ export default function MaterialStockReconciliation() {
                     inputRef={grossInputRef}
                     size="small"
                     type="number"
-                    sx={fieldSx}
+                    sx={{ ...fieldSx, ...lockedTextSx }}
                     value={grossWeight}
                     onChange={nonNegativeChange(setGrossWeight)}
                     onBlur={markTouched("gross")}
@@ -2490,6 +2906,7 @@ export default function MaterialStockReconciliation() {
                       fullWidth
                       size="small"
                       type="number"
+                      sx={lockedTextSx}
                       value={trayWeight}
                       onChange={nonNegativeChange(setTrayWeight)}
                       onBlur={markTouched("tray")}
@@ -2504,6 +2921,7 @@ export default function MaterialStockReconciliation() {
                       fullWidth
                       size="small"
                       type="number"
+                      sx={lockedTextSx}
                       value={stickerWeight}
                       onChange={nonNegativeChange(setStickerWeight)}
                       onBlur={markTouched("sticker")}
@@ -2518,6 +2936,7 @@ export default function MaterialStockReconciliation() {
                       fullWidth
                       size="small"
                       type="number"
+                      sx={lockedTextSx}
                       value={polytheneWeight}
                       onChange={nonNegativeChange(setPolytheneWeight)}
                       onBlur={markTouched("polythene")}
@@ -2544,7 +2963,7 @@ export default function MaterialStockReconciliation() {
                     multiline
                     minRows={2}
                     size="small"
-                    sx={fieldSx}
+                    sx={{ ...fieldSx, ...lockedTextSx }}
                     placeholder="Enter remarks (optional)"
                     value={remarks}
                     onChange={(e) => setRemarks(e.target.value.slice(0, REMARKS_MAX))}
