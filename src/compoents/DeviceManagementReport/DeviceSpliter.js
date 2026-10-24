@@ -82,6 +82,8 @@ export default function DeviceSpliter({ isLoadingNew }) {
 
   const fetchData = async (selected) => {
     const clientIpAddress = sessionStorage.getItem("clientIpAddress");
+    const ONLY_APP = "icatalog";
+    const isFromEcom = searchParams.get("fromecom") === "1"; // only Icatalog when opened from ecom
 
     try {
       setIsLoading(true);
@@ -108,18 +110,16 @@ export default function DeviceSpliter({ isLoadingNew }) {
       const { rd, rd1, rd2 } = fetchedData?.Data || {};
       setFinalData(fetchedData?.Data);
       sessionStorage.setItem("soketVariable", JSON.stringify(rd2));
+
       if (!Array.isArray(rd) || !Array.isArray(rd1) || rd1.length === 0) {
         setIsLoading(false);
         return;
       }
 
-      const keyMap = Object.entries(rd[0] || {}).reduce(
-        (acc, [numKey, name]) => {
-          acc[numKey] = name.toLowerCase();
-          return acc;
-        },
-        {}
-      );
+      const keyMap = Object.entries(rd[0] || {}).reduce((acc, [numKey, name]) => {
+        acc[numKey] = name.toLowerCase();
+        return acc;
+      }, {});
 
       const mergedData = rd1.map((record) => {
         const mapped = {};
@@ -130,7 +130,7 @@ export default function DeviceSpliter({ isLoadingNew }) {
         return mapped;
       });
 
-      // Filter based on selectedFilter
+      // Filter based on selectedFileter
       let filtered = [];
       if (selectedFileter === "App") {
         filtered = [
@@ -142,9 +142,7 @@ export default function DeviceSpliter({ isLoadingNew }) {
         ];
       } else if (selectedFileter === "Device") {
         filtered = [
-          ...new Map(
-            mergedData.map((item) => [item.devicename, item])
-          ).values(),
+          ...new Map(mergedData.map((item) => [item.devicename, item])).values(),
         ];
       }
 
@@ -162,29 +160,30 @@ export default function DeviceSpliter({ isLoadingNew }) {
         department: item.department,
       }));
 
-      const nonEmptyAppData = filteredData?.filter(
-        (item) => item.app && item.app.trim() !== ""
-      );
+      const nonEmptyAppData = filteredData?.filter((item) => {
+        const name = item.app?.trim();
+        if (!name) return false;
+        // fromecom=1 -> only Icatalog (App mode), otherwise normal
+        if (isFromEcom && selectedFileter === "App") {
+          return name.toLowerCase() === ONLY_APP;
+        }
+        return true;
+      });
 
       setSideFilterData(filtered);
       setGroupedDepartments(nonEmptyAppData);
 
       if (customerBindeChnaged) {
-        const expressAppEntry = filteredData?.find(
+        const expressAppEntry = nonEmptyAppData?.find(
           (item) => item.app === "ExpressApp"
         );
-        if (expressAppEntry) {
-          setSelectedDepartment(expressAppEntry?.app);
-          setCustomerBindeChnaged(false);
-        } else {
-          setSelectedDepartment(filteredData[0]?.app || "");
-          setCustomerBindeChnaged(false);
-        }
+        setSelectedDepartment(
+          expressAppEntry?.app || nonEmptyAppData[0]?.app || ""
+        );
       } else {
-        setSelectedDepartment(filteredData[0]?.app || "");
-        setCustomerBindeChnaged(false);
+        setSelectedDepartment(nonEmptyAppData[0]?.app || "");
       }
-      // setSelectedDepartment(selected);
+      setCustomerBindeChnaged(false);
     } catch (error) {
       console.error("Fetch failed:", error);
     } finally {
