@@ -1,4 +1,5 @@
 // http://localhost:3000/testreport/?sp=15&ifid=ToolsReport&pid=18233
+// http://localhost:3000/testreport/?sp=15&ifid=AppandDevicelist&pid=18233&fromecom=1
 
 import React, { useEffect, useState, useRef } from "react";
 import Box from "@mui/material/Box";
@@ -20,10 +21,18 @@ const formatToMMDDYYYY = (date) => {
     .padStart(2, "0")}/${d.getFullYear()}`;
 };
 
+const ONLY_APP = "icatalog";
+
 export default function DeviceSpliter({ isLoadingNew }) {
+  const [searchParams] = useSearchParams();
+  // fromecom=1 -> both sidebars hidden, only Icatalog
+  const isFromEcom = searchParams.get("fromecom") === "1";
+
   const [selectedLocation, setSelectedLocation] = useState("HO");
   const [selectedDepartment, setSelectedDepartment] = useState(null);
-  const [paneWidths, setPaneWidths] = useState(["15%", "15%", "70%"]);
+  const [paneWidths, setPaneWidths] = useState(
+    isFromEcom ? ["0%", "0%", "100%"] : ["15%", "15%", "70%"]
+  );
   const [isLoading, setIsLoading] = React.useState(isLoadingNew);
   const [status500, setStatus500] = useState(false);
   const [selectedFileter, setSelectedFilter] = useState("App");
@@ -67,7 +76,6 @@ export default function DeviceSpliter({ isLoadingNew }) {
   const [AllFinalData, setFinalData] = useState();
   const [packageMasterData, setPackageMasterData] = useState();
   const [settingMasterData, setSettingMasterData] = useState();
-  const [searchParams] = useSearchParams();
   const [customerBindeChnaged, setCustomerBindeChnaged] = useState(false);
 
   useEffect(() => {
@@ -82,8 +90,6 @@ export default function DeviceSpliter({ isLoadingNew }) {
 
   const fetchData = async (selected) => {
     const clientIpAddress = sessionStorage.getItem("clientIpAddress");
-    const ONLY_APP = "icatalog";
-    const isFromEcom = searchParams.get("fromecom") === "1"; // only Icatalog when opened from ecom
 
     try {
       setIsLoading(true);
@@ -212,7 +218,7 @@ export default function DeviceSpliter({ isLoadingNew }) {
     fetchData(selectedDepartment);
     if (subRef.current) {
       subRef.current.handleClearFilter();
-      subRef.current.clearDeletedIds();   // ← add
+      subRef.current.clearDeletedIds();
     }
   };
 
@@ -223,6 +229,8 @@ export default function DeviceSpliter({ isLoadingNew }) {
   };
 
   const handleOpen = () => {
+    // fromecom=1 -> sidebars stay hidden
+    if (isFromEcom) return;
     setIsPaneCollapsed(false);
     setPaneWidths(["15%", "15%", "70%"]);
   };
@@ -238,7 +246,8 @@ export default function DeviceSpliter({ isLoadingNew }) {
         sx={{ height: "100vh", display: "flex", flexDirection: "row" }}
         ref={containerRef}
       >
-        {!status500 && (
+        {/* Location sidebar (hidden when fromecom=1) */}
+        {!status500 && !isFromEcom && (
           <div className="pane" style={{ width: paneWidths[0] }}>
             <div style={{ height: "95vh" }}>
               <div
@@ -310,7 +319,8 @@ export default function DeviceSpliter({ isLoadingNew }) {
           </div>
         )}
 
-        {!status500 && paneWidths[1] !== "0%" && (
+        {/* App / Employee / Device sidebar (hidden when fromecom=1) */}
+        {!status500 && !isFromEcom && paneWidths[1] !== "0%" && (
           <>
             <div className="splitter" onMouseDown={(e) => handleDrag(0, e)} />
             <div className="pane" style={{ width: paneWidths[1] }}>
@@ -335,7 +345,7 @@ export default function DeviceSpliter({ isLoadingNew }) {
                       const isExpanded = selectedDepartment === emp.app;
                       return (
                         <div
-                          key={emp.location}
+                          key={emp.app}
                           className={
                             selectedDepartment == emp.app
                               ? "employee_card_selected"
@@ -383,9 +393,12 @@ export default function DeviceSpliter({ isLoadingNew }) {
           </>
         )}
 
+        {/* Main report */}
         {AllFinalData && subRef && paneWidths[2] !== "0%" && (
           <>
-            <div className="splitter" onMouseDown={(e) => handleDrag(1, e)} />
+            {!isFromEcom && (
+              <div className="splitter" onMouseDown={(e) => handleDrag(1, e)} />
+            )}
             <div className="pane" style={{ width: paneWidths[2] }}>
               <AllEmployeeDataReport
                 selectedFilterCategory={selectedDepartment ?? ""}
