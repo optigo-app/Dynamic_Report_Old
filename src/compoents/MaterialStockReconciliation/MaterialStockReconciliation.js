@@ -187,14 +187,7 @@ const linkCellSx = { ...tbodyCellSx, color: COLORS.purple, fontWeight: 600 };
 
 const fieldSx = { mb: 1.75 };
 
-/* ========================================================================
-   API HELPERS
-   - toArray:      accepts either a plain array or a wrapped response
-   - normalizeRow: maps ONE API row (GetmaterialWiseData) to the field names
-                   the rest of this screen already uses. If your API returns
-                   different field names for Diamond / Color Stone / Mount /
-                   Finding, adjust ONLY this function.
-   ===================================================================== */
+
 const toArray = (res) => {
   if (Array.isArray(res)) return res;
   if (Array.isArray(res?.data)) return res.data;
@@ -203,9 +196,9 @@ const toArray = (res) => {
 };
 
 const normalizeRow = (r, materialName, index) => ({
-  ...r, // keep every original API field available
+  ...r,
   id: r.id ?? index,
-  itemname: materialName, // data is fetched per material, so this always matches the selection
+  itemname: materialName,
   rfbag: r.rfbag ?? "",
   MaterialType: r.MaterialType ?? r.shape ?? "",
   shape: r.shape ?? r.shapename ?? "",
@@ -221,6 +214,116 @@ const normalizeRow = (r, materialName, index) => ({
   TotalRemainingWeight: Number(r.TotalRemainingWeight) || 0,
   istoreCust_Customercode: r.istoreCust_Customercode ?? "",
 });
+
+/* ========================================================================
+   NEW: INDEXEDDB CACHE FOR MATERIAL-WISE DATA
+   - One record per material (key = material itemid) holding the already
+     normalized rows + the time they were fetched.
+   - Data older than CACHE_TTL_MS is treated as stale and re-fetched from
+     the API (stock changes, so we never trust old data for long).
+   - If IndexedDB is unavailable / blocked (private mode, quota, etc.)
+     every helper fails silently and the code falls back to the API.
+   ===================================================================== */
+const IDB_NAME = "rmReconcileDB";
+const IDB_VERSION = 1;
+const IDB_STORE = "materialData";
+const CACHE_TTL_MS = 10 * 60 * 1000; // 10 minutes — change as needed
+
+let idbPromise = null;
+
+const openIdb = () => {
+  if (typeof indexedDB === "undefined") {
+    return Promise.reject(new Error("IndexedDB not supported"));
+  }
+  if (!idbPromise) {
+    idbPromise = new Promise((resolve, reject) => {
+      const req = indexedDB.open(IDB_NAME, IDB_VERSION);
+      req.onupgradeneeded = () => {
+        const db = req.result;
+        if (!db.objectStoreNames.contains(IDB_STORE)) {
+          db.createObjectStore(IDB_STORE, { keyPath: "key" });
+        }
+      };
+      req.onsuccess = () => {
+        const db = req.result;
+        // if another tab upgrades the DB, close ours so it is not blocked
+        db.onversionchange = () => {
+          db.close();
+          idbPromise = null;
+        };
+        resolve(db);
+      };
+      req.onerror = () => {
+        idbPromise = null;
+        reject(req.error);
+      };
+      req.onblocked = () => {
+        idbPromise = null;
+        reject(new Error("IndexedDB open blocked"));
+      };
+    });
+  }
+  return idbPromise;
+};
+
+/* returns cached rows (array) if present AND fresh, otherwise null */
+const getCachedMaterialRows = async (materialKey) => {
+  try {
+    const db = await openIdb();
+    const record = await new Promise((resolve, reject) => {
+      const tx = db.transaction(IDB_STORE, "readonly");
+      const req = tx.objectStore(IDB_STORE).get(String(materialKey));
+      req.onsuccess = () => resolve(req.result || null);
+      req.onerror = () => reject(req.error);
+    });
+    if (!record || !Array.isArray(record.rows) || record.rows.length === 0) return null;
+    if (Date.now() - (record.fetchedAt || 0) > CACHE_TTL_MS) {
+      deleteCachedMaterialRows(materialKey); // expired -> remove, fire and forget
+      return null;
+    }
+    return record.rows;
+  } catch (err) {
+    console.warn("IndexedDB read skipped:", err?.message || err);
+    return null;
+  }
+};
+
+/* stores rows for one material (replaces any previous record) */
+const saveCachedMaterialRows = async (materialKey, materialName, rows) => {
+  try {
+    if (!Array.isArray(rows) || rows.length === 0) return; // never cache an empty / failed response
+    const db = await openIdb();
+    await new Promise((resolve, reject) => {
+      const tx = db.transaction(IDB_STORE, "readwrite");
+      tx.objectStore(IDB_STORE).put({
+        key: String(materialKey),
+        itemname: materialName,
+        rows,
+        fetchedAt: Date.now(),
+      });
+      tx.oncomplete = () => resolve();
+      tx.onerror = () => reject(tx.error);
+      tx.onabort = () => reject(tx.error);
+    });
+  } catch (err) {
+    // quota exceeded or blocked -> ignore, app still works from the API
+    console.warn("IndexedDB write skipped:", err?.message || err);
+  }
+};
+
+const deleteCachedMaterialRows = async (materialKey) => {
+  try {
+    const db = await openIdb();
+    await new Promise((resolve, reject) => {
+      const tx = db.transaction(IDB_STORE, "readwrite");
+      tx.objectStore(IDB_STORE).delete(String(materialKey));
+      tx.oncomplete = () => resolve();
+      tx.onerror = () => reject(tx.error);
+    });
+  } catch (err) {
+    console.warn("IndexedDB delete skipped:", err?.message || err);
+  }
+};
 
 /* NEW: logged-in user id for the SaveReconciliation API.
    >>> Adjust the storage key / field names to match how your app stores
@@ -300,6 +403,17 @@ const nowStamp = () =>
   new Date().toLocaleString("en-GB", {
     day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit",
   });
+
+/* NEW: block "-", "+", "e", "E" in number inputs */
+const blockNegativeKeys = (e) => {
+  if (["-", "+", "e", "E"].includes(e.key)) e.preventDefault();
+};
+
+/* NEW: accept only empty or values >= 0 */
+const nonNegativeChange = (setter) => (e) => {
+  const v = e.target.value;
+  if (v === "" || Number(v) >= 0) setter(v);
+};
 
 /* CHANGE: both builders now receive the API data as the first argument
    (instead of reading a global RAW_DATA constant). */
@@ -700,8 +814,13 @@ function LandingPage({
               type="number"
               fullWidth
               value={toleranceMetal}
-              onChange={(e) => setToleranceMetal(Number(e.target.value))}
-              inputProps={{ step: 0.001, min: 0 }}
+              onChange={(e) => {
+                const v = e.target.value;
+                if (v === "" || Number(v) >= 0) setToleranceMetal(v);
+              }}
+              error={toleranceMetal === ""}
+              helperText={toleranceMetal === "" ? "Required" : ""}
+              inputProps={{ step: 0.001, min: 0, onKeyDown: blockNegativeKeys }}
               InputProps={{
                 endAdornment: <Typography sx={{ fontSize: 12, color: COLORS.textMuted }}>gm</Typography>,
               }}
@@ -712,8 +831,13 @@ function LandingPage({
               type="number"
               fullWidth
               value={toleranceOther}
-              onChange={(e) => setToleranceOther(Number(e.target.value))}
-              inputProps={{ step: 0.001, min: 0 }}
+              onChange={(e) => {
+                const v = e.target.value;
+                if (v === "" || Number(v) >= 0) setToleranceOther(v);
+              }}
+              error={toleranceOther === ""}
+              helperText={toleranceOther === "" ? "Required" : ""}
+              inputProps={{ step: 0.001, min: 0, onKeyDown: blockNegativeKeys }}
               InputProps={{
                 endAdornment: <Typography sx={{ fontSize: 12, color: COLORS.textMuted }}>ct/gm</Typography>,
               }}
@@ -728,7 +852,7 @@ function LandingPage({
                 }
                 sx={{ ...primaryBtnSx, px: 3 }}
                 onClick={onSaveTolerance}
-                disabled={tolSaving}
+                disabled={tolSaving || toleranceMetal === "" || toleranceOther === ""}
               >
                 {tolSaving ? "Saving..." : "Save"}
               </Button>
@@ -742,17 +866,10 @@ function LandingPage({
   );
 }
 
-/* ========================================================================
-   Shared filter fields — used inside the left Drawer (Criteria Wise
-   mode). CHANGE: Material is now fixed (selected on the landing page)
-   and shown disabled. The other filters stay material-wise as before.
-   ===================================================================== */
-/* PERF: lists with many options use a searchable Autocomplete that renders
-   only the first 100 matches (type to narrow). Small lists keep the normal Select. */
+
 const limitedFilter = createFilterOptions({ limit: 100 });
 
 function FilterField({ label, value, options, onChange, showAll = false }) {
-  // keep already-selected values visible even if the other filters narrowed the list
   const allOptions = useMemo(() => uniq([...value, ...options]), [value, options]);
   return (
     <Autocomplete
@@ -871,12 +988,7 @@ function FilterPanelContent({
   );
 }
 
-/* ========================================================================
-   Scan panel — the "Scan RM Bag to Reconciliation" drawer. Scanned Job
-   No.'s are shown as small deletable chips instead of a modal list.
-   CHANGE: shows the selected material, and a bag is VALID only if it
-   belongs to that material.
-   ===================================================================== */
+
 function ScanPanelContent({
   scanInput,
   setScanInput,
@@ -890,6 +1002,7 @@ function ScanPanelContent({
   onScan,
   onClose,
   material,
+  inputRef,
 }) {
   const isValid = (code) => validScannedCodes.includes(code);
 
@@ -967,13 +1080,15 @@ function ScanPanelContent({
 
       <TextField
         autoFocus
+        inputRef={inputRef}
         fullWidth
         multiline
         size="small"
         placeholder="Scan or type RM Bag No.'s — e.g. 0000005845 0000005846"
         value={scanInput}
-        onChange={(e) => setScanInput(e.target.value)}
+        onChange={(e) => setScanInput(e.target.value.replace(/[^0-9\s,]/g, ""))}
         onKeyDown={onKeyDown}
+        inputProps={{ inputMode: "numeric" }}
         sx={{
           mb: 1,
           "& .MuiInputBase-root": {
@@ -1070,15 +1185,13 @@ function ScanPanelContent({
   );
 }
 
-/* ========================================================================
-   COMPONENT
-   ===================================================================== */
+
 export default function MaterialStockReconciliation() {
   const [mode, setMode] = useState("initial");
 
   /* ---- API data ---- */
   const [materialList, setMaterialList] = useState([]); // from getMasterMaterialData()
-  const [rawData, setRawData] = useState([]);           // from GetmaterialWiseData(materialId)
+  const [rawData, setRawData] = useState([]);           // from GetmaterialWiseData(materialId) (cached in IndexedDB)
   const [dataLoading, setDataLoading] = useState(false);
   const [pendingAction, setPendingAction] = useState(null); // 'filter' | 'scan' | null
 
@@ -1096,15 +1209,16 @@ export default function MaterialStockReconciliation() {
 
   const [scanInfoOpen, setScanInfoOpen] = useState(false);
 
-  /* CHANGE 4: RM bag code waiting for "remove" confirmation (null = dialog closed) */
+
   const [removeCode, setRemoveCode] = useState(null);
   const [scaleConnected, setScaleConnected] = useState(false);
   const scalePortRef = useRef(null);
   const scaleReaderRef = useRef(null);
   const scaleClosedRef = useRef(null);
   const scaleBufferRef = useRef("");
-  /* NEW: ref to the "Enter Total Weight" input so we can focus it programmatically */
+
   const grossInputRef = useRef(null);
+  const scanInputRef = useRef(null);
   const [grossWeight, setGrossWeight] = useState("");
   const [trayWeight, setTrayWeight] = useState("");
   const [stickerWeight, setStickerWeight] = useState("");
@@ -1112,14 +1226,18 @@ export default function MaterialStockReconciliation() {
   const [remarks, setRemarks] = useState("");
   const [result, setResult] = useState(null);
 
-  /* NEW: SaveReconciliation API state */
+
+  const [touched, setTouched] = useState({});
+  const markTouched = (k) => () => setTouched((p) => ({ ...p, [k]: true }));
+  const isEmptyErr = (k, val) => !!touched[k] && val === "";
+
+
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState("");
 
-  /* CHANGE 1: confirmation dialog for Save Reconciliation */
   const [confirmSaveOpen, setConfirmSaveOpen] = useState(false);
 
-  /* CHANGE B: small calculation popover anchored to the i icon beside "Physical Measurement" */
+
   const [calcAnchor, setCalcAnchor] = useState(null);
 
   const [toleranceMetal, setToleranceMetal] = useState(0);
@@ -1132,7 +1250,7 @@ export default function MaterialStockReconciliation() {
   const [history, setHistory] = useState([]);
   const [reconciledIds, setReconciledIds] = useState(new Set());
 
-  /* NEW: Today's transactions table + reconcile summary KPI (from API) */
+
   const [todaysData, setTodaysData] = useState([]);
   const [todaysLoading, setTodaysLoading] = useState(false);
   const todaysReqRef = useRef(0);
@@ -1141,15 +1259,11 @@ export default function MaterialStockReconciliation() {
   const [historyPage, setHistoryPage] = useState(0);
   const [historyRowsPerPage, setHistoryRowsPerPage] = useState(25);
 
-  /* ------------------------------------------------------------------- */
-  /* Load the material master list once.
-     FIX: the first response often comes back without rd2 (admin flag).
-     We keep retrying (up to 10 times) until rd2 arrives, and we never
-     overwrite isAdmin with false from an empty response. */
+
   useEffect(() => {
     let timer = null;
     let stopped = false;
-    let listSet = false; // material list is set only once (avoids re-fetching rawData on retries)
+    let listSet = false;
     const MAX_ATTEMPTS = 10;
 
     const retry = (attempt) => {
@@ -1163,12 +1277,12 @@ export default function MaterialStockReconciliation() {
         if (stopped) return;
         console.log("getMasterMaterialData response:", res);
 
-        const root = res?.Data ?? res; // handles both wrapped and plain responses
+        const root = res?.Data ?? res;
         const rd = toArray(root?.rd || []);
         const rd1 = Array.isArray(root?.rd1) ? root.rd1 : [];
         const rd2 = Array.isArray(root?.rd2) ? root.rd2 : [];
 
-        // material list (set once)
+
         if (rd.length && !listSet) {
           setMaterialList(rd);
           listSet = true;
@@ -1206,7 +1320,10 @@ export default function MaterialStockReconciliation() {
       if (timer) clearTimeout(timer);
     };
   }, []);
-  /* Load material-wise data whenever the selected material changes */
+  /* Load material-wise data whenever the selected material changes.
+     CHANGED: first look in IndexedDB (fresh cache = no API call). If there
+     is no fresh cache, call the API, normalize, show it, and save it into
+     IndexedDB for next time. */
   useEffect(() => {
     if (!material) {
       setRawData([]);
@@ -1221,10 +1338,20 @@ export default function MaterialStockReconciliation() {
     setRawData([]);
     (async () => {
       try {
-        const res = await GetmaterialWiseData(selected.itemid);
-        if (!cancelled) {
-          setRawData(toArray(res).map((r, i) => normalizeRow(r, material, i)));
+        // 1) try IndexedDB cache
+        const cachedRows = await getCachedMaterialRows(selected.itemid);
+        if (cachedRows) {
+          if (!cancelled) setRawData(cachedRows);
+          return;
         }
+
+        // 2) no fresh cache -> call API
+        const res = await GetmaterialWiseData(selected.itemid);
+        const rows = toArray(res).map((r, i) => normalizeRow(r, material, i));
+        if (!cancelled) setRawData(rows);
+
+        // 3) save to IndexedDB (don't block the UI; errors are ignored inside)
+        saveCachedMaterialRows(selected.itemid, material, rows);
       } catch (err) {
         console.error("GetmaterialWiseData failed:", err);
         if (!cancelled) setRawData([]);
@@ -1311,6 +1438,11 @@ export default function MaterialStockReconciliation() {
   /* NEW: save tolerance (admin only) */
   const handleSaveTolerance = async () => {
     if (tolSaving) return;
+
+    if (toleranceMetal === "" || toleranceOther === "") {
+      setTolMsg({ type: "error", text: "Tolerance cannot be empty." });
+      return;
+    }
 
     if (toleranceMetal < 0 || toleranceOther < 0) {
       setTolMsg({ type: "error", text: "Tolerance cannot be negative." });
@@ -1413,10 +1545,12 @@ export default function MaterialStockReconciliation() {
   }, [pendingAction, dataLoading]);
 
   const parseAndAddScannedCodes = () => {
-    const parts = scanInput
-      .split(/[\n,]+/)
-      .map((s) => s.trim())
-      .filter(Boolean);
+    const parts = uniq(
+      scanInput
+        .split(/[\s,]+/)
+        .map((s) => s.trim())
+        .filter(Boolean)
+    );
     if (parts.length === 0) return;
     setScannedCodes((prev) => {
       const merged = [...prev];
@@ -1429,10 +1563,17 @@ export default function MaterialStockReconciliation() {
   };
 
   const handleScanKeyDown = (e) => {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      parseAndAddScannedCodes();
-    }
+    if (e.key !== "Enter") return;
+    e.preventDefault();
+
+    const tokens = scanInput.split(/[\s,]+/).filter(Boolean);
+    if (tokens.length === 0) return;
+
+    // keep each code only once, and drop codes already in the Scanned RM Bag list
+    const unique = uniq(tokens).filter((code) => !scannedCodes.includes(code));
+
+    // text area shows only unique codes, with a space after the last one
+    setScanInput(unique.length ? unique.join(" ") + " " : "");
   };
 
   const handleRemoveScanned = (code) => {
@@ -1504,6 +1645,7 @@ export default function MaterialStockReconciliation() {
     setStickerWeight("");
     setPolytheneWeight("");
     setRemarks("");
+    setTouched({});
 
     // scan inputs
     setScanInput("");
@@ -1554,10 +1696,10 @@ export default function MaterialStockReconciliation() {
         rfbags,                                   // RmBags
         Math.abs(applicableTolerance),            // tolerance
         Number(grossWeight) || 0,                 // totalweight (entered total weight)
-        systemWt,                                 // SyatemWt
+        systemWt?.toFixed(3),                                 // SyatemWt
         stockSummary.bags || 0,                   // totalbags
         remarks.trim().slice(0, REMARKS_MAX),     // remarks (optional, max 200)
-        physicalWt                                // physicalwt (frontend calculated)
+        physicalWt?.toFixed(3)                              // physicalwt (frontend calculated)
       );
 
       // response: { Data: { rd: [ { stat, stat_msg, status, Reconcileflg, difference, remarks } ] } }
@@ -1728,6 +1870,12 @@ export default function MaterialStockReconciliation() {
     }, 400);
     return () => clearTimeout(t);
   }, [showSummaryBlock, filterOpen, scanDrawerOpen]);
+  /* focus the scan text area every time the Scan drawer opens */
+  useEffect(() => {
+    if (!scanDrawerOpen) return;
+    const t = setTimeout(() => scanInputRef.current?.focus(), 350);
+    return () => clearTimeout(t);
+  }, [scanDrawerOpen]);
 
   /* release the port when leaving the screen */
   useEffect(() => {
@@ -1888,6 +2036,7 @@ export default function MaterialStockReconciliation() {
             open={scanDrawerOpen}
             onClose={() => setScanDrawerOpen(false)}
             PaperProps={{ sx: { width: 520, bgcolor: COLORS.bg } }}
+            SlideProps={{ onEntered: () => scanInputRef.current?.focus() }}
           >
             <ScanPanelContent
               scanInput={scanInput}
@@ -1902,6 +2051,7 @@ export default function MaterialStockReconciliation() {
               onScan={handleScanAndView}
               onClose={() => setScanDrawerOpen(false)}
               material={material}
+              inputRef={scanInputRef}
             />
           </Drawer>
         )}
@@ -2106,10 +2256,10 @@ export default function MaterialStockReconciliation() {
               </Typography>
 
               {mode === "scan" && validScannedCodes.length > 0 && (
-                <Tooltip title="View scanned Job No.'s" arrow>
+                <Tooltip title="View scanned RM Bag No.'s" arrow>
                   <IconButton
                     onClick={() => setScanInfoOpen(true)}
-                    aria-label="View scanned Job No.'s"
+                    aria-label="View scanned RM Bag No.'s"
                     sx={{
                       width: 38,
                       height: 38,
@@ -2194,7 +2344,7 @@ export default function MaterialStockReconciliation() {
                       </Typography>
                       {stockSummary && (
                         <Typography component="span" sx={{ fontSize: 16, color: COLORS.textMuted, fontWeight: 600 }}>
-                          {["DIAMOND", "COLOR STONE"].includes(String(material).toUpperCase()) ? "ct" : "gm"}
+                          {["DIAMOND", "COLOR STONE"].includes(String(material).toUpperCase()) ? "ctw" : "gm"}
                         </Typography>
                       )}
                     </Box>
@@ -2310,23 +2460,27 @@ export default function MaterialStockReconciliation() {
                     type="number"
                     sx={fieldSx}
                     value={grossWeight}
-                    onChange={(e) => setGrossWeight(e.target.value)}
-                    InputProps={{
-                      endAdornment: (
-                        <Box sx={{ display: "flex", alignItems: "center", gap: 0.75 }}>
-                          <Tooltip title={scaleConnected ? "Scale connected (click to disconnect)" : "Connect weight scale"} arrow>
-                            <IconButton
-                              size="small"
-                              onClick={scaleConnected ? disconnectScale : connectScale}
-                              sx={{ color: scaleConnected ? COLORS.success : COLORS.textMuted }}
-                            >
-                              <ScaleIcon fontSize="small" />
-                            </IconButton>
-                          </Tooltip>
-                          <Typography sx={{ fontSize: 12, color: COLORS.textMuted }}>gm</Typography>
-                        </Box>
-                      ),
-                    }}
+                    onChange={nonNegativeChange(setGrossWeight)}
+                    onBlur={markTouched("gross")}
+                    error={isEmptyErr("gross", grossWeight)}
+                    helperText={isEmptyErr("gross", grossWeight) ? "Required" : ""}
+                    inputProps={{ min: 0, step: "any", onKeyDown: blockNegativeKeys }}
+                    // InputProps={{
+                    //   endAdornment: (
+                    //     <Box sx={{ display: "flex", alignItems: "center", gap: 0.75 }}>
+                    //       <Tooltip title={scaleConnected ? "Scale connected (click to disconnect)" : "Connect weight scale"} arrow>
+                    //         <IconButton
+                    //           size="small"
+                    //           onClick={scaleConnected ? disconnectScale : connectScale}
+                    //           sx={{ color: scaleConnected ? COLORS.success : COLORS.textMuted }}
+                    //         >
+                    //           <ScaleIcon fontSize="small" />
+                    //         </IconButton>
+                    //       </Tooltip>
+                    //       {/* <Typography sx={{ fontSize: 12, color: COLORS.textMuted }}>gm</Typography> */}
+                    //     </Box>
+                    //   ),
+                    // }}
                   />
 
                   <Box sx={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 1.5, mb: 1.75 }}>
@@ -2337,7 +2491,11 @@ export default function MaterialStockReconciliation() {
                       size="small"
                       type="number"
                       value={trayWeight}
-                      onChange={(e) => setTrayWeight(e.target.value)}
+                      onChange={nonNegativeChange(setTrayWeight)}
+                      onBlur={markTouched("tray")}
+                      error={isEmptyErr("tray", trayWeight)}
+                      helperText={isEmptyErr("tray", trayWeight) ? "Required" : ""}
+                      inputProps={{ min: 0, step: "any", onKeyDown: blockNegativeKeys }}
                       InputProps={{ endAdornment: <Typography sx={{ fontSize: 12, color: COLORS.textMuted }}>gm</Typography> }}
                     />
                     <TextField
@@ -2347,7 +2505,11 @@ export default function MaterialStockReconciliation() {
                       size="small"
                       type="number"
                       value={stickerWeight}
-                      onChange={(e) => setStickerWeight(e.target.value)}
+                      onChange={nonNegativeChange(setStickerWeight)}
+                      onBlur={markTouched("sticker")}
+                      error={isEmptyErr("sticker", stickerWeight)}
+                      helperText={isEmptyErr("sticker", stickerWeight) ? "Required" : ""}
+                      inputProps={{ min: 0, step: "any", onKeyDown: blockNegativeKeys }}
                       InputProps={{ endAdornment: <Typography sx={{ fontSize: 12, color: COLORS.textMuted }}>gm</Typography> }}
                     />
                     <TextField
@@ -2357,7 +2519,11 @@ export default function MaterialStockReconciliation() {
                       size="small"
                       type="number"
                       value={polytheneWeight}
-                      onChange={(e) => setPolytheneWeight(e.target.value)}
+                      onChange={nonNegativeChange(setPolytheneWeight)}
+                      onBlur={markTouched("polythene")}
+                      error={isEmptyErr("polythene", polytheneWeight)}
+                      helperText={isEmptyErr("polythene", polytheneWeight) ? "Required" : ""}
+                      inputProps={{ min: 0, step: "any", onKeyDown: blockNegativeKeys }}
                       InputProps={{ endAdornment: <Typography sx={{ fontSize: 12, color: COLORS.textMuted }}>gm</Typography> }}
                     />
                   </Box>

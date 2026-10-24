@@ -109,7 +109,7 @@ export const SetToReconcile = async (metal, othermaterial) => {
   return data?.Data?.rd || [];
 };
 
-export const SaveReconciliation = async (RmBags, tolerance, totalweight, SyatemWt, totalbags, remarks, physicalwt) => {
+export const SaveReconciliation = async (RmBags, tolerance, totalweight, systemwt, totalbags, remarks, physicalwt) => {
   const uid = await getUid();
   const body = {
     con: JSON.stringify({
@@ -121,7 +121,7 @@ export const SaveReconciliation = async (RmBags, tolerance, totalweight, SyatemW
       rfbags: RmBags,
       tolerance,
       totalweight,
-      SyatemWt,
+      systemwt,
       totalbags,
       remarks,
       physicalwt,
