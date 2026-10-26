@@ -412,6 +412,7 @@ export default function DeviceSpliter({ isLoadingNew }) {
                 handleRefresh={handleRefresh}
                 packageMasterData={packageMasterData}
                 settingMasterData={settingMasterData}
+                isFromEcom={isFromEcom}
               />
             </div>
           </>
