@@ -155,7 +155,8 @@ export default function AllEmployeeDataReport({
   setCustomerBindeChnaged,
   handleRefresh,
   packageMasterData,
-  settingMasterData
+  settingMasterData,
+  isFromEcom
 }) {
   const [commonSearch, setCommonSearch] = React.useState("");
   const [toDate, setToDate] = React.useState(null);
@@ -1044,7 +1045,7 @@ export default function AllEmployeeDataReport({
     }
   ]
 
- 
+
 
   React.useEffect(() => {
     setColumns((prev) =>
@@ -1874,7 +1875,7 @@ export default function AllEmployeeDataReport({
   const handleClosePopup = () => {
     setOpenPopup(false);
   };
-  
+
   const handleClosePopupPin = () => {
     setOpenDefaultpin(false);
   };
@@ -2765,7 +2766,7 @@ export default function AllEmployeeDataReport({
             flexDirection: "column",
           }}
         >
-          <div style={{ height: "30px" }}>
+          {!isFromEcom && <div style={{ height: "30px" }}>
             {!isPaneCollapsed && (
               <p
                 onClick={onClosePane}
@@ -2784,7 +2785,7 @@ export default function AllEmployeeDataReport({
                 <p>{selectedFilterCategory}</p>
               </p>
             )}
-          </div>
+          </div>}
 
           <div style={{ display: "flex", justifyContent: "space-between" }}>
             {renderSummary()}
@@ -2802,7 +2803,7 @@ export default function AllEmployeeDataReport({
               </button>
             )}
 
-            <div style={{ display: 'flex', alignItems: 'flex-start', gap: '10px' }}>
+            <div style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', margin: '0px 10px 0px 0px' }}>
               <Tooltip title="Refresh" arrow>
                 <IconButton
                   onClick={handleRefresh}
@@ -2816,7 +2817,7 @@ export default function AllEmployeeDataReport({
                   }}
                   style={{
                     display: "flex",
-                    margin: "-20px 0px 0px 0px",
+                    margin: isFromEcom ? "10px" : "-20px 0px 0px 0px",
                     minWidth: "40px",
                   }}
                 >
