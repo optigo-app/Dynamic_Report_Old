@@ -5,7 +5,9 @@ const VERSION =
   window.location.hostname == "nzen"
     ? "R50B3"
     : "live";
-
+    let AllData = JSON.parse(sessionStorage.getItem("AuthqueryParams"));
+    
+     
 // read fresh on every call (NOT once at import time)
 const getAuth = () => {
   try {

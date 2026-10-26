@@ -2124,7 +2124,7 @@ export default function MaterialStockReconciliation() {
       // use backend difference if present, otherwise fall back to frontend calculation
       const diff = Number.isFinite(Number(rec.difference))
         ? Number(rec.difference)
-        : physicalWt - systemWt;
+        : systemWt-physicalWt ;
 
       setResult({
         systemWeight: systemWt,
@@ -3042,7 +3042,7 @@ export default function MaterialStockReconciliation() {
                         value={`${result.difference >= 0 ? "+" : ""}${fmt(result.difference)} gm`}
                         tooltip={
                           <Box sx={{ fontSize: 12, lineHeight: 1.6 }}>
-                            <div><b>Difference = Physical Weight − System Weight</b></div>
+                            <div><b>Difference = System Weight - Physical Weight </b></div>
 
                           </Box>
                         }
