@@ -1643,6 +1643,7 @@ export default function MaterialStockReconciliation() {
 
   const [toleranceMetal, setToleranceMetal] = useState(0);
   const [toleranceOther, setToleranceOther] = useState(0);
+  const [savedTolerance, setSavedTolerance] = useState({ metal: 0, other: 0 });
   const [isAdmin, setIsAdmin] = useState(false);   // NEW
   const [tolAnchor, setTolAnchor] = useState(null);
   const [tolSaving, setTolSaving] = useState(false);              // NEW
@@ -1692,12 +1693,21 @@ export default function MaterialStockReconciliation() {
         // tolerance values from rd1
         const tol = rd1[0];
         if (tol) {
+          const apiMetal = Number(tol.metal) || 0;
+          const apiOther = Number(tol.otherMaterial) || 0;
+
           if (tol.metal !== undefined && tol.metal !== null) {
-            setToleranceMetal(Number(tol.metal) || 0);
+            setToleranceMetal(apiMetal);
           }
           if (tol.otherMaterial !== undefined && tol.otherMaterial !== null) {
-            setToleranceOther(Number(tol.otherMaterial) || 0);
+            setToleranceOther(apiOther);
           }
+
+          // NEW
+          setSavedTolerance((prev) => ({
+            metal: tol.metal !== undefined && tol.metal !== null ? apiMetal : prev.metal,
+            other: tol.otherMaterial !== undefined && tol.otherMaterial !== null ? apiOther : prev.other,
+          }));
         }
 
         // admin flag from rd2 (accepts 1, "1" or true) — only when rd2 really arrived
@@ -1860,6 +1870,10 @@ export default function MaterialStockReconciliation() {
       if (rec && rec.stat !== undefined && Number(rec.stat) !== 1) {
         setTolMsg({ type: "error", text: rec.stat_msg || "Could not save tolerance." });
       } else {
+        setSavedTolerance({                                  // NEW
+          metal: Number(toleranceMetal),
+          other: Number(toleranceOther),
+        });
         setTolMsg({ type: "success", text: "Tolerance saved successfully." });
         setTimeout(() => setTolMsg({ type: "", text: "" }), 3000);
       }
@@ -2076,7 +2090,7 @@ export default function MaterialStockReconciliation() {
     grossWeight !== "" && trayWeight !== "" && stickerWeight !== "" && polytheneWeight !== "";
 
   const isMetal = String(material).toUpperCase() === "METAL";
-  const applicableTolerance = isMetal ? toleranceMetal : toleranceOther;
+  const applicableTolerance = isMetal ? savedTolerance.metal : savedTolerance.other;
   const toleranceLabel = isMetal ? "Metal" : "Other Material";
 
   /* CHANGED: now calls the BulkReconcileSave API and builds `result`
@@ -2124,7 +2138,7 @@ export default function MaterialStockReconciliation() {
       // use backend difference if present, otherwise fall back to frontend calculation
       const diff = Number.isFinite(Number(rec.difference))
         ? Number(rec.difference)
-        : systemWt-physicalWt ;
+        : systemWt - physicalWt;
 
       setResult({
         systemWeight: systemWt,
@@ -2881,22 +2895,22 @@ export default function MaterialStockReconciliation() {
                     error={isEmptyErr("gross", grossWeight)}
                     helperText={isEmptyErr("gross", grossWeight) ? "Required" : ""}
                     inputProps={{ min: 0, step: "any", onKeyDown: blockNegativeKeys }}
-                    // InputProps={{
-                    //   endAdornment: (
-                    //     <Box sx={{ display: "flex", alignItems: "center", gap: 0.75 }}>
-                    //       <Tooltip title={scaleConnected ? "Scale connected (click to disconnect)" : "Connect weight scale"} arrow>
-                    //         <IconButton
-                    //           size="small"
-                    //           onClick={scaleConnected ? disconnectScale : connectScale}
-                    //           sx={{ color: scaleConnected ? COLORS.success : COLORS.textMuted }}
-                    //         >
-                    //           <ScaleIcon fontSize="small" />
-                    //         </IconButton>
-                    //       </Tooltip>
-                    //       {/* <Typography sx={{ fontSize: 12, color: COLORS.textMuted }}>gm</Typography> */}
-                    //     </Box>
-                    //   ),
-                    // }}
+                  // InputProps={{
+                  //   endAdornment: (
+                  //     <Box sx={{ display: "flex", alignItems: "center", gap: 0.75 }}>
+                  //       <Tooltip title={scaleConnected ? "Scale connected (click to disconnect)" : "Connect weight scale"} arrow>
+                  //         <IconButton
+                  //           size="small"
+                  //           onClick={scaleConnected ? disconnectScale : connectScale}
+                  //           sx={{ color: scaleConnected ? COLORS.success : COLORS.textMuted }}
+                  //         >
+                  //           <ScaleIcon fontSize="small" />
+                  //         </IconButton>
+                  //       </Tooltip>
+                  //       {/* <Typography sx={{ fontSize: 12, color: COLORS.textMuted }}>gm</Typography> */}
+                  //     </Box>
+                  //   ),
+                  // }}
                   />
 
                   <Box sx={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 1.5, mb: 1.75 }}>
@@ -3016,8 +3030,7 @@ export default function MaterialStockReconciliation() {
                         fullWidth
                         disabled
                         sx={fieldSx}
-                        value={toleranceMetal}
-                        onChange={(e) => setToleranceMetal(Number(e.target.value))}
+                        value={savedTolerance.metal}
                       />
                       <TextField
                         label="Other Material (ct/gm)"
@@ -3026,8 +3039,7 @@ export default function MaterialStockReconciliation() {
                         disabled
                         fullWidth
                         sx={{ mb: 0 }}
-                        value={toleranceOther}
-                        onChange={(e) => setToleranceOther(Number(e.target.value))}
+                        value={savedTolerance.other}
                       />
                     </Box>
                   </Popover>
