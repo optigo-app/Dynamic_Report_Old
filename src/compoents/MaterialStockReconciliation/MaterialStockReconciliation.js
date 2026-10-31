@@ -2119,7 +2119,8 @@ export default function MaterialStockReconciliation() {
         systemWt?.toFixed(3),                                 // SyatemWt
         stockSummary.bags || 0,                   // totalbags
         remarks.trim().slice(0, REMARKS_MAX),     // remarks (optional, max 200)
-        physicalWt?.toFixed(3)                              // physicalwt (frontend calculated)
+        physicalWt?.toFixed(3),                              // physicalwt (frontend calculated)
+        stockSummary.pieces
       );
 
       // response: { Data: { rd: [ { stat, stat_msg, status, Reconcileflg, difference, remarks } ] } }
