@@ -879,7 +879,7 @@ const PCS_DETAIL_COLUMNS = [
   { field: 'design', headerName: 'Design No.', flex: 1, minWidth: 120 },
   { field: 'custCode', headerName: 'Cust Code', flex: 1, minWidth: 120 },
   { field: 'jobNo', headerName: 'Job No', flex: 1, minWidth: 120 },
-  { field: 'Pcs', headerName: 'Pcs', flex: 0.7, minWidth: 70 },
+  { field: 'Pcs', headerName: 'Qty', flex: 0.7, minWidth: 70 },
 
   // NEW: two columns after Pcs
   { field: 'grossWt', headerName: 'Gross Wt', flex: 0.8, minWidth: 80, align: 'right', headerAlign: 'center' },
@@ -1152,7 +1152,7 @@ const handleExportPcsDetail = () => {
     { field: 'row', headerName: rowLabel, flex: 1.4, minWidth: 160 },
     {
       field: 'pcs',
-      headerName: 'Pcs',
+      headerName: 'Qty',
       flex: 1,
       minWidth: 90,
       align: 'center',
@@ -1350,7 +1350,7 @@ const handleExportPcsDetail = () => {
       { field: 'location', headerName: 'Location', flex: 1, minWidth: 120 },
       { field: 'custCode', headerName: 'CustCode', flex: 1.1, minWidth: 130 },
       { field: 'job', headerName: 'Job', flex: 1, minWidth: 120 },
-      { field: 'Pcs', headerName: 'Pcs', flex: 1, minWidth: 80 },
+      { field: 'Pcs', headerName: 'Qty', flex: 1, minWidth: 80 },
       { field: 'designNo', headerName: 'Design No.', flex: 1.1, minWidth: 130 },
       {
         field: 'status',
