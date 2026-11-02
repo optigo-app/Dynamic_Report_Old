@@ -152,19 +152,13 @@ const naturalSort = (a, b) => {
   return ax.length - bx.length;
 };
 
-// Some fields (e.g. department) can come back containing raw markup
-// (e.g. "Sprue Cutting-Receive<br/><span class=...>"). Strip it so the
-// pivot labels stay plain text instead of leaking HTML into the cell.
+ 
 const stripHtml = (val) => {
   if (typeof val !== 'string') return val;
   return val.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
 };
 
-// Builds a row-label x column-label pivot. In addition to the plain job
-// COUNT per cell/row/column (matrix / rowTotals / colTotals / grandTotal),
-// this also accumulates the sum of the "Quantity" field (API response)
-// per row-label grouping (rowQtyTotals) and overall (grandQty), which is
-// what feeds the mandatory "Pcs" column on every pivot table.
+ 
 const buildPivot = (rows, fieldMap, rowField, colField, rowFormatter) => {
   const matrix = {};
   const rowTotals = {};
@@ -174,10 +168,7 @@ const buildPivot = (rows, fieldMap, rowField, colField, rowFormatter) => {
   let grandQty = 0;
   let maxCell = 0;
 
-  // Tracks which base job numbers have already contributed to a given
-  // row-label's Pcs total (per-row-group dedupe) and to the grand Pcs
-  // total (dataset-wide dedupe) — so a job split across S1/S2/... sub-rows
-  // only adds its Quantity ONCE instead of once per sub-row.
+ 
   const rowQtySeenJobs = {};
   const grandQtySeenJobs = new Set();
 
@@ -200,10 +191,7 @@ const buildPivot = (rows, fieldMap, rowField, colField, rowFormatter) => {
     colTotals[cVal] = (colTotals[cVal] || 0) + 1;
     grandTotal += 1;
 
-    // Pcs = sum of "Quantity" (API response field), counted once per base
-    // job number. "1/13765S1" and "1/13765S2" both belong to job
-    // "1/13765" — strip the trailing S<n> suffix so they collapse into one
-    // contribution instead of adding Quantity twice.
+    
     const jobNoRaw = getField(row, fieldMap, 'serialjobno');
     const baseJobNo = jobNoRaw ? String(jobNoRaw).replace(/S\d+$/i, '') : null;
 
@@ -235,8 +223,7 @@ const buildPivot = (rows, fieldMap, rowField, colField, rowFormatter) => {
   return { rowKeys, colKeys, matrix, rowTotals, colTotals, rowQtyTotals, grandTotal, grandQty, maxCell };
 };
 
-// alwaysKeepFields: field names that should never be stripped even if every
-// row is blank/'-'/0 for that column (e.g. a mandatory "Rem. Days" column).
+ 
 const filterEmptyColumns = (columns, rows, alwaysKeepFields = []) =>
   columns.filter((col) => {
     if (col.field === 'row' || col.field === 'total' || alwaysKeepFields.includes(col.field)) return true;
@@ -249,16 +236,12 @@ const filterEmptyColumns = (columns, rows, alwaysKeepFields = []) =>
     });
   });
 
-// Pull a given column key (e.g. "Pending Request") to a fixed position
-// (default: right after the row-label column) regardless of where the
-// natural sort of the pivot would otherwise place it.
+ 
 const reorderPriorityColumn = (colKeys, priorityLabel) => {
   if (!colKeys.includes(priorityLabel)) return colKeys;
   return [priorityLabel, ...colKeys.filter((c) => c !== priorityLabel)];
 };
-
-// Formats a KPI value as "D:<value> ct" and appends " S:<value> ct" only when
-// a solitaire figure is present and non-zero — never shows "S:0 ct".
+ 
 const formatDiamondSolitaire = (dVal, sVal, decimals = 0, unit = '') => {
   const fmt = (n) => n.toLocaleString(undefined, { maximumFractionDigits: decimals });
   const suffix = unit ? ` ${unit}` : '';
@@ -269,12 +252,7 @@ const formatDiamondSolitaire = (dVal, sVal, decimals = 0, unit = '') => {
   return dStr;
 };
 
-/* ---------------------------------------------------------------- */
-/* NEW: Pcs drill-down helpers                                        */
-/* Returns the source rows that make up ONE pivot row (i.e. the rows  */
-/* behind the clicked Pcs value). Uses the exact same rules as        */
-/* buildPivot so what you see matches what was counted.               */
-/* ---------------------------------------------------------------- */
+ 
 
 const getPivotSourceRows = (rows, fieldMap, rowField, colField, rowFormatter, rowLabel) =>
   rows.filter((row) => {
@@ -296,11 +274,63 @@ const formatWeight = (val) => {
   return Number.isFinite(n) ? n.toFixed(3) : '-';
 };
 
-/* ---------------------------------------------------------------- */
-/* Row filtering — extracted into a pure helper so each TAB can hold */
-/* its own independent filter state and pass it through here, while  */
-/* the actual filtering predicate is identical for every tab.        */
-/* ---------------------------------------------------------------- */
+// Totals for the drill-down popup (all filtered rows, not just the current page)
+const sumDetailTotals = (rows) => {
+  const seenJobs = new Set();
+  let qty = 0;
+  let gross = 0;
+  let net = 0;
+
+  rows.forEach((r) => {
+    // Qty: count once per BASE job (S1/S2 sub-rows not double-counted),
+    // same rule as the pivot "Qty" column
+    const baseJob = r.jobNo && r.jobNo !== '-' ? String(r.jobNo).replace(/S\d+$/i, '') : null;
+    const q = parseFloat(r.Pcs);
+    if (!baseJob || !seenJobs.has(baseJob)) {
+      qty += Number.isFinite(q) ? q : 0;
+      if (baseJob) seenJobs.add(baseJob);
+    }
+
+    const g = parseFloat(r.grossWt);
+    const n = parseFloat(r.netWt);
+    gross += Number.isFinite(g) ? g : 0;
+    net += Number.isFinite(n) ? n : 0;
+  });
+
+  return { qty, gross, net };
+};
+
+const SummaryChip = ({ icon, label, value, unit }) => (
+  <Box
+    sx={{
+      display: 'flex',
+      alignItems: 'center',
+      gap: 1,
+      padding: '4px 14px',
+      borderRadius: '8px',
+      background: '#f2effe',
+      border: '1px solid #e0daff',
+      whiteSpace: 'nowrap',
+    }}
+  >
+    <Box sx={{ display: 'flex', color: '#6c5ce7' }}>{icon}</Box>
+    <Box sx={{ lineHeight: 1.15 }}>
+      <Typography sx={{ fontSize: '10px', fontWeight: 700, color: '#6b7280', letterSpacing: '0.4px' }}>
+        {label}
+      </Typography>
+      <Typography sx={{ fontSize: '14px', fontWeight: 700, color: '#1a1f36' }}>
+        {value}
+        {unit && (
+          <Box component="span" sx={{ fontSize: '11px', fontWeight: 600, color: '#6b7280', ml: 0.5 }}>
+            {unit}
+          </Box>
+        )}
+      </Typography>
+    </Box>
+  </Box>
+);
+
+ 
 
 const createEmptyFilters = () => ({
   location: [],
@@ -402,6 +432,7 @@ const DataGridPanel = ({
   showTotals = false,
   gridHeight, // optional manual override; auto-computed from row count otherwise
   headerFilters, // optional filter controls rendered on the right of the header
+  headerCenter,
 }) => {
   const gridWrapRef = useRef(null);
   const totalsRowRef = useRef(null);
@@ -507,6 +538,13 @@ const DataGridPanel = ({
             )}
           </Box>
         </Box>
+
+        {/* 👇 ADD */}
+        {headerCenter && (
+          <Box sx={{ flex: 1, display: 'flex', justifyContent: 'center', gap: 1.5, px: 2, flexWrap: 'wrap' }}>
+            {headerCenter}
+          </Box>
+        )}
 
         {headerFilters && (
           <Box className="data-table__header-filters">{headerFilters}</Box>
@@ -616,14 +654,7 @@ const StatCard = ({ icon, label, value, subLabel, unit }) => (
   </Paper>
 );
 
-/* ---------------------------------------------------------------- */
-/* Filter chip (single select) — used for Delivery Status.            */
-/* Rebuilt on top of Popover (same mechanism as CheckboxFilterChip)   */
-/* instead of a nested native <Select>, so outside-click reliably     */
-/* closes it — the old version could get stuck open because clicks    */
-/* on the wrapping Box re-opened it right after the Select's own      */
-/* onClose fired.                                                     */
-/* ---------------------------------------------------------------- */
+ 
 
 const FilterChip = ({ label, value, onChange, options }) => {
   const [anchorEl, setAnchorEl] = useState(null);
@@ -675,11 +706,7 @@ const FilterChip = ({ label, value, onChange, options }) => {
   );
 };
 
-/* ---------------------------------------------------------------- */
-/* Checkbox-style multi-select filter — click the chip, a popover     */
-/* with a search box + checkboxes opens. Used inline in each tab's    */
-/* header for Location / Customer / Order No. / Status / Metal.       */
-/* ---------------------------------------------------------------- */
+ 
 
 const checkboxIcon = <CheckBoxOutlineBlankIcon fontSize="small" />;
 const checkboxCheckedIcon = <CheckBoxIcon fontSize="small" />;
@@ -772,12 +799,7 @@ const CheckboxFilterChip = ({ label, value, onChange, options }) => {
   );
 };
 
-/* ---------------------------------------------------------------- */
-/* Full filter bar for one tab — holds Location / Customer Code /     */
-/* Order No. / Current Status / Metal Type (checkbox chips) plus      */
-/* Delivery Status (single select). Independent per tab: each         */
-/* instance gets its own `filters` state + `onChange` from the parent.*/
-/* ---------------------------------------------------------------- */
+
 
 const TabFilterBar = ({ filters, onChange, options }) => {
   const setField = (field, value) => onChange({ ...filters, [field]: value });
@@ -853,9 +875,6 @@ const TabFilterBar = ({ filters, onChange, options }) => {
   );
 };
 
-/* ---------------------------------------------------------------- */
-/* Main component                                                     */
-/* ---------------------------------------------------------------- */
 
 const DATE_FIELD_OPTIONS = [{ value: 'jobpromisedate', label: 'Promise Date' }];
 
@@ -870,8 +889,7 @@ const TAB_LABELS = [
   'Promise Date by Status',
 ];
 
-/* NEW: columns for the Pcs drill-down popup  
-*/
+
 const PCS_DETAIL_COLUMNS = [
   { field: 'promiseDate', headerName: 'Promise Date', flex: 1, minWidth: 120, align: 'center', headerAlign: 'center' },
   { field: 'remDays', headerName: 'Rem. Days', flex: 0.7, minWidth: 70, align: 'center', headerAlign: 'center' },
@@ -957,8 +975,7 @@ const WIPMis = () => {
     setPickerAnchor(null);
   };
 
-  // Rows restricted ONLY by the Promise Date range — feeds the dropdown
-  // option lists shared by every tab's filter bar.
+
   const dateFilteredRows = useMemo(() => {
     if (isAllDates || !dateRange.startDate || !dateRange.endDate) return rawRows;
     return rawRows.filter((row) => {
@@ -1021,9 +1038,7 @@ const WIPMis = () => {
     [rawRows, fieldMap, deptFilters, isAllDates, dateRange, dateField]
   );
 
-  // Which per-tab filtered row set is currently "active" (drives the KPI
-  // cards below the Tabs) — matches whichever tab the user is on, so the
-  // KPI cards apply that SAME tab's filters instead of a shared global set.
+
   const activeFilteredRows = useMemo(() => {
     switch (activeTab) {
       case 1:
@@ -1038,9 +1053,7 @@ const WIPMis = () => {
     }
   }, [activeTab, orderFilteredRows, promiseFilteredRows, statusFilteredRows, deptFilteredRows]);
 
-  // KPI cards now reflect the ACTIVE TAB's own filters (not a shared
-  // global set) — switching tabs or changing that tab's filters updates
-  // these cards accordingly.
+
   const stats = useMemo(
     () => ({
       pcs: activeFilteredRows.length,
@@ -1122,6 +1135,8 @@ const WIPMis = () => {
       )
     );
   }, [pcsDetail, pcsSearch]);
+
+  const pcsTotals = useMemo(() => sumDetailTotals(pcsDetailFilteredRows), [pcsDetailFilteredRows]);
 
   // NEW: close helper that also resets the search
   const closePcsDetail = () => {
@@ -1696,6 +1711,27 @@ const handleExportPcsDetail = () => {
               dense
               columns={PCS_DETAIL_COLUMNS}
               rows={pcsDetailFilteredRows}
+              headerCenter={
+                <>
+                  <SummaryChip
+                    icon={<Inventory2OutlinedIcon fontSize="medium" />}
+                    label="TOTAL QTY"
+                    value={pcsTotals.qty.toLocaleString(undefined, { maximumFractionDigits: 2 })}
+                  />
+                  <SummaryChip
+                    icon={<MonitorWeightOutlinedIcon fontSize="medium" />}
+                    label="GROSS WT"
+                    value={pcsTotals.gross.toLocaleString(undefined, { minimumFractionDigits: 3, maximumFractionDigits: 3 })}
+                    unit="Gm"
+                  />
+                  <SummaryChip
+                    icon={<ScaleOutlinedIcon fontSize="medium" />}
+                    label="NET WT"
+                    value={pcsTotals.net.toLocaleString(undefined, { minimumFractionDigits: 3, maximumFractionDigits: 3 })}
+                    unit="Gm"
+                  />
+                </>
+              }
               headerFilters={
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                   <TextField
