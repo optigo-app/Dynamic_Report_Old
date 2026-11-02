@@ -307,12 +307,13 @@ const createEmptyFilters = () => ({
   customerCode: [],
   orderNo: [],
   currentStatus: [],
+  worker: [],            
   metalType: [],
   deliveryStatus: 'All',
 });
 
 const applyRowFilters = (rows, fieldMap, filters, dateCtx) => {
-  const { location, customerCode, orderNo, currentStatus, metalType, deliveryStatus } = filters;
+  const { location, customerCode, orderNo, currentStatus,worker, metalType, deliveryStatus } = filters;
   const { isAllDates, dateRange, dateField } = dateCtx;
 
   return rows.filter((row) => {
@@ -327,6 +328,11 @@ const applyRowFilters = (rows, fieldMap, filters, dateCtx) => {
     if (currentStatus.length > 0) {
       const dept = stripHtml(getField(row, fieldMap, 'department'));
       if (!currentStatus.includes(dept)) return false;
+    }
+
+    if (worker.length > 0) {
+      const w = stripHtml(getField(row, fieldMap, 'LastProcessedBy'));
+      if (!worker.includes(w)) return false;
     }
 
     if (metalType.length > 0) {
@@ -781,6 +787,7 @@ const TabFilterBar = ({ filters, onChange, options }) => {
     (filters.customerCode.length > 0 ? 1 : 0) +
     (filters.orderNo.length > 0 ? 1 : 0) +
     (filters.currentStatus.length > 0 ? 1 : 0) +
+    (filters.worker.length > 0 ? 1 : 0) +  
     (filters.metalType.length > 0 ? 1 : 0) +
     (filters.deliveryStatus !== 'All' ? 1 : 0);
 
@@ -812,6 +819,13 @@ const TabFilterBar = ({ filters, onChange, options }) => {
         onChange={(v) => setField('currentStatus', v)}
         options={options.currentStatus}
       />
+      {/* NEW */}
+<CheckboxFilterChip
+  label="Worker"
+  value={filters.worker}
+  onChange={(v) => setField('worker', v)}
+  options={options.worker}
+/>
       <CheckboxFilterChip
         label="Metal"
         value={filters.metalType}
@@ -961,17 +975,20 @@ const WIPMis = () => {
     const custSet = new Set();
     const ordSet = new Set();
     const statusSet = new Set();
+    const workerSet = new Set();       
     const metalSet = new Set();
     dateFilteredRows.forEach((r) => {
       const loc = getField(r, fieldMap, 'JobLocation');
       const cust = getField(r, fieldMap, 'Customercode');
       const ord = getField(r, fieldMap, 'SKUNO');
       const dept = stripHtml(getField(r, fieldMap, 'department'));
+      const wrk = stripHtml(getField(r, fieldMap, 'LastProcessedBy'));  
       const metal = stripHtml(getField(r, fieldMap, 'metal_type_name'));
       if (loc) locSet.add(loc);
       if (cust) custSet.add(cust);
       if (ord) ordSet.add(ord);
       if (dept) statusSet.add(dept);
+      if (wrk) workerSet.add(wrk); 
       if (metal) metalSet.add(metal);
     });
     return {
@@ -979,6 +996,7 @@ const WIPMis = () => {
       customer: [...custSet].sort(),
       orderNo: [...ordSet].sort(),
       currentStatus: [...statusSet].sort(),
+      worker: [...workerSet].sort(),
       metalType: [...metalSet].sort(),
     };
   }, [dateFilteredRows, fieldMap]);
