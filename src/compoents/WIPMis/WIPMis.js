@@ -44,6 +44,23 @@ import SearchIcon from '@mui/icons-material/Search';
 import FileDownloadOutlinedIcon from '@mui/icons-material/FileDownloadOutlined';
 
 /* ---------------------------------------------------------------- */
+/* Excel export button style (green circle + green icon)              */
+/* ---------------------------------------------------------------- */
+
+const exportBtnSx = {
+  '&&': {
+    width: 36,
+    height: 36,
+    borderRadius: '50%',
+    background: '#e6f6ec',
+    color: '#22a45d',
+    border: '1px solid #d3efdd',
+    '&:hover': { background: '#d3efdd' },
+    '&.Mui-disabled': { background: '#f1f3f5', color: '#b6bcc8', borderColor: '#e6e8f0' },
+  },
+};
+
+/* ---------------------------------------------------------------- */
 /* Helpers (DATA LOGIC — UNCHANGED)                                   */
 /* ---------------------------------------------------------------- */
 
@@ -521,9 +538,16 @@ const DataGridPanel = ({
     [columns]
   );
 
-  const resolvedMaxHeight = gridHeight ?? computeGridMaxHeight(pagedRows.length, dense);
-  const isOverflowing = pagedRows.length > MAX_VISIBLE_ROWS;
-  const hasRows = pagedRows.length > 0;
+
+  const rowH = dense ? ROW_HEIGHT_DENSE : ROW_HEIGHT_NORMAL;
+const headerH = dense ? HEADER_HEIGHT_DENSE : HEADER_HEIGHT_NORMAL;
+const resolvedMaxHeight = gridHeight ?? computeGridMaxHeight(pagedRows.length, dense);
+const isOverflowing = pagedRows.length > MAX_VISIBLE_ROWS;
+const hasRows = pagedRows.length > 0;
+// exact height: header + rows (+2px borders), capped at the max
+const resolvedHeight = hasRows
+  ? Math.min(headerH + pagedRows.length * rowH + 2, resolvedMaxHeight)
+  : resolvedMaxHeight;
 
   return (
     <Paper className={`data-table data-table--full ${dense ? 'data-table--dense' : ''}`} elevation={0}>
@@ -551,7 +575,7 @@ const DataGridPanel = ({
         )}
       </Box>
 
-      <Box
+      {/* <Box
         className={`data-table__grid-wrap ${isOverflowing ? 'data-table__grid-wrap--scrollable' : ''}`}
         ref={gridWrapRef}
         style={
@@ -574,8 +598,41 @@ const DataGridPanel = ({
           pagination={false}
           className="mis-datagrid"
           components={{ NoRowsOverlay }}
+          // Sticky header: the grid's own wrapper (data-table__grid-wrap) is the
+          // scroll container, so the header row must stick to the top of it.
+          // overflow must be visible on the grid root/main or sticky won't work.
+          sx={{
+            overflow: 'visible',
+            '& .MuiDataGrid-main': { overflow: 'visible' },
+            '& .MuiDataGrid-columnHeaders': {
+              position: 'sticky',
+              top: 0,
+              zIndex: 5,
+              backgroundColor: '#f6f7fb',
+            },
+          }}
         />
-      </Box>
+      </Box> */}
+      <Box
+  className={`data-table__grid-wrap ${isOverflowing ? 'data-table__grid-wrap--scrollable' : ''}`}
+  ref={gridWrapRef}
+  style={{ height: resolvedHeight, overflow: 'hidden' }}
+>
+  <DataGrid
+    rows={pagedRows}
+    columns={columnsNoHeaderTooltip}
+    getRowId={(row) => row.__key}
+    disableColumnMenu
+    disableRowSelectionOnClick
+    hideFooter
+    hideFooterPagination
+    rowHeight={dense ? 34 : 40}
+    columnHeaderHeight={dense ? 56 : 42}
+    pagination={false}
+    className="mis-datagrid"
+    components={{ NoRowsOverlay }}
+  />
+</Box>
 
       {showTotals && pageTotals && rows.length > 0 && (
         <Box className="data-table__totals-row" ref={totalsRowRef}>
@@ -1548,6 +1605,7 @@ const handleExportPcsDetail = () => {
                   onClick={handleExportExcel}
                   size="small"
                   title="Export to Excel"
+                  sx={exportBtnSx}
                 >
                   <DescriptionOutlinedIcon fontSize="small" />
                 </IconButton>
@@ -1760,6 +1818,7 @@ const handleExportPcsDetail = () => {
                     size="small"
                     title="Export to Excel"
                     disabled={pcsDetailFilteredRows.length === 0}
+                    sx={exportBtnSx}
                   >
                     <DescriptionOutlinedIcon fontSize="small" />
                   </IconButton>
