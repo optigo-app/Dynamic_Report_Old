@@ -18,7 +18,7 @@ import {
   TableRow,
   TableCell,
   TableContainer,
-  Checkbox,
+  Checkbox, 
   Chip,
   CircularProgress,
   Autocomplete,
@@ -103,7 +103,7 @@ const framePulse = (color) => keyframes`
 const theme = createTheme({
   palette: {
     primary: { main: COLORS.purple, dark: COLORS.purpleDark, light: COLORS.purpleLight },
-    success: { main: COLORS.success },
+    success: { main: COLORS.success }, 
     error: { main: COLORS.danger },
     warning: { main: COLORS.warning },
     background: { default: COLORS.bg },
@@ -1735,45 +1735,38 @@ export default function MaterialStockReconciliation() {
      CHANGED: first look in IndexedDB (fresh cache = no API call). If there
      is no fresh cache, call the API, normalize, show it, and save it into
      IndexedDB for next time. */
-  useEffect(() => {
-    if (!material) {
-      setRawData([]);
-      setDataLoading(false);
-      return;
-    }
-    const selected = materialList.find((m) => m.itemname === material);
-    if (!selected) return;
-
-    let cancelled = false;
-    setDataLoading(true);
+   /* Load material-wise data whenever the selected material changes.
+   The API is called every time (no local caching). */
+useEffect(() => {
+  if (!material) {
     setRawData([]);
-    (async () => {
-      try {
-        // 1) try IndexedDB cache
-        const cachedRows = await getCachedMaterialRows(selected.itemid);
-        if (cachedRows) {
-          if (!cancelled) setRawData(cachedRows);
-          return;
-        }
+    setDataLoading(false);
+    return;
+  }
+  const selected = materialList.find((m) => m.itemname === material);
+  if (!selected) return;
 
-        // 2) no fresh cache -> call API
-        const res = await GetmaterialWiseData(selected.itemid);
-        const rows = toArray(res).map((r, i) => normalizeRow(r, material, i));
-        if (!cancelled) setRawData(rows);
+  let cancelled = false;
+  setDataLoading(true);
+  setRawData([]);
 
-        // 3) save to IndexedDB (don't block the UI; errors are ignored inside)
-        saveCachedMaterialRows(selected.itemid, material, rows);
-      } catch (err) {
-        console.error("GetmaterialWiseData failed:", err);
-        if (!cancelled) setRawData([]);
-      } finally {
-        if (!cancelled) setDataLoading(false);
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [material, materialList]);
+  (async () => {
+    try {
+      const res = await GetmaterialWiseData(selected.itemid);
+      const rows = toArray(res).map((r, i) => normalizeRow(r, material, i));
+      if (!cancelled) setRawData(rows);
+    } catch (err) {
+      console.error("GetmaterialWiseData failed:", err);
+      if (!cancelled) setRawData([]);
+    } finally {
+      if (!cancelled) setDataLoading(false);
+    }
+  })();
+
+  return () => {
+    cancelled = true;
+  };
+}, [material, materialList]);
 
   /* NEW: Today's reconcile summary (KPI card) */
   const loadReconSummary = useCallback(async () => {
@@ -3161,8 +3154,8 @@ export default function MaterialStockReconciliation() {
                           <TableCell sx={tbodyCellSx}>
                             <Chip
                               size="small"
-                              label={r.Last_Reconcileflg || "—"}
-                              sx={getStatusChipSx(r.Last_Reconcileflg)}
+                              label={r.Reconcileflg || "—"}
+                              sx={getStatusChipSx(r.Reconcileflg)}
                             />
                           </TableCell>
                           <TableCell sx={tbodyCellSx}>{String(r.ActionBy || "").trim() || "—"}</TableCell>
