@@ -1042,6 +1042,10 @@ export default function AllEmployeeDataReport({
     {
       "id": 4,
       "name": "ATM Binding + On Floor"
+    },
+    {
+      "id": 2,
+      "name": "All"
     }
   ]
 
@@ -1101,27 +1105,41 @@ export default function AllEmployeeDataReport({
                       ? "Customer Bind"
                       : "View List"}
                   </p>
-                ) : (
-                  <Select
-                    value={params.row.customerBind ?? ""}
-                    onChange={(e) =>
-                      handleCustomerBindChange(e.target.value, params.row)
-                    }
-                    size="small"
-                    fullWidth
-                    className="MenuSelectItem"
-                  >
-                    {CustomerBindevo?.map((item) => (
-                      <MenuItem
-                        key={item.id}
-                        value={item.id}
-                        className="MenuSelectItem_select"
-                      >
-                        {item.name}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                )}
+                ) :
+                  selectedFilterCategory === "Evo" ? (
+                    <p
+                      style={{
+                        backgroundColor: col.BackgroundColor || "inherit",
+                        fontSize: col.FontSize || "inherit",
+                        padding: "5px 0px",
+                        borderRadius: col.BorderRadius,
+                        margin: "0px",
+                        cursor: "pointer",
+                      }}
+                    >
+                      On Floor
+                    </p>
+                  ) : (
+                    <Select
+                      value={params.row.customerBind ?? ""}
+                      onChange={(e) =>
+                        handleCustomerBindChange(e.target.value, params.row)
+                      }
+                      size="small"
+                      fullWidth
+                      className="MenuSelectItem"
+                    >
+                      {CustomerBindevo?.map((item) => (
+                        <MenuItem
+                          key={item.id}
+                          value={item.id}
+                          className="MenuSelectItem_select"
+                        >
+                          {item.name}
+                        </MenuItem>
+                      ))}
+                    </Select>
+                  )}
               </div>
             ),
           };
