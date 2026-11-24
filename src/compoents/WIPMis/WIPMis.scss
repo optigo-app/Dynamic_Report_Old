@@ -116,14 +116,21 @@ $red-bg: #fdecea;
   }
 
   &__export-btn {
-    color: $purple !important;
-    background: $purple-soft !important;
-    border-radius: 8px !important;
+    color: #22a45d !important;
+    background: #e6f6ec !important;
+    border: 1px solid #d3efdd !important;
+    border-radius: 50% !important;
     width: 36px;
     height: 36px;
-
+  
     &:hover {
-      background: #e6e0ff !important;
+      background: #d3efdd !important;
+    }
+  
+    &.Mui-disabled {
+      color: #b6bcc8 !important;
+      background: #f1f3f5 !important;
+      border-color: #e6e8f0 !important;
     }
   }
 
