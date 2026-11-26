@@ -421,16 +421,6 @@ const mapPaymentBehaviour = (rd) => {
    ══════════════════════════════════════════════ */
 const NOTE_COLORS = ["#7367f0", "#28c76f", "#ff9f43", "#ea5455", "#1e9ff2"];
 
-const decodeNoteEntities = (str) => {
-  if (!str) return "";
-  return str
-    .replace(/@lt;/g, "<")
-    .replace(/@gt;/g, ">")
-    .replace(/@quot;/g, '"')
-    .replace(/@eqlt;/g, "=")
-    .replace(/@nbsp;/g, " ");
-};
-
 const stripHtml = (html) => {
   if (!html) return "";
   if (typeof window === "undefined" || typeof document === "undefined") return html;
@@ -439,12 +429,43 @@ const stripHtml = (html) => {
   return (div.textContent || div.innerText || "").trim();
 };
 
+const decodeNoteEntities = (str) => {
+  if (!str) return "";
+
+  // custom "@xxx;" format -> standard "&xxx;"
+  let s = str
+    .replace(/@(lt|gt|quot|amp|nbsp|apos|#\d+|#x[0-9a-f]+);/gi, "&$1;")
+    .replace(/@eqlt;/g, "=");
+
+  // decode repeatedly to handle double encoding (&amp;nbsp; -> &nbsp; -> space)
+  const txt = document.createElement("textarea");
+  for (let i = 0; i < 5; i++) {
+    txt.innerHTML = s;
+    const decoded = txt.value;
+    if (decoded === s) break; // nothing left to decode
+    s = decoded;
+  }
+
+  // safety net: replace any leftover nbsp (including the special space character)
+  return s.replace(/&nbsp;/gi, " ").replace(/\u00a0/g, " ");
+};
+
+const htmlToPlainText = (html) => {
+  if (!html) return "";
+  return html
+    .replace(/<br\s*\/?>/gi, "\n")                // <br> -> newline
+    .replace(/<\/(div|p|li|h[1-6])>/gi, "\n")     // closing block tag -> newline
+    .replace(/<[^>]+>/g, "")                      // remove remaining tags
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
+};
+
 const mapCustomerNotes = (rd) => {
   if (!rd || !rd.length) return null;
   return rd.map((item, i) => ({
     id: i,
     by: item.DisplayName,
-    note: stripHtml(decodeNoteEntities(item.Note)),
+    note: htmlToPlainText(decodeNoteEntities(item.Note)),
     color: NOTE_COLORS[i % NOTE_COLORS.length],
   }));
 };
@@ -616,7 +637,6 @@ const CrmReport = () => {
   const displayPaymentBehaviour = apiPaymentBehaviour;
   const displayCustomerNotes = apiCustomerNotes;
   const displayCallLogs = apiCallLogs;
-  console.log('displayCallLogs: ', displayCallLogs);
 
   /* ══════════════════════════════════════════════
      API CALL — CustomerSearch (sp=215)
@@ -1622,8 +1642,12 @@ const CrmReport = () => {
                     <Typography className="crm_note_by" noWrap>{note.by}</Typography>
                   </Box>
                 </Box>
-                <Typography className="crm_note_text">{note.note}</Typography>
-              </Box>
+                <Typography
+                  className="crm_note_text"
+                  sx={{ whiteSpace: "pre-line", wordBreak: "break-word" }}
+                >
+                  {note.note}
+                </Typography>              </Box>
             ))}
             {(!displayCustomerNotes || !displayCustomerNotes.length) && (
               <Typography sx={{ fontSize: 11, color: "#9e9e9e", fontFamily: "Poppins" }}>No notes yet.</Typography>
